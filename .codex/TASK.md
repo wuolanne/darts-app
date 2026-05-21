@@ -23,6 +23,7 @@ The app must be in **English**.
 7. Store data locally first.
 8. No login, no payments, no backend in MVP unless the existing project already has a simple local-only setup.
 9. Do not copy DartZone’s UI. Similar product category is OK, but create our own layout and visual style.
+10. The app must support switchable visual themes: Dark, Light, Dim and System.
 
 ## MVP features to implement
 
@@ -90,6 +91,43 @@ Pause time must not count toward estimated darts.
 - 10 seconds
 - 20 seconds
 - 30 seconds
+
+#### Theme
+
+The user must be able to switch the app theme.
+
+Options:
+
+- Dark
+- Light
+- Dim
+- System
+
+Default: Dark.
+
+Theme definitions:
+
+- Dark: the default dark sports-style app theme.
+- Light: a clean light theme for bright environments.
+- Dim: a middle theme between dark and light, softer than Dark and less bright than Light.
+- System: follow device appearance if the selected framework supports it reasonably.
+
+The selected theme must affect the whole app:
+
+- screen backgrounds
+- cards
+- text
+- buttons
+- accents
+- timers/progress bars
+- stats views
+- practice views
+
+Implementation requirement:
+
+- Use a central theme/tokens structure.
+- Do not hardcode colors directly throughout components.
+- It must be easy to add more themes later.
 
 #### Vibration feedback
 
@@ -287,6 +325,16 @@ type ThrowPace = {
   secondsPerVisit?: number; // one visit = 3 darts
 };
 
+type ThemeMode = 'DARK' | 'LIGHT' | 'DIM' | 'SYSTEM';
+
+type AppSettings = {
+  preferredDouble: PreferredDouble;
+  throwPace: ThrowPace;
+  theme: ThemeMode;
+  timerDefaultSeconds?: 10 | 20 | 30;
+  vibrationFeedback: boolean;
+};
+
 type CheckoutAttempt = {
   id: string;
   createdAt: string;
@@ -334,12 +382,15 @@ Preferred-double support can be basic in MVP:
 
 Create our own look:
 
-- Dark background
+- Dark sports-style theme by default
+- Switchable themes: Dark, Light, Dim, System
 - Clean sports-app style
 - Large typography
 - Big buttons
 - Clear cards
-- High contrast
+- High contrast in Dark and Light
+- Softer contrast in Dim
+- Centralized theme tokens
 - No direct DartZone clone
 - No pixel-font requirement
 
@@ -349,14 +400,16 @@ The MVP is acceptable when:
 
 1. App starts and shows English Home / Training screen.
 2. User can change preferred double and throw pace in Settings.
-3. User can run a Checkout Practice session without logging every dart.
-4. Checkout attempts are stored locally.
-5. User can run Around the Clock Singles/Doubles/Trebles.
-6. User can run Full Sector Around the Clock with 1 or 2 required double hits.
-7. Timed sessions record per-target/per-sector time.
-8. Session result shows total time, active time, fastest/slowest target or sector, and estimated darts when throw pace is set.
-9. Stats screen shows basic 7 day / 30 day / total stats.
-10. No login, backend, payment, online play, camera scoring, or full X01 scorer is added.
+3. User can switch the app theme between Dark, Light, Dim and System.
+4. Theme selection affects the whole app and persists locally.
+5. User can run a Checkout Practice session without logging every dart.
+6. Checkout attempts are stored locally.
+7. User can run Around the Clock Singles/Doubles/Trebles.
+8. User can run Full Sector Around the Clock with 1 or 2 required double hits.
+9. Timed sessions record per-target/per-sector time.
+10. Session result shows total time, active time, fastest/slowest target or sector, and estimated darts when throw pace is set.
+11. Stats screen shows basic 7 day / 30 day / total stats.
+12. No login, backend, payment, online play, camera scoring, or full X01 scorer is added.
 
 ## Build and quality
 
