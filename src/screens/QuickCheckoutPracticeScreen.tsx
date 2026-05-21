@@ -208,7 +208,13 @@ export function QuickCheckoutPracticeScreen({
   );
   const maxPicks = Math.max(activeRoute.length, 1);
   const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
-  const currentRouteLabel = missScenario ? "Correct continuation" : "Correct route";
+  const routeForFeedback = missScenario
+    ? activeRoute
+    : currentRouteData?.route ?? activeRoute;
+  const primaryContinuation = !missScenario && currentRouteData
+    ? getSingleHitContinuation(currentRouteData)
+    : undefined;
+  const firstTarget = routeForFeedback[0] ? normalizeDartTarget(routeForFeedback[0]) : null;
 
   const expectedTarget = activeRoute[stepIndex] ?? null;
   useEffect(() => {
@@ -608,13 +614,27 @@ export function QuickCheckoutPracticeScreen({
                     <span className="muted">Your picks:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
                   </p>
                   <p>
-                    <span className="muted">{currentRouteLabel}:</span>{" "}
-                    {activeRoute.length > 0 ? formatRoute(activeRoute) : "No valid route yet."}
+                    <span className="muted">{missScenario ? "Correct continuation" : "Correct route"}:</span>{" "}
+                    {routeForFeedback.length > 0 ? formatRoute(routeForFeedback) : "No valid route yet."}
                   </p>
-                  {feedback.tone === "wrong" && currentRouteData && !missScenario ? (
-                    <p>
-                      <span className="muted">Correct route:</span> {formatRoute(currentRouteData.route)}
-                    </p>
+                  {!missScenario ? (
+                    <div className="route-box top-gap">
+                      <p className="route-compact-line">
+                        <span className="muted">Why this route</span>
+                      </p>
+                      {primaryContinuation && firstTarget ? (
+                        <p className="route-compact-line">
+                          If <strong>{firstTarget}</strong> becomes{" "}
+                          <strong>{normalizeDartTarget(primaryContinuation.singleHitTarget)}</strong>:{" "}
+                          <strong>{primaryContinuation.remaining} left</strong>{" "}
+                          {primaryContinuation.continuationRoute.length > 0
+                            ? `\u2192 ${formatRoute(primaryContinuation.continuationRoute)}`
+                            : "\u2192 No saved single-hit continuation yet."}
+                        </p>
+                      ) : (
+                        <p className="route-compact-line">No saved single-hit continuation yet.</p>
+                      )}
+                    </div>
                   ) : null}
                   <div className="row top-gap">
                     <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
