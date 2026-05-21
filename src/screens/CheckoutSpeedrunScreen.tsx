@@ -9,7 +9,7 @@ import {
 import { CHECKOUT_RANGE_PRESETS } from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
 import { triggerHaptic } from "../utils/haptics";
-import { formatClock, formatSeconds, toRoundedSeconds } from "../utils/time";
+import { formatClock, toRoundedSeconds } from "../utils/time";
 
 interface RunningState {
   list: number[];
@@ -46,6 +46,10 @@ function getSuccessRate(entries: { result: SpeedrunEntryResult }[]): number {
   return (finished / entries.length) * 100;
 }
 
+function displaySecondsAsClock(seconds: number): string {
+  return formatClock(Math.round(seconds));
+}
+
 export function CheckoutSpeedrunScreen({
   onBack,
   onSaveSession,
@@ -72,7 +76,7 @@ export function CheckoutSpeedrunScreen({
     if (!running) {
       return;
     }
-    const timer = window.setInterval(() => setTicker(Date.now()), 200);
+    const timer = window.setInterval(() => setTicker(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [running]);
 
@@ -137,37 +141,51 @@ export function CheckoutSpeedrunScreen({
     });
   };
 
-  const finishEntry = (resultType: SpeedrunEntryResult) => {
+  const finalizeSession = (state: RunningState, entries: RunningState["entries"], now: number) => {
+    const totalActive = toRoundedSeconds(
+      now -
+        state.startedAt -
+        state.pauseMs -
+        (state.pauseStartedAt ? now - state.pauseStartedAt : 0)
+    );
+    const session: CheckoutSpeedrunSession = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      rangeLabel: state.rangeLabel,
+      rangeStart: state.rangeStart,
+      rangeEnd: state.rangeEnd,
+      order: state.order,
+      entries,
+      totalActiveSeconds: totalActive,
+      pauseSeconds: toRoundedSeconds(
+        state.pauseMs + (state.pauseStartedAt ? now - state.pauseStartedAt : 0)
+      )
+    };
+    const comparable = previousSessions
+      .filter((item) => item.rangeLabel === session.rangeLabel)
+      .map((item) => item.totalActiveSeconds);
+    if (comparable.length > 0) {
+      setPbDelta(totalActive - Math.min(...comparable));
+    }
+    onSaveSession(session);
+    setResult(session);
+    setRunning(null);
+  };
+
+  const finishEntry = () => {
     if (!running) {
       return;
     }
     const now = Date.now();
     const checkoutSeconds = toRoundedSeconds(now - running.currentCheckoutStartedAt);
-    const nextEntries = [...running.entries, { checkout: running.list[running.index], seconds: checkoutSeconds, result: resultType }];
+    const nextEntries = [
+      ...running.entries,
+      { checkout: running.list[running.index], seconds: checkoutSeconds, result: "finished" as const }
+    ];
     triggerHaptic(settings.vibrationFeedback);
     const nextIndex = running.index + 1;
     if (nextIndex >= running.list.length) {
-      const totalActive = toRoundedSeconds(now - running.startedAt - running.pauseMs);
-      const session: CheckoutSpeedrunSession = {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        rangeLabel: running.rangeLabel,
-        rangeStart: running.rangeStart,
-        rangeEnd: running.rangeEnd,
-        order: running.order,
-        entries: nextEntries,
-        totalActiveSeconds: totalActive,
-        pauseSeconds: toRoundedSeconds(running.pauseMs)
-      };
-      const comparable = previousSessions
-        .filter((item) => item.rangeLabel === session.rangeLabel)
-        .map((item) => item.totalActiveSeconds);
-      if (comparable.length > 0) {
-        setPbDelta(totalActive - Math.min(...comparable));
-      }
-      onSaveSession(session);
-      setResult(session);
-      setRunning(null);
+      finalizeSession(running, nextEntries, now);
       return;
     }
     setRunning({
@@ -196,18 +214,16 @@ export function CheckoutSpeedrunScreen({
     });
   };
 
-  const undoLast = () => {
-    if (!running || running.entries.length === 0) {
+  const endRun = () => {
+    if (!running) {
       return;
     }
-    const nextEntries = running.entries.slice(0, -1);
-    const nextIndex = Math.max(0, running.index - 1);
-    setRunning({
-      ...running,
-      entries: nextEntries,
-      index: nextIndex,
-      currentCheckoutStartedAt: Date.now()
-    });
+    const now = Date.now();
+    if (running.entries.length === 0) {
+      setRunning(null);
+      return;
+    }
+    finalizeSession(running, running.entries, now);
   };
 
   return (
@@ -287,7 +303,7 @@ export function CheckoutSpeedrunScreen({
             </div>
             <div>
               <p className="muted">Current checkout</p>
-              <strong>{formatSeconds(currentCheckoutSeconds)}</strong>
+              <strong>{displaySecondsAsClock(currentCheckoutSeconds)}</strong>
             </div>
           </div>
 
@@ -300,23 +316,19 @@ export function CheckoutSpeedrunScreen({
           ) : null}
 
           <div className="action-grid">
-            <Button variant="success" onClick={() => finishEntry("finished")}>
-              FINISHED
-            </Button>
-            <Button variant="danger" onClick={() => finishEntry("failed")}>
-              FAILED
-            </Button>
-            <Button variant="warning" onClick={() => finishEntry("bust")}>
-              BUST
-            </Button>
-            <Button variant="ghost" onClick={() => setShowRoute((prev) => !prev)}>
-              SHOW ROUTE
+            <Button variant="success" onClick={finishEntry}>
+              READY
             </Button>
             <Button variant="secondary" onClick={togglePause}>
               {running.pauseStartedAt ? "RESUME" : "PAUSE"}
             </Button>
-            <Button variant="secondary" onClick={undoLast}>
-              UNDO
+            <Button variant="danger" onClick={endRun}>
+              END RUN
+            </Button>
+          </div>
+          <div className="top-gap">
+            <Button variant="ghost" onClick={() => setShowRoute((prev) => !prev)}>
+              {showRoute ? "HIDE ROUTE" : "SHOW ROUTE"}
             </Button>
           </div>
         </Card>
@@ -325,24 +337,21 @@ export function CheckoutSpeedrunScreen({
       {result ? (
         <Card>
           <h3>Result</h3>
-          <p className="big-number">{formatClock(result.totalActiveSeconds)}</p>
+          <p className="big-number">{displaySecondsAsClock(result.totalActiveSeconds)}</p>
           <p className="muted">
-            Finished: {result.entries.filter((entry) => entry.result === "finished").length} / {result.entries.length}
-          </p>
-          <p className="muted">
-            Failed: {result.entries.filter((entry) => entry.result === "failed").length} | Bust:{" "}
-            {result.entries.filter((entry) => entry.result === "bust").length}
+            Completed: {result.entries.filter((entry) => entry.result === "finished").length} /{" "}
+            {running ? running.list.length : result.rangeEnd - result.rangeStart + 1}
           </p>
           <p className="muted">Success rate: {getSuccessRate(result.entries).toFixed(1)}%</p>
           <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
-              Fastest checkout: {resultFastest.checkout} ({formatSeconds(resultFastest.seconds)})
+              Fastest checkout: {resultFastest.checkout} ({displaySecondsAsClock(resultFastest.seconds)})
             </p>
           ) : null}
           {resultSlowest ? (
             <p className="muted">
-              Slowest checkout: {resultSlowest.checkout} ({formatSeconds(resultSlowest.seconds)})
+              Slowest checkout: {resultSlowest.checkout} ({displaySecondsAsClock(resultSlowest.seconds)})
             </p>
           ) : null}
           {pbDelta !== null ? (
@@ -356,7 +365,7 @@ export function CheckoutSpeedrunScreen({
               <div key={`${entry.checkout}-${index}`} className="breakdown-item">
                 <span>{entry.checkout}</span>
                 <span>{entry.result.toUpperCase()}</span>
-                <strong>{formatSeconds(entry.seconds)}</strong>
+                <strong>{displaySecondsAsClock(entry.seconds)}</strong>
               </div>
             ))}
           </div>
