@@ -154,28 +154,28 @@ export function Dartboard({
               {isHighlighted(targets, sector, "double") ? (
                 <path
                   d={annularSectorPath(cx, cy, 170, 190, start, end)}
-                  fill="#39c7ff"
-                  fillOpacity={0.45}
+                  fill="var(--accent-muted)"
+                  fillOpacity={0.48}
                 />
               ) : null}
               {isHighlighted(targets, sector, "treble") ? (
                 <path
                   d={annularSectorPath(cx, cy, 90, 110, start, end)}
-                  fill="#39c7ff"
-                  fillOpacity={0.45}
+                  fill="var(--accent-muted)"
+                  fillOpacity={0.48}
                 />
               ) : null}
               {isHighlighted(targets, sector, "single") ? (
                 <>
                   <path
                     d={annularSectorPath(cx, cy, 110, 170, start, end)}
-                    fill="#39c7ff"
-                    fillOpacity={0.3}
+                    fill="var(--accent-muted)"
+                    fillOpacity={0.35}
                   />
                   <path
                     d={annularSectorPath(cx, cy, 40, 90, start, end)}
-                    fill="#39c7ff"
-                    fillOpacity={0.3}
+                    fill="var(--accent-muted)"
+                    fillOpacity={0.35}
                   />
                 </>
               ) : null}
@@ -183,28 +183,28 @@ export function Dartboard({
               {selected && selected.number === sector && selected.kind === "double" ? (
                 <path
                   d={annularSectorPath(cx, cy, 170, 190, start, end)}
-                  fill="#ffce3a"
-                  fillOpacity={0.8}
+                  fill="var(--selected-border)"
+                  fillOpacity={0.7}
                 />
               ) : null}
               {selected && selected.number === sector && selected.kind === "treble" ? (
                 <path
                   d={annularSectorPath(cx, cy, 90, 110, start, end)}
-                  fill="#ffce3a"
-                  fillOpacity={0.8}
+                  fill="var(--selected-border)"
+                  fillOpacity={0.7}
                 />
               ) : null}
               {selected && selected.number === sector && selected.kind === "single" ? (
                 <>
                   <path
                     d={annularSectorPath(cx, cy, 110, 170, start, end)}
-                    fill="#ffce3a"
-                    fillOpacity={0.7}
+                    fill="var(--selected-border)"
+                    fillOpacity={0.62}
                   />
                   <path
                     d={annularSectorPath(cx, cy, 40, 90, start, end)}
-                    fill="#ffce3a"
-                    fillOpacity={0.7}
+                    fill="var(--selected-border)"
+                    fillOpacity={0.62}
                   />
                 </>
               ) : null}
@@ -234,16 +234,16 @@ export function Dartboard({
         />
 
         {targets.some((item) => item.kind === "outer-bull") ? (
-          <circle cx={cx} cy={cy} r={40} fill="#39c7ff" fillOpacity={0.45} />
+          <circle cx={cx} cy={cy} r={40} fill="var(--accent-muted)" fillOpacity={0.48} />
         ) : null}
         {targets.some((item) => item.kind === "bull") ? (
-          <circle cx={cx} cy={cy} r={18} fill="#39c7ff" fillOpacity={0.65} />
+          <circle cx={cx} cy={cy} r={18} fill="var(--accent-muted)" fillOpacity={0.68} />
         ) : null}
         {selected?.kind === "outer-bull" ? (
-          <circle cx={cx} cy={cy} r={40} fill="#ffce3a" fillOpacity={0.7} />
+          <circle cx={cx} cy={cy} r={40} fill="var(--selected-border)" fillOpacity={0.62} />
         ) : null}
         {selected?.kind === "bull" ? (
-          <circle cx={cx} cy={cy} r={18} fill="#ffce3a" fillOpacity={0.9} />
+          <circle cx={cx} cy={cy} r={18} fill="var(--selected-border)" fillOpacity={0.78} />
         ) : null}
 
         {BOARD_ORDER.map((sector, idx) => {

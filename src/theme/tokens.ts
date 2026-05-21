@@ -1,55 +1,99 @@
 export interface ThemeTokens {
   background: string;
   surface: string;
-  surfaceAlt: string;
-  text: string;
+  surfaceElevated: string;
+  card: string;
+  cardBorder: string;
+  input: string;
+  inputBorder: string;
+  textPrimary: string;
+  textSecondary: string;
   textMuted: string;
   accent: string;
+  accentMuted: string;
   accentSoft: string;
+  primaryButton: string;
+  primaryButtonText: string;
+  selected: string;
+  selectedBorder: string;
+  progress: string;
   success: string;
-  warning: string;
   danger: string;
-  border: string;
+  warning: string;
+  dartboardShell: string;
 }
 
 export const THEMES: Record<"dark" | "light" | "dim", ThemeTokens> = {
   dark: {
-    background: "#0a0b0d",
-    surface: "#14171c",
-    surfaceAlt: "#1b1f26",
-    text: "#f3f5f7",
-    textMuted: "#98a0ab",
-    accent: "#b6ff2f",
-    accentSoft: "#2a3a0a",
-    success: "#8df01c",
-    warning: "#ffbe45",
-    danger: "#ff5f5f",
-    border: "#2d333d"
+    background: "#0c0e12",
+    surface: "#151922",
+    surfaceElevated: "#1a202a",
+    card: "#19212c",
+    cardBorder: "#2f3744",
+    input: "#1d2430",
+    inputBorder: "#343d4b",
+    textPrimary: "#f2f4f6",
+    textSecondary: "#c5ccd5",
+    textMuted: "#98a2ad",
+    accent: "#4f9f72",
+    accentMuted: "#3e6f57",
+    accentSoft: "#24362d",
+    primaryButton: "#4f9f72",
+    primaryButtonText: "#0d1a13",
+    selected: "#253b31",
+    selectedBorder: "#4f9f72",
+    progress: "#4d8f6b",
+    success: "#5ca978",
+    danger: "#c76666",
+    warning: "#c59a57",
+    dartboardShell: "#0f141d"
   },
   light: {
-    background: "#f1f3f6",
-    surface: "#ffffff",
-    surfaceAlt: "#e8ecf2",
-    text: "#12161b",
-    textMuted: "#5d6671",
-    accent: "#6cae00",
-    accentSoft: "#d7e8b4",
-    success: "#5e9d00",
-    warning: "#c57d00",
-    danger: "#c83434",
-    border: "#cfd6df"
+    background: "#eceae6",
+    surface: "#f4f1ec",
+    surfaceElevated: "#efebe5",
+    card: "#f7f3ee",
+    cardBorder: "#d2c9be",
+    input: "#f1ece5",
+    inputBorder: "#c9bfb3",
+    textPrimary: "#1d252e",
+    textSecondary: "#404c59",
+    textMuted: "#687483",
+    accent: "#5c8768",
+    accentMuted: "#7d9687",
+    accentSoft: "#d5ded7",
+    primaryButton: "#5c8768",
+    primaryButtonText: "#f4f7f4",
+    selected: "#d6dfd7",
+    selectedBorder: "#5c8768",
+    progress: "#6d9279",
+    success: "#5f8c6a",
+    danger: "#b05f5f",
+    warning: "#ad8451",
+    dartboardShell: "#d7d2cb"
   },
   dim: {
-    background: "#0f1217",
-    surface: "#1a1f27",
-    surfaceAlt: "#232a34",
-    text: "#eef1f4",
-    textMuted: "#98a3b2",
-    accent: "#9eea22",
-    accentSoft: "#2e3f10",
-    success: "#84dd1f",
-    warning: "#f7bf57",
-    danger: "#f06b6b",
-    border: "#3a424e"
+    background: "#141821",
+    surface: "#202734",
+    surfaceElevated: "#273040",
+    card: "#2a3344",
+    cardBorder: "#46536a",
+    input: "#2a3342",
+    inputBorder: "#4b596f",
+    textPrimary: "#e9edf2",
+    textSecondary: "#c4ccda",
+    textMuted: "#9ca8bc",
+    accent: "#6d8aa7",
+    accentMuted: "#5d7289",
+    accentSoft: "#334356",
+    primaryButton: "#6d8aa7",
+    primaryButtonText: "#101820",
+    selected: "#344458",
+    selectedBorder: "#6d8aa7",
+    progress: "#6a849e",
+    success: "#6f9ab8",
+    danger: "#c17a7a",
+    warning: "#b89a63",
+    dartboardShell: "#1b2331"
   }
 };
