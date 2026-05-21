@@ -16,7 +16,10 @@ interface RunningState {
   pauseStartedAt: number | null;
   pauseMs: number;
   doubleRequirement: 1 | 2 | null;
+  fullSectorOrder: FullSectorOrder | null;
 }
+
+type FullSectorOrder = "start_with_bull" | "end_with_bull";
 
 const COMMON_DOUBLES_TARGETS = ["D20", "D10", "D5", "D16", "D8", "D4", "D12", "D18"] as const;
 const CENTER_TARGETS = ["25", "Bull"] as const;
@@ -25,6 +28,7 @@ const ALL_DOUBLES = Array.from({ length: 20 }, (_, i) => `D${i + 1}`);
 const ALL_TREBLES = Array.from({ length: 20 }, (_, i) => `T${i + 1}`);
 const D16_PATH_TARGETS = ["D16", "D8", "D4", "D2", "D1"] as const;
 const CUSTOM_TARGETS_KEY = "around_clock_custom_targets";
+const FULL_SECTOR_ORDER_KEY = "around_clock_full_sector_order";
 
 function sanitizeCustomTargets(values: string[]): string[] {
   const allowed = new Set<string>([...ALL_SINGLES, ...ALL_DOUBLES, ...ALL_TREBLES, ...CENTER_TARGETS]);
@@ -37,7 +41,12 @@ function sanitizeCustomTargets(values: string[]): string[] {
   return next;
 }
 
-function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2, customTargets: string[]): string[] {
+function createTargets(
+  mode: AroundClockMode,
+  doubleRequirement: 1 | 2,
+  customTargets: string[],
+  fullSectorOrder: FullSectorOrder
+): string[] {
   if (mode === "singles") {
     return [...Array.from({ length: 20 }, (_, i) => `S${i + 1}`), "Bull"];
   }
@@ -53,14 +62,14 @@ function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2, customTa
   if (mode === "custom") {
     return [...customTargets];
   }
-  return [
-    "Bull",
-    "25",
-    ...Array.from({ length: 20 }, (_, i) => {
-      const n = i + 1;
-      return doubleRequirement === 2 ? `S${n} + T${n} + D${n} + D${n}` : `S${n} + T${n} + D${n}`;
-    })
-  ];
+  const sectorTargets = Array.from({ length: 20 }, (_, i) => {
+    const n = i + 1;
+    return doubleRequirement === 2 ? `S${n} + T${n} + D${n} + D${n}` : `S${n} + T${n} + D${n}`;
+  });
+  if (fullSectorOrder === "end_with_bull") {
+    return [...sectorTargets, "25", "Bull"];
+  }
+  return ["Bull", "25", ...sectorTargets];
 }
 
 function modeLabel(mode: AroundClockMode): string {
@@ -95,6 +104,7 @@ export function AroundTheClockScreen({
 }) {
   const [mode, setMode] = useState<AroundClockMode>("singles");
   const [doubleRequirement, setDoubleRequirement] = useState<1 | 2>(1);
+  const [fullSectorOrder, setFullSectorOrder] = useState<FullSectorOrder>("start_with_bull");
   const [customTargets, setCustomTargets] = useState<string[]>([]);
   const [running, setRunning] = useState<RunningState | null>(null);
   const [result, setResult] = useState<AroundClockSession | null>(null);
@@ -104,11 +114,17 @@ export function AroundTheClockScreen({
   useEffect(() => {
     const saved = readJson<string[]>(CUSTOM_TARGETS_KEY, []);
     setCustomTargets(sanitizeCustomTargets(saved));
+    const savedOrder = readJson<FullSectorOrder>(FULL_SECTOR_ORDER_KEY, "start_with_bull");
+    setFullSectorOrder(savedOrder === "end_with_bull" ? "end_with_bull" : "start_with_bull");
   }, []);
 
   useEffect(() => {
     writeJson(CUSTOM_TARGETS_KEY, customTargets);
   }, [customTargets]);
+
+  useEffect(() => {
+    writeJson(FULL_SECTOR_ORDER_KEY, fullSectorOrder);
+  }, [fullSectorOrder]);
 
   useEffect(() => {
     if (!running) {
@@ -138,7 +154,7 @@ export function AroundTheClockScreen({
       return;
     }
     const now = Date.now();
-    const targets = createTargets(mode, doubleRequirement, customTargets);
+    const targets = createTargets(mode, doubleRequirement, customTargets, fullSectorOrder);
     setPbDelta(null);
     setResult(null);
     setRunning({
@@ -150,7 +166,8 @@ export function AroundTheClockScreen({
       targetStartedAt: now,
       pauseStartedAt: null,
       pauseMs: 0,
-      doubleRequirement: mode === "full_sector" ? doubleRequirement : null
+      doubleRequirement: mode === "full_sector" ? doubleRequirement : null,
+      fullSectorOrder: mode === "full_sector" ? fullSectorOrder : null
     });
   };
 
@@ -378,6 +395,24 @@ export function AroundTheClockScreen({
           ) : null}
           {mode === "full_sector" ? (
             <div className="top-gap">
+              <label>Full Sector order</label>
+              <Segmented
+                value={fullSectorOrder}
+                options={[
+                  { label: "Start with Bull", value: "start_with_bull" },
+                  { label: "End with Bull", value: "end_with_bull" }
+                ]}
+                onChange={(value) => setFullSectorOrder(value as FullSectorOrder)}
+              />
+              <p className="muted top-gap">
+                {fullSectorOrder === "start_with_bull"
+                  ? "Full Sector: Bull, 25, then S/T/D for sectors 1-20"
+                  : "Full Sector: S/T/D for sectors 1-20, then 25 and Bull"}
+              </p>
+            </div>
+          ) : null}
+          {mode === "full_sector" ? (
+            <div className="top-gap">
               <label>Double requirement for each numbered sector</label>
               <Segmented
                 value={doubleRequirement}
@@ -406,6 +441,13 @@ export function AroundTheClockScreen({
             </Pill>
           </div>
           <p className="big-number">{currentTarget}</p>
+          {running.mode === "full_sector" ? (
+            <p className="muted">
+              {running.fullSectorOrder === "end_with_bull"
+                ? "Full Sector: S/T/D for sectors 1-20, then 25 and Bull"
+                : "Full Sector: Bull, 25, then S/T/D for sectors 1-20"}
+            </p>
+          ) : null}
           <div className="metric-grid">
             <div>
               <p className="muted">Total time</p>
