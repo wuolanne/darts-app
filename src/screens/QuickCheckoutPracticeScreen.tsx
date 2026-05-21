@@ -13,7 +13,6 @@ import {
   CheckoutRouteDetails,
   DartTarget,
   formatRoute,
-  getBestFirstTarget,
   getCheckoutRouteDetails,
   getPrimaryCheckoutRoute,
   getSingleHitContinuation,
@@ -209,8 +208,6 @@ export function QuickCheckoutPracticeScreen({
   );
 
   const expectedTarget = activeRoute[stepIndex] ?? null;
-  const bestFirstTarget = getBestFirstTarget(finish, settings.preferredDouble);
-
   useEffect(() => {
     if (stage !== "playing" || timerSeconds === 0 || completed) {
       return;
