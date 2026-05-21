@@ -30,15 +30,19 @@ function RouteDetail({ option }: { option: CheckoutRouteOption }) {
         <span className="muted">Route:</span> {formatRoute(option.route)}
       </p>
       <p>
-        <span className="muted">If single hit:</span> If {option.firstTarget} becomes S
-        {option.singleHitScore}
+        <span className="muted">If single hit:</span>{" "}
+        {option.singleHitTarget
+          ? `If ${option.firstTarget} becomes ${option.singleHitTarget}`
+          : "No single-hit follow-up yet."}
       </p>
       <p>
         <span className="muted">Remaining:</span> {option.remainingAfterSingle}
       </p>
       <p>
         <span className="muted">Follow-up:</span>{" "}
-        {option.followUpRoute.length > 0 ? formatRoute(option.followUpRoute) : "No detailed follow-up yet."}
+        {option.followUpRoute && option.followUpRoute.length > 0
+          ? formatRoute(option.followUpRoute)
+          : "No detailed follow-up yet."}
       </p>
       {option.note ? (
         <p>

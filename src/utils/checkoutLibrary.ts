@@ -18,9 +18,9 @@ export type CheckoutRouteOption = {
   label: string;
   route: string[];
   firstTarget: string;
-  singleHitScore: number;
+  singleHitTarget?: string;
   remainingAfterSingle: number;
-  followUpRoute: string[];
+  followUpRoute?: string[];
   note?: string;
   preferredDouble?: string;
 };
@@ -44,6 +44,16 @@ const FINAL_DARTS: DartThrow[] = [
 ];
 
 const CACHE = new Map<number, CheckoutOption[]>();
+
+export function isValidDartTarget(target: string): boolean {
+  if (!target) return false;
+  if (target === "25" || target === "Bull") return true;
+  if (/^S([1-9]|1\d|20)$/.test(target)) return true;
+  if (/^D([1-9]|1\d|20)$/.test(target)) return true;
+  if (/^T([1-9]|1\d|20)$/.test(target)) return true;
+  if (/^([1-9]|1\d|20)$/.test(target)) return true;
+  return false;
+}
 
 function isBogey(finish: number): boolean {
   return [159, 162, 163, 165, 166, 168, 169].includes(finish);
@@ -87,6 +97,20 @@ function singleEquivalentScore(token: string): number | null {
   return null;
 }
 
+function singleEquivalentTarget(token: string): string | undefined {
+  if (token === "Bull") return "25";
+  if (token === "25") return "25";
+  const treble = token.match(/^T(\d{1,2})$/);
+  if (treble) return `S${Number(treble[1])}`;
+  const double = token.match(/^D(\d{1,2})$/);
+  if (double) return `S${Number(double[1])}`;
+  const single = token.match(/^S(\d{1,2})$/);
+  if (single) return `S${Number(single[1])}`;
+  const plain = token.match(/^(\d{1,2})$/);
+  if (plain) return `S${Number(plain[1])}`;
+  return undefined;
+}
+
 function isPreferredDoubleRoute(option: CheckoutOption, preferredDouble: PreferredDouble): boolean {
   return preferredDouble !== "Not sure" && option.route[option.route.length - 1] === preferredDouble;
 }
@@ -113,6 +137,7 @@ function buildRouteOption(
 ): CheckoutRouteOption {
   const firstTarget = option.route[0];
   const singleHitScore = singleEquivalentScore(firstTarget) ?? 0;
+  const singleHitTarget = singleEquivalentTarget(firstTarget);
   const remainingAfterSingle = Math.max(0, finish - singleHitScore);
 
   const followUpBest = remainingAfterSingle > 1 ? pickBestFinishOption(remainingAfterSingle, preferredDouble) : null;
@@ -126,9 +151,9 @@ function buildRouteOption(
     label,
     route: option.route,
     firstTarget,
-    singleHitScore,
+    singleHitTarget,
     remainingAfterSingle,
-    followUpRoute,
+    followUpRoute: followUpRoute.length > 0 ? followUpRoute : undefined,
     preferredDouble: preferredDoubleValue,
     note:
       followUpRoute.length === 0
@@ -140,6 +165,32 @@ function buildRouteOption(
 function routeEquals(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
   return a.every((item, idx) => item === b[idx]);
+}
+
+function firstTargetPriority(target: string): number {
+  if (/^T\d+$/.test(target)) return 0;
+  if (/^S20$/.test(target)) return 1;
+  if (/^S\d+$/.test(target) || /^\d+$/.test(target)) return 2;
+  if (target === "25") return 3;
+  if (/^D\d+$/.test(target)) return 4;
+  if (target === "Bull") return 5;
+  return 6;
+}
+
+function sortRouteOptionsForTeaching(
+  options: CheckoutOption[],
+  preferredDouble: PreferredDouble
+): CheckoutOption[] {
+  return [...options].sort((a, b) => {
+    const aPreferred = isPreferredDoubleRoute(a, preferredDouble);
+    const bPreferred = isPreferredDoubleRoute(b, preferredDouble);
+    if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
+    if (a.dartsUsed !== b.dartsUsed) return a.dartsUsed - b.dartsUsed;
+    const aFirst = firstTargetPriority(a.route[0]);
+    const bFirst = firstTargetPriority(b.route[0]);
+    if (aFirst !== bFirst) return aFirst - bFirst;
+    return a.route.join("|").localeCompare(b.route.join("|"));
+  });
 }
 
 const DETAIL_OVERRIDES: Record<number, string[][]> = {
@@ -156,8 +207,17 @@ export function getCheckoutRouteDetails(
     return null;
   }
 
-  const twoDart = options.filter((item) => item.dartsUsed === 2);
-  const pool = twoDart.length > 0 ? twoDart : options;
+  const validOptions = options.filter(
+    (item) =>
+      item.route.length > 0 &&
+      isValidDartTarget(item.route[0]) &&
+      item.route.every((token) => isValidDartTarget(token))
+  );
+  const twoDart = validOptions.filter((item) => item.dartsUsed === 2);
+  const pool = sortRouteOptionsForTeaching(
+    twoDart.length > 0 ? twoDart : validOptions,
+    preferredDouble
+  );
 
   const picked: CheckoutOption[] = [];
   const overrides = DETAIL_OVERRIDES[finish];

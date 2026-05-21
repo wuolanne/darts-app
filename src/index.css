@@ -285,6 +285,28 @@ body {
   background: color-mix(in oklab, var(--surface-alt) 65%, transparent);
 }
 
+.quick-practice-card {
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--surface) 94%, black 6%),
+    color-mix(in oklab, var(--surface-alt) 90%, black 10%)
+  );
+}
+
+.quick-route-box {
+  background: color-mix(in oklab, var(--surface-alt) 52%, black 48%);
+  border-color: color-mix(in oklab, var(--border) 78%, var(--accent) 22%);
+}
+
+.quick-feedback-box {
+  background: color-mix(in oklab, var(--surface-alt) 58%, black 42%);
+  border-color: color-mix(in oklab, var(--border) 72%, var(--accent) 28%);
+}
+
+.quick-feedback-box h4 {
+  margin: 0 0 8px;
+}
+
 .dartboard-wrap {
   margin-top: 8px;
   border: 1px solid var(--border);

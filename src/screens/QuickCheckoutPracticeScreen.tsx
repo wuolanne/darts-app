@@ -3,59 +3,69 @@ import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { Dartboard } from "../components/Dartboard";
 import { CheckoutAttempt, CheckoutRangeKey, CheckoutResult, TimerOption, UserSettings } from "../types/models";
 import { CHECKOUT_RANGE_PRESETS, TIMER_OPTIONS } from "../utils/constants";
-import { getRouteForFinish } from "../utils/checkoutRoutes";
+import {
+  CheckoutRouteOption,
+  getCheckoutRouteDetails,
+  isValidDartTarget
+} from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 
 type Stage = "setup" | "attempt" | "feedback";
 
-function randomBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+interface FeedbackState {
+  correct: boolean;
+  chosenTarget: string;
+  bestTarget: string;
+  routeLabel: string;
+  route: string[];
+  singleHitTarget?: string;
+  remainingAfterSingle: number;
+  followUpRoute?: string[];
+  explanation: string;
+  note?: string;
 }
 
 function normalizeToken(token: string): string {
   return token.trim().toUpperCase();
 }
 
-function firstTargetFromRoute(route: string): string | null {
-  const first = route
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean)[0];
-  if (!first) {
-    return null;
-  }
-  if (first === "BULL") {
-    return "BULL";
-  }
-  if (first === "25") {
-    return "25";
-  }
-  if (/^\d{1,2}$/.test(first)) {
-    return `S${first}`;
-  }
-  return first.toUpperCase();
+function formatRoute(route: string[]): string {
+  return route.join(" \u2192 ");
 }
 
-function whyGoodRoute(route: string, usedPreferredRoute: boolean, preferredDouble: string): string {
-  const darts = route.split(",").length;
-  if (usedPreferredRoute) {
-    return `Good because it supports your preferred double ${preferredDouble} in ${darts}-dart flow.`;
-  }
-  if (darts <= 2) {
-    return "Good because it is a clean high-percentage 2-dart route.";
-  }
-  return "Good because it avoids awkward leaves and keeps a clear finish path.";
+function randomBetween(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function missPlanForSingleMiss(finish: number, expectedTarget: string, route: string): string {
-  const trebleMatch = expectedTarget.match(/^T(\d{1,2})$/);
-  if (!trebleMatch) {
-    return "If first dart misses, set up a clean double for the next dart.";
+function pickPrimaryRoute(optionList: CheckoutRouteOption[]): CheckoutRouteOption | null {
+  if (optionList.length === 0) return null;
+  const preferred = optionList.find((item) => item.preferredDouble);
+  if (preferred) return preferred;
+  return optionList[0];
+}
+
+function routeExplanation(route: CheckoutRouteOption, preferredDouble: string): string {
+  if (route.preferredDouble) {
+    return `Good route because it supports your preferred double ${preferredDouble}.`;
   }
-  const singleScore = Number(trebleMatch[1]);
-  const left = finish - singleScore;
-  return `If ${expectedTarget} drops to S${singleScore}, ${left} left. Switch to safe setup route: ${route}.`;
+  return "Good route because it keeps a clean high-percentage finish path.";
+}
+
+function findNextFinish(
+  min: number,
+  max: number,
+  preferredDouble: UserSettings["preferredDouble"]
+): number {
+  for (let i = 0; i < 120; i += 1) {
+    const candidate = randomBetween(min, max);
+    const details = getCheckoutRouteDetails(candidate, preferredDouble);
+    const route = details ? pickPrimaryRoute(details.routes) : null;
+    if (route && isValidDartTarget(route.firstTarget)) {
+      return candidate;
+    }
+  }
+  return randomBetween(min, max);
 }
 
 export function QuickCheckoutPracticeScreen({
@@ -74,16 +84,33 @@ export function QuickCheckoutPracticeScreen({
   const [attemptStartedAt, setAttemptStartedAt] = useState<number>(0);
   const [secondsLeft, setSecondsLeft] = useState<number>(settings.defaultTimer);
   const [routeVisible, setRouteVisible] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  const [lastResult, setLastResult] = useState<CheckoutResult | null>(null);
   const [lastPick, setLastPick] = useState<string | null>(null);
-  const [expectedPick, setExpectedPick] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
     [selectedRange]
   );
-  const route = getRouteForFinish(finish, settings.preferredDouble);
+
+  const details = useMemo(
+    () => getCheckoutRouteDetails(finish, settings.preferredDouble),
+    [finish, settings.preferredDouble]
+  );
+  const primaryRoute = useMemo(
+    () => (details ? pickPrimaryRoute(details.routes) : null),
+    [details]
+  );
+  const alternativeRoute = useMemo(
+    () =>
+      details?.routes.find(
+        (item) =>
+          primaryRoute &&
+          item !== primaryRoute &&
+          item.label.toLowerCase().includes("alternative")
+      ) ?? null,
+    [details, primaryRoute]
+  );
+  const bestTarget = primaryRoute && isValidDartTarget(primaryRoute.firstTarget) ? primaryRoute.firstTarget : null;
 
   useEffect(() => {
     if (stage !== "attempt" || timerSeconds === 0) {
@@ -94,17 +121,21 @@ export function QuickCheckoutPracticeScreen({
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           window.clearInterval(timer);
-          const expected = firstTargetFromRoute(route.route);
-          setExpectedPick(expected ? normalizeToken(expected) : null);
-          setFeedback(
-            expected
-              ? `Time over. Best first target was ${normalizeToken(expected)}. ${whyGoodRoute(
-                  route.route,
-                  route.usedPreferredRoute,
-                  settings.preferredDouble
-                )}`
-              : "Time over."
-          );
+          const timedOutFeedback: FeedbackState = {
+            correct: false,
+            chosenTarget: "No target selected",
+            bestTarget: bestTarget ?? "No valid route yet.",
+            routeLabel: primaryRoute?.label ?? "Route",
+            route: primaryRoute?.route ?? [],
+            singleHitTarget: primaryRoute?.singleHitTarget,
+            remainingAfterSingle: primaryRoute?.remainingAfterSingle ?? 0,
+            followUpRoute: primaryRoute?.followUpRoute,
+            explanation: bestTarget
+              ? `Time over. ${routeExplanation(primaryRoute!, settings.preferredDouble)}`
+              : "No valid route yet.",
+            note: primaryRoute?.note
+          };
+          setFeedback(timedOutFeedback);
           setRouteVisible(true);
           completeAttempt("failed");
           return 0;
@@ -113,27 +144,19 @@ export function QuickCheckoutPracticeScreen({
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [stage, timerSeconds, route.route, route.usedPreferredRoute, settings.preferredDouble]);
-
-  useEffect(() => {
-    if (stage !== "feedback") {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      startNext();
-    }, 1800);
-    return () => window.clearTimeout(timer);
-  }, [stage]);
+  }, [stage, timerSeconds, bestTarget, primaryRoute, settings.preferredDouble]);
 
   const startNext = () => {
-    const nextFinish = randomBetween(selectedPreset.min, selectedPreset.max);
+    const nextFinish = findNextFinish(
+      selectedPreset.min,
+      selectedPreset.max,
+      settings.preferredDouble
+    );
     setFinish(nextFinish);
     setAttemptStartedAt(performance.now());
     setRouteVisible(false);
-    setFeedback("");
-    setLastResult(null);
     setLastPick(null);
-    setExpectedPick(null);
+    setFeedback(null);
     setSecondsLeft(timerSeconds);
     setStage("attempt");
   };
@@ -154,7 +177,6 @@ export function QuickCheckoutPracticeScreen({
     };
     onSaveAttempt(attempt);
     triggerHaptic(settings.vibrationFeedback);
-    setLastResult(result);
     setStage("feedback");
   };
 
@@ -162,31 +184,48 @@ export function QuickCheckoutPracticeScreen({
     if (stage !== "attempt") {
       return;
     }
-    const expected = firstTargetFromRoute(route.route);
-    if (!expected) {
+
+    const normalizedPick = normalizeToken(pickedTarget);
+    setLastPick(normalizedPick);
+    setRouteVisible(true);
+
+    if (!bestTarget || !primaryRoute) {
+      setFeedback({
+        correct: false,
+        chosenTarget: normalizedPick,
+        bestTarget: "No valid route yet.",
+        routeLabel: "Route",
+        route: [],
+        remainingAfterSingle: 0,
+        explanation: "No valid route yet.",
+        note: "No valid route yet."
+      });
       completeAttempt("failed");
       return;
     }
 
-    const normalizedPick = normalizeToken(pickedTarget);
-    const normalizedExpected = normalizeToken(expected);
-    const correct = normalizedPick === normalizedExpected;
-    const reason = whyGoodRoute(route.route, route.usedPreferredRoute, settings.preferredDouble);
-    const missPlan = missPlanForSingleMiss(finish, normalizedExpected, route.route);
-    const nextFeedback = correct
-      ? `Correct: ${normalizedPick}. ${reason}`
-      : `Wrong: ${normalizedPick}. Best was ${normalizedExpected}. ${reason} ${missPlan}`;
-
-    setLastPick(normalizedPick);
-    setExpectedPick(normalizedExpected);
-    setFeedback(nextFeedback);
-    setRouteVisible(true);
+    const normalizedBest = normalizeToken(bestTarget);
+    const correct = normalizedPick === normalizedBest;
+    setFeedback({
+      correct,
+      chosenTarget: normalizedPick,
+      bestTarget: normalizedBest,
+      routeLabel: primaryRoute.label,
+      route: primaryRoute.route,
+      singleHitTarget: primaryRoute.singleHitTarget,
+      remainingAfterSingle: primaryRoute.remainingAfterSingle,
+      followUpRoute: primaryRoute.followUpRoute,
+      explanation: correct
+        ? routeExplanation(primaryRoute, settings.preferredDouble)
+        : `Best first target is ${normalizedBest}. ${routeExplanation(primaryRoute, settings.preferredDouble)}`,
+      note: primaryRoute.note
+    });
     completeAttempt(correct ? "finished" : "failed");
   };
 
   return (
     <div className="screen">
-      <ScreenTitle title="Quick Checkout Practice" subtitle="Tap once per attempt." onBack={onBack} />
+      <ScreenTitle title="Quick Checkout Practice" subtitle="First-target mini game on the dartboard." onBack={onBack} />
 
       {stage === "setup" ? (
         <Card>
@@ -215,7 +254,7 @@ export function QuickCheckoutPracticeScreen({
       ) : null}
 
       {stage !== "setup" ? (
-        <Card className="practice-card">
+        <Card className="practice-card quick-practice-card">
           <div className="practice-header">
             <Pill tone="neutral">{selectedPreset.label}</Pill>
             <Pill tone="neutral">Preferred double: {settings.preferredDouble}</Pill>
@@ -238,17 +277,30 @@ export function QuickCheckoutPracticeScreen({
             </div>
           ) : null}
 
-          {routeVisible ? (
-            <div className="route-box">
-              <h4>Route hint</h4>
-              <p>{route.route}</p>
-              <p className="muted">{route.note}</p>
+          {routeVisible && primaryRoute ? (
+            <div className="route-box quick-route-box">
+              <h4>{primaryRoute.label}</h4>
+              <p>{formatRoute(primaryRoute.route)}</p>
+              {primaryRoute.singleHitTarget ? (
+                <p className="muted">
+                  If single hit: {primaryRoute.singleHitTarget} leaves {primaryRoute.remainingAfterSingle}
+                </p>
+              ) : null}
+              {primaryRoute.followUpRoute && primaryRoute.followUpRoute.length > 0 ? (
+                <p className="muted">Follow-up: {formatRoute(primaryRoute.followUpRoute)}</p>
+              ) : null}
+              {alternativeRoute ? (
+                <p className="muted">
+                  Alternative route: {formatRoute(alternativeRoute.route)}
+                </p>
+              ) : null}
+              {primaryRoute.note ? <p className="muted">{primaryRoute.note}</p> : null}
             </div>
           ) : null}
 
-          <p className="muted">Tap the board for your first target choice.</p>
+          <p className="muted">Tap the board once for your first target.</p>
           <Dartboard
-            route={route.route}
+            route={primaryRoute ? primaryRoute.route.join(", ") : ""}
             reveal={routeVisible || stage === "feedback"}
             onTargetSelect={handleBoardPick}
             selectedTarget={lastPick}
@@ -263,12 +315,38 @@ export function QuickCheckoutPracticeScreen({
             </div>
           ) : null}
 
-          {stage === "feedback" ? (
-            <div className="feedback-box">
-              <h4>{lastResult === "finished" ? "Correct" : "Wrong"}</h4>
-              <p>{feedback}</p>
-              {expectedPick ? <p className="muted">Best first target: {expectedPick}</p> : null}
-              <p className="muted">Moving to next checkout…</p>
+          {stage === "feedback" && feedback ? (
+            <div className="feedback-box quick-feedback-box">
+              <h4>{feedback.correct ? "Correct" : "Wrong"}</h4>
+              <p>You chose {feedback.chosenTarget}.</p>
+              <p>
+                <span className="muted">Best first target:</span> {feedback.bestTarget}
+              </p>
+              {feedback.route.length > 0 ? (
+                <p>
+                  <span className="muted">{feedback.routeLabel}:</span> {formatRoute(feedback.route)}
+                </p>
+              ) : (
+                <p className="warn-text">No valid route yet.</p>
+              )}
+              {feedback.singleHitTarget ? (
+                <p>
+                  <span className="muted">If single hit:</span> {feedback.singleHitTarget} leaves{" "}
+                  {feedback.remainingAfterSingle}
+                </p>
+              ) : null}
+              {feedback.followUpRoute && feedback.followUpRoute.length > 0 ? (
+                <p>
+                  <span className="muted">Follow-up:</span> {formatRoute(feedback.followUpRoute)}
+                </p>
+              ) : null}
+              <p className="muted">{feedback.explanation}</p>
+              {feedback.note ? <p className="muted">{feedback.note}</p> : null}
+              <div className="top-gap">
+                <Button full onClick={startNext}>
+                  Next checkout
+                </Button>
+              </div>
             </div>
           ) : null}
         </Card>
