@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   preferredDouble: "D16",
   defaultTimer: 0,
   themeMode: "dark",
+  languageMode: "en",
   vibrationFeedback: false,
   throwPace: {
     mode: "not_set",

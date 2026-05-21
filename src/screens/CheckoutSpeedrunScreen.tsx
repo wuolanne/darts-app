@@ -22,6 +22,7 @@ import {
 } from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
+import { useI18n } from "../i18n";
 
 interface RunningState {
   list: number[];
@@ -65,6 +66,7 @@ export function CheckoutSpeedrunScreen({
   previousSessions: CheckoutSpeedrunSession[];
   settings: UserSettings;
 }) {
+  const { t } = useI18n();
   const [preset, setPreset] = useState<CheckoutRangeKey>("61-70");
   const [customStart, setCustomStart] = useState("61");
   const [customEnd, setCustomEnd] = useState("70");
@@ -250,11 +252,11 @@ export function CheckoutSpeedrunScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Checkout Timed Run" subtitle="Complete selected checkouts as fast as possible." onBack={onBack} />
+      <ScreenTitle title={t.checkoutTimedRun.title} subtitle={t.checkoutTimedRun.subtitle} onBack={onBack} />
 
       {!running && !result ? (
         <Card>
-          <h3>Setup</h3>
+          <h3>{t.checkoutTimedRun.setup}</h3>
           <Segmented
             value={preset}
             options={CHECKOUT_RANGE_PRESETS.map((option) => ({ label: option.label, value: option.key }))}
@@ -282,19 +284,19 @@ export function CheckoutSpeedrunScreen({
             <p className="warn-text top-gap">Custom range must be 61-170 and From must be less than or equal to To.</p>
           ) : null}
           <div className="top-gap">
-            <label>Order</label>
+            <label>{t.checkoutTimedRun.order}</label>
             <Segmented
               value={order}
               options={[
-                { label: "Sequential", value: "sequential" },
-                { label: "Random", value: "random" }
+                { label: t.checkoutTimedRun.sequential, value: "sequential" },
+                { label: t.checkoutTimedRun.random, value: "random" }
               ]}
               onChange={setOrder}
             />
           </div>
           <div className="top-gap">
             <Button full onClick={start} disabled={preset === "custom" && !customRange}>
-              Start timed run
+              {t.checkoutTimedRun.startTimedRun}
             </Button>
           </div>
         </Card>
@@ -308,21 +310,21 @@ export function CheckoutSpeedrunScreen({
               {running.index + 1}/{running.list.length}
             </Pill>
           </div>
-          <p className="big-number">Checkout: {currentCheckout}</p>
+          <p className="big-number">{`${t.checkoutTimedRun.currentCheckout}: ${currentCheckout}`}</p>
           <div className="metric-grid">
             <div>
-              <p className="muted">Total time</p>
+              <p className="muted">{t.checkoutTimedRun.totalTime}</p>
               <strong>{formatClock(activeTotalSeconds)}</strong>
             </div>
             <div>
-              <p className="muted">Current checkout</p>
+              <p className="muted">{t.checkoutTimedRun.currentCheckout}</p>
               <strong>{formatPracticeDuration(currentCheckoutSeconds)}</strong>
             </div>
           </div>
 
           {showRoute && primaryRoute ? (
             <div className="route-box">
-              <h4>Route</h4>
+              <h4>{t.checkoutTimedRun.route}</h4>
               <p className="route-compact-line">
                 <span className="muted">Optimal:</span> <strong>{formatRoute(primaryRoute.route)}</strong>
               </p>
@@ -347,15 +349,15 @@ export function CheckoutSpeedrunScreen({
               READY
             </Button>
             <Button variant="secondary" onClick={togglePause}>
-              {running.pauseStartedAt ? "RESUME" : "PAUSE"}
+              {running.pauseStartedAt ? "RESUME" : t.common.pause.toUpperCase()}
             </Button>
             <Button variant="danger" onClick={endRun}>
-              END RUN
+              {t.checkoutTimedRun.endRun.toUpperCase()}
             </Button>
           </div>
           <div className="top-gap">
             <Button variant="ghost" onClick={() => setShowRoute((prev) => !prev)}>
-              {showRoute ? "HIDE ROUTE" : "SHOW ROUTE"}
+              {showRoute ? t.checkoutTimedRun.hideRoute.toUpperCase() : t.checkoutTimedRun.showRoute.toUpperCase()}
             </Button>
           </div>
         </Card>
@@ -363,22 +365,22 @@ export function CheckoutSpeedrunScreen({
 
       {result ? (
         <Card>
-          <h3>Result</h3>
+          <h3>{t.checkoutTimedRun.result}</h3>
           <p className="big-number">{formatPracticeDuration(result.totalActiveSeconds)}</p>
           <p className="muted">
             Completed: {result.entries.filter((entry) => entry.result === "finished").length} /{" "}
             {running ? running.list.length : result.rangeEnd - result.rangeStart + 1}
           </p>
-          <p className="muted">Success rate: {getSuccessRate(result.entries).toFixed(1)}%</p>
-          <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
+          <p className="muted">{t.checkoutTimedRun.successRate}: {getSuccessRate(result.entries).toFixed(1)}%</p>
+          <p className="muted">{t.checkoutTimedRun.pauseTime}: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
-              Fastest checkout: {resultFastest.checkout} ({formatPracticeDuration(resultFastest.seconds)})
+              {t.checkoutTimedRun.fastestCheckout}: {resultFastest.checkout} ({formatPracticeDuration(resultFastest.seconds)})
             </p>
           ) : null}
           {resultSlowest ? (
             <p className="muted">
-              Slowest checkout: {resultSlowest.checkout} ({formatPracticeDuration(resultSlowest.seconds)})
+              {t.checkoutTimedRun.slowestCheckout}: {resultSlowest.checkout} ({formatPracticeDuration(resultSlowest.seconds)})
             </p>
           ) : null}
           {pbDelta !== null ? (
@@ -398,7 +400,7 @@ export function CheckoutSpeedrunScreen({
           </div>
           <div className="top-gap">
             <Button full onClick={() => setResult(null)}>
-              New timed run
+              {t.checkoutTimedRun.newTimedRun}
             </Button>
           </div>
         </Card>

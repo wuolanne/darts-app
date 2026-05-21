@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useI18n } from "../i18n";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`card ${className}`.trim()}>{children}</section>;
@@ -75,11 +76,13 @@ export function ScreenTitle({
   subtitle?: string;
   onBack?: () => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <header className="screen-head">
       {onBack ? (
         <button className="link-btn" onClick={onBack} type="button">
-          ← Back
+          {`← ${t.common.back}`}
         </button>
       ) : (
         <span className="screen-head-spacer" />

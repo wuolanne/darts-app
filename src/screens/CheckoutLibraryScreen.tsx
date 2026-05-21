@@ -5,6 +5,7 @@ import {
   CheckoutRouteOption,
   getCheckoutRouteDetails
 } from "../utils/checkoutLibrary";
+import { useI18n } from "../i18n";
 
 const RANGES = [
   { label: "60-80", min: 60, max: 80 },
@@ -18,7 +19,7 @@ function formatRoute(route: string[]): string {
   return route.join(" \u2192 ");
 }
 
-function RouteDetail({ option }: { option: CheckoutRouteOption }) {
+function RouteDetail({ option, labels }: { option: CheckoutRouteOption; labels: { main: string; note: string; singleHit: string; preferredRoute: string } }) {
   const mainLine = formatRoute(option.route);
   const continuationLine =
     option.singleHitTarget && option.followUpRoute && option.followUpRoute.length > 0
@@ -31,19 +32,19 @@ function RouteDetail({ option }: { option: CheckoutRouteOption }) {
     <div className="route-teach-card">
       <div className="route-teach-head">
         <strong>{option.label}</strong>
-        {option.preferredDouble ? <Pill tone="success">Preferred double route</Pill> : null}
+        {option.preferredDouble ? <Pill tone="success">{labels.preferredRoute}</Pill> : null}
       </div>
       <p className="route-compact-line">
-        <span className="muted">Main:</span> <strong>{mainLine}</strong>
+        <span className="muted">{labels.main}:</span> <strong>{mainLine}</strong>
       </p>
       {continuationLine ? (
         <p className="route-compact-line">
-          <span className="muted">If:</span> <strong>{continuationLine}</strong>
+          <span className="muted">{labels.singleHit}:</span> <strong>{continuationLine}</strong>
         </p>
       ) : null}
       {option.note ? (
         <p className="route-compact-line">
-          <span className="muted">Note:</span> {option.note}
+          <span className="muted">{labels.note}:</span> {option.note}
         </p>
       ) : null}
     </div>
@@ -57,6 +58,7 @@ export function CheckoutLibraryScreen({
   onBack: () => void;
   preferredDouble: PreferredDouble;
 }) {
+  const { t } = useI18n();
   const [selectedFinish, setSelectedFinish] = useState<number | null>(null);
   const detail = useMemo(() => {
     if (selectedFinish === null) {
@@ -68,8 +70,8 @@ export function CheckoutLibraryScreen({
   return (
     <div className="screen">
       <ScreenTitle
-        title="Checkout Library"
-        subtitle={`All finishes 60-170. Preferred double: ${preferredDouble}`}
+        title={t.checkoutLibrary.title}
+        subtitle={`${t.checkoutLibrary.subtitle}: ${preferredDouble}`}
         onBack={onBack}
       />
 
@@ -97,7 +99,7 @@ export function CheckoutLibraryScreen({
           selectedFinish >= range.min &&
           selectedFinish <= range.max ? (
             <div className="finish-inline-detail">
-              <h4>Finish {selectedFinish}</h4>
+              <h4>{t.checkoutLibrary.finish} {selectedFinish}</h4>
               {detail?.isBogey ? (
                 <div className="route-teach-card">
                   <p className="warn-text">{detail.note ?? "Bogey number - cannot be finished in three darts."}</p>
@@ -105,12 +107,21 @@ export function CheckoutLibraryScreen({
               ) : detail ? (
                 <>
                   {detail.routes.map((option, idx) => (
-                    <RouteDetail key={`${selectedFinish}-${option.label}-${idx}`} option={option} />
+                    <RouteDetail
+                      key={`${selectedFinish}-${option.label}-${idx}`}
+                      option={option}
+                      labels={{
+                        main: t.checkoutLibrary.main,
+                        note: t.checkoutLibrary.note,
+                        singleHit: t.checkoutLibrary.singleHit,
+                        preferredRoute: "Preferred double route"
+                      }}
+                    />
                   ))}
                 </>
               ) : (
                 <div className="route-teach-card">
-                  <p className="warn-text">No detailed route yet.</p>
+                  <p className="warn-text">{t.checkoutLibrary.noDetailedRoute}</p>
                 </div>
               )}
             </div>

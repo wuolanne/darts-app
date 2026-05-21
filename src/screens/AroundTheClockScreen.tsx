@@ -5,6 +5,7 @@ import { estimateDartsFromActiveTime } from "../utils/pace";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, formatSeconds, toRoundedSeconds } from "../utils/time";
 import { readJson, writeJson } from "../storage/localStorage";
+import { useI18n } from "../i18n";
 
 interface RunningState {
   mode: AroundClockMode;
@@ -104,6 +105,7 @@ export function AroundTheClockScreen({
   previousSessions: AroundClockSession[];
   settings: UserSettings;
 }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<AroundClockMode>("singles");
   const [doubleRequirement, setDoubleRequirement] = useState<1 | 2>(1);
   const [fullSectorOrder, setFullSectorOrder] = useState<FullSectorOrder>("start_with_bull");
@@ -276,20 +278,20 @@ export function AroundTheClockScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Around the Clock" subtitle="One tap only when target/sector is complete." onBack={onBack} />
+      <ScreenTitle title={t.aroundClock.title} subtitle={t.aroundClock.subtitle} onBack={onBack} />
 
       {!running && !result ? (
         <Card>
-          <h3>Setup</h3>
+          <h3>{t.aroundClock.setup}</h3>
           <Segmented
             value={mode}
             options={[
-              { label: "Singles", value: "singles" },
-              { label: "Doubles", value: "doubles" },
-              { label: "Trebles", value: "trebles" },
-              { label: "Common Doubles", value: "common_doubles" },
-              { label: "Custom", value: "custom" },
-              { label: "Full Sector", value: "full_sector" }
+              { label: t.aroundClock.singles, value: "singles" },
+              { label: t.aroundClock.doubles, value: "doubles" },
+              { label: t.aroundClock.trebles, value: "trebles" },
+              { label: t.aroundClock.commonDoubles, value: "common_doubles" },
+              { label: t.aroundClock.custom, value: "custom" },
+              { label: t.aroundClock.fullSector, value: "full_sector" }
             ]}
             onChange={setMode}
           />
@@ -397,12 +399,12 @@ export function AroundTheClockScreen({
           ) : null}
           {mode === "full_sector" ? (
             <div className="top-gap">
-              <label>Full Sector order</label>
+              <label>{t.aroundClock.fullSectorOrder}</label>
               <Segmented
                 value={fullSectorOrder}
                 options={[
-                  { label: "Start with Bull", value: "start_with_bull" },
-                  { label: "End with Bull", value: "end_with_bull" }
+                  { label: t.aroundClock.startWithBull, value: "start_with_bull" },
+                  { label: t.aroundClock.endWithBull, value: "end_with_bull" }
                 ]}
                 onChange={(value) => setFullSectorOrder(value as FullSectorOrder)}
               />
@@ -428,7 +430,7 @@ export function AroundTheClockScreen({
           ) : null}
           <div className="top-gap">
             <Button full onClick={start} disabled={!canStart}>
-              Start mode
+              {t.aroundClock.startMode}
             </Button>
           </div>
         </Card>
@@ -456,19 +458,19 @@ export function AroundTheClockScreen({
               <strong>{formatClock(activeTotalSeconds)}</strong>
             </div>
             <div>
-              <p className="muted">Current target</p>
+              <p className="muted">{t.aroundClock.currentTarget}</p>
               <strong>{formatSeconds(activeTargetSeconds)}</strong>
             </div>
           </div>
           <div className="action-grid">
             <Button variant="success" onClick={done}>
-              {running.mode === "full_sector" ? "SECTOR DONE" : "TARGET DONE"}
+              {running.mode === "full_sector" ? t.aroundClock.sectorDone.toUpperCase() : t.aroundClock.targetDone.toUpperCase()}
             </Button>
             <Button variant="secondary" onClick={togglePause}>
-              {running.pauseStartedAt ? "RESUME" : "PAUSE"}
+              {running.pauseStartedAt ? "RESUME" : t.common.pause.toUpperCase()}
             </Button>
             <Button variant="secondary" onClick={undo}>
-              UNDO
+              {t.common.undo.toUpperCase()}
             </Button>
           </div>
         </Card>
@@ -476,22 +478,22 @@ export function AroundTheClockScreen({
 
       {result ? (
         <Card>
-          <h3>Result</h3>
+          <h3>{t.aroundClock.result}</h3>
           <p className="big-number">{formatClock(result.totalActiveSeconds)}</p>
-          <p className="muted">Active time: {formatClock(result.totalActiveSeconds)}</p>
+          <p className="muted">{t.aroundClock.activeTime}: {formatClock(result.totalActiveSeconds)}</p>
           <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
-              Fastest: {resultFastest.target} ({formatSeconds(resultFastest.seconds)})
+              {t.aroundClock.fastest}: {resultFastest.target} ({formatSeconds(resultFastest.seconds)})
             </p>
           ) : null}
           {resultSlowest ? (
             <p className="muted">
-              Slowest: {resultSlowest.target} ({formatSeconds(resultSlowest.seconds)})
+              {t.aroundClock.slowest}: {resultSlowest.target} ({formatSeconds(resultSlowest.seconds)})
             </p>
           ) : null}
           {resultAverage !== null ? (
-            <p className="muted">Average target/sector time: {formatSeconds(resultAverage)}</p>
+            <p className="muted">{t.aroundClock.averageTargetTime}: {formatSeconds(resultAverage)}</p>
           ) : null}
           {estimated !== null ? (
             <p className="muted">
@@ -515,7 +517,7 @@ export function AroundTheClockScreen({
           </div>
           <div className="top-gap">
             <Button full onClick={() => setResult(null)}>
-              New session
+              {t.aroundClock.newSession}
             </Button>
           </div>
         </Card>

@@ -1,4 +1,5 @@
 export type ThemeMode = "dark" | "light" | "dim" | "system";
+export type AppLanguageMode = "en" | "fi" | "system";
 export type PreferredDouble = "D16" | "D20" | "D18" | "D12" | "Not sure";
 export type TimerOption = 0 | 10 | 20 | 30;
 export type ThrowPaceMode = "not_set" | "manual" | "calibrated";
@@ -13,6 +14,7 @@ export interface UserSettings {
   preferredDouble: PreferredDouble;
   defaultTimer: TimerOption;
   themeMode: ThemeMode;
+  languageMode: AppLanguageMode;
   vibrationFeedback: boolean;
   throwPace: ThrowPaceSetting;
 }

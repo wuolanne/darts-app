@@ -1,49 +1,51 @@
 import { AppScreen } from "../types/models";
 import { Card, ScreenTitle } from "../components/ui";
-
-const items: { title: string; screen: AppScreen; description: string; active: boolean }[] = [
-  {
-    title: "Quick Checkout Practice",
-    screen: "quick-checkout",
-    description: "Low-input checkout reps with fast feedback.",
-    active: true
-  },
-  {
-    title: "Checkout Timed Run",
-    screen: "speedrun",
-    description: "Complete a checkout range as fast as possible.",
-    active: true
-  },
-  {
-    title: "Around the Clock",
-    screen: "around-clock",
-    description: "Timed sectors and targets with minimal taps.",
-    active: true
-  },
-  {
-    title: "Checkout Library",
-    screen: "checkout-library",
-    description: "Route reference table (light MVP version).",
-    active: true
-  },
-  {
-    title: "Stats",
-    screen: "stats",
-    description: "7d / 30d / total practice insights.",
-    active: true
-  },
-  {
-    title: "Settings",
-    screen: "settings",
-    description: "Preferred double, timer, theme, throw pace.",
-    active: true
-  }
-];
+import { useI18n } from "../i18n";
 
 export function HomeScreen({ onNavigate }: { onNavigate: (screen: AppScreen) => void }) {
+  const { t } = useI18n();
+  const items: { title: string; screen: AppScreen; description: string; active: boolean }[] = [
+    {
+      title: t.stats.quickCheckoutPractice,
+      screen: "quick-checkout",
+      description: t.home.quickCheckoutDescription,
+      active: true
+    },
+    {
+      title: t.stats.checkoutTimedRun,
+      screen: "speedrun",
+      description: t.home.timedRunDescription,
+      active: true
+    },
+    {
+      title: t.stats.aroundTheClock,
+      screen: "around-clock",
+      description: t.home.aroundDescription,
+      active: true
+    },
+    {
+      title: t.checkoutLibrary.title,
+      screen: "checkout-library",
+      description: t.home.libraryDescription,
+      active: true
+    },
+    {
+      title: t.stats.title,
+      screen: "stats",
+      description: t.home.statsDescription,
+      active: true
+    },
+    {
+      title: t.settings.title,
+      screen: "settings",
+      description: t.home.settingsDescription,
+      active: true
+    }
+  ];
+
   return (
     <div className="screen">
-      <ScreenTitle title="Darts Practice" subtitle="Low-input practice modes for daily reps." />
+      <ScreenTitle title={t.home.title} subtitle={t.home.subtitle} />
       <div className="card-grid">
         {items.map((item) => (
           <button

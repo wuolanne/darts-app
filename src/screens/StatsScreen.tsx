@@ -3,6 +3,7 @@ import { AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, StatsRang
 import { Card, ScreenTitle, Segmented } from "../components/ui";
 import { getAroundClockStats, getCheckoutStats, getSpeedrunStats } from "../utils/stats";
 import { formatClock, formatSeconds } from "../utils/time";
+import { useI18n } from "../i18n";
 
 function CompactRow({
   left,
@@ -38,6 +39,7 @@ export function StatsScreen({
   speedruns: CheckoutSpeedrunSession[];
   aroundSessions: AroundClockSession[];
 }) {
+  const { t } = useI18n();
   const [range, setRange] = React.useState<StatsRange>("7d");
 
   const checkout = getCheckoutStats(checkoutAttempts, range);
@@ -46,7 +48,7 @@ export function StatsScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Stats" subtitle="Compact local insights by training mode." onBack={onBack} />
+      <ScreenTitle title={t.stats.title} subtitle={t.stats.subtitle} onBack={onBack} />
       <Card>
         <Segmented
           value={range}
@@ -60,14 +62,14 @@ export function StatsScreen({
       </Card>
 
       <Card>
-        <h3>Quick Checkout Practice</h3>
-        {checkout.attemptsCount === 0 ? <p className="muted">No attempts yet.</p> : null}
+        <h3>{t.stats.quickCheckoutPractice}</h3>
+        {checkout.attemptsCount === 0 ? <p className="muted">{t.stats.noAttempts}</p> : null}
         {checkout.attemptsCount > 0 ? (
           <>
             <details className="stats-subsection" open>
-              <summary>Overall</summary>
-              <CompactRow left="Attempts" right={checkout.attemptsCount} />
-              <CompactRow left="Success rate" right={`${checkout.successRate.toFixed(1)}%`} />
+              <summary>{t.stats.overall}</summary>
+              <CompactRow left={t.stats.attempts} right={checkout.attemptsCount} />
+              <CompactRow left={t.stats.successRate} right={`${checkout.successRate.toFixed(1)}%`} />
               <CompactRow left="Wrong rate" right={`${checkout.wrongRate.toFixed(1)}%`} />
               <CompactRow left="Bust rate" right={`${checkout.bustRate.toFixed(1)}%`} />
               <CompactRow
@@ -81,8 +83,8 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection" open>
-              <summary>By range</summary>
-              {checkout.byRange.length === 0 ? <p className="muted">Not enough data yet.</p> : null}
+              <summary>{t.stats.byRange}</summary>
+              {checkout.byRange.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {checkout.byRange.map((row) => (
                 <CompactRow
                   key={row.rangeLabel}
@@ -94,8 +96,8 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection">
-              <summary>Best finishes</summary>
-              {checkout.bestFinishes.length === 0 ? <p className="muted">Not enough data yet.</p> : null}
+              <summary>{t.stats.bestFinishes}</summary>
+              {checkout.bestFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {checkout.bestFinishes.map((row) => (
                 <CompactRow
                   key={`best-${row.finish}`}
@@ -107,8 +109,8 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection">
-              <summary>Problem finishes</summary>
-              {checkout.problemFinishes.length === 0 ? <p className="muted">Not enough data yet.</p> : null}
+              <summary>{t.stats.problemFinishes}</summary>
+              {checkout.problemFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {checkout.problemFinishes.map((row) => (
                 <CompactRow
                   key={`problem-${row.finish}`}
@@ -122,7 +124,7 @@ export function StatsScreen({
             {!checkout.hasFirstTargetData ? (
               <details className="stats-subsection">
                 <summary>By first target / route</summary>
-                <p className="muted">Not enough data yet.</p>
+                <p className="muted">{t.common.noDataYet}</p>
               </details>
             ) : null}
           </>
@@ -130,13 +132,13 @@ export function StatsScreen({
       </Card>
 
       <Card>
-        <h3>Checkout Timed Run</h3>
-        {speedrun.sessions === 0 ? <p className="muted">No sessions yet.</p> : null}
+        <h3>{t.stats.checkoutTimedRun}</h3>
+        {speedrun.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
         {speedrun.sessions > 0 ? (
           <>
             <details className="stats-subsection" open>
-              <summary>Overall</summary>
-              <CompactRow left="Sessions" right={speedrun.sessions} />
+              <summary>{t.stats.overall}</summary>
+              <CompactRow left={t.stats.sessions} right={speedrun.sessions} />
               <CompactRow
                 left="Best total time"
                 right={speedrun.overallBestTime !== null ? formatClock(speedrun.overallBestTime) : "Not enough data yet"}
@@ -157,7 +159,7 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection" open>
-              <summary>By range</summary>
+              <summary>{t.stats.byRange}</summary>
               {speedrun.byRange.map((row) => (
                 <CompactRow
                   key={row.rangeLabel}
@@ -169,8 +171,8 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection">
-              <summary>By finish</summary>
-              {speedrun.byFinish.length === 0 ? <p className="muted">Not enough data yet.</p> : null}
+              <summary>{t.stats.byFinish}</summary>
+              {speedrun.byFinish.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {speedrun.byFinish.slice(0, 10).map((row) => (
                 <CompactRow
                   key={`speedrun-finish-${row.finish}`}
@@ -219,7 +221,7 @@ export function StatsScreen({
 
             <details className="stats-subsection">
               <summary>Best runs</summary>
-              {speedrun.bestRuns.length === 0 ? <p className="muted">No sessions yet.</p> : null}
+              {speedrun.bestRuns.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
               {speedrun.bestRuns.map((run) => (
                 <CompactRow
                   key={run.id}
@@ -234,13 +236,13 @@ export function StatsScreen({
       </Card>
 
       <Card>
-        <h3>Around the Clock</h3>
-        {around.sessions === 0 ? <p className="muted">No sessions yet.</p> : null}
+        <h3>{t.stats.aroundTheClock}</h3>
+        {around.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
         {around.sessions > 0 ? (
           <>
             <details className="stats-subsection" open>
-              <summary>Overall</summary>
-              <CompactRow left="Sessions" right={around.sessions} />
+              <summary>{t.stats.overall}</summary>
+              <CompactRow left={t.stats.sessions} right={around.sessions} />
               <CompactRow
                 left="Best total time"
                 right={around.bestTotalTime !== null ? formatClock(around.bestTotalTime) : "Not enough data yet"}
@@ -260,7 +262,7 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection" open>
-              <summary>By mode</summary>
+              <summary>{t.stats.byMode}</summary>
               {around.byMode.map((row) => (
                 <CompactRow
                   key={row.mode}
@@ -272,8 +274,8 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection">
-              <summary>By target / sector</summary>
-              {around.byTarget.length === 0 ? <p className="muted">Not enough data yet.</p> : null}
+              <summary>{t.stats.byTargetSector}</summary>
+              {around.byTarget.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {around.byTarget.slice(0, 18).map((row) => (
                 <CompactRow
                   key={`target-${row.key}`}
@@ -285,7 +287,7 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection" open>
-              <summary>Fastest & slowest</summary>
+              <summary>{t.stats.fastestSlowest}</summary>
               <CompactRow
                 left="Fastest target/sector"
                 middle={around.fastest?.key ?? "-"}

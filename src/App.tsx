@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "./theme/ThemeContext";
+import { I18nProvider } from "./i18n";
 import { HomeScreen } from "./screens/HomeScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { QuickCheckoutPracticeScreen } from "./screens/QuickCheckoutPracticeScreen";
@@ -128,21 +129,23 @@ export default function App() {
   }, [settings]);
 
   return (
-    <ThemeProvider requestedMode={settings.themeMode}>
-      <main className="app-shell">
-        <AppBody
-          screen={screen}
-          setScreen={setScreen}
-          settings={settings}
-          setSettings={setSettings}
-          checkoutAttempts={checkoutAttempts}
-          setCheckoutAttempts={setCheckoutAttempts}
-          speedruns={speedruns}
-          setSpeedruns={setSpeedruns}
-          aroundSessions={aroundSessions}
-          setAroundSessions={setAroundSessions}
-        />
-      </main>
-    </ThemeProvider>
+    <I18nProvider requestedLanguage={settings.languageMode}>
+      <ThemeProvider requestedMode={settings.themeMode}>
+        <main className="app-shell">
+          <AppBody
+            screen={screen}
+            setScreen={setScreen}
+            settings={settings}
+            setSettings={setSettings}
+            checkoutAttempts={checkoutAttempts}
+            setCheckoutAttempts={setCheckoutAttempts}
+            speedruns={speedruns}
+            setSpeedruns={setSpeedruns}
+            aroundSessions={aroundSessions}
+            setAroundSessions={setAroundSessions}
+          />
+        </main>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

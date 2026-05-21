@@ -21,6 +21,7 @@ import {
 } from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
+import { useI18n } from "../i18n";
 
 type Stage = "setup" | "playing";
 
@@ -158,6 +159,7 @@ export function QuickCheckoutPracticeScreen({
   onBack: () => void;
   onSaveAttempt: (attempt: CheckoutAttempt) => void;
 }) {
+  const { t } = useI18n();
   const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-70");
   const [practiceMode, setPracticeMode] = useState<PracticeMode>("main-route");
   const [customStart, setCustomStart] = useState("61");
@@ -253,8 +255,8 @@ export function QuickCheckoutPracticeScreen({
           setCompleted(true);
           setFeedback({
             tone: "wrong",
-            title: "Time up",
-            body: "The timer ended before checkout completion."
+            title: t.common.timeUp,
+            body: t.quickCheckout.timerEnded
           });
           return 0;
         }
@@ -340,7 +342,7 @@ export function QuickCheckoutPracticeScreen({
         setFeedback({
           tone: "info",
           title: "No scenario data",
-          body: "No valid single-miss scenarios for this range yet."
+          body: t.quickCheckout.noScenarioInRange
         });
         return;
       }
@@ -356,8 +358,8 @@ export function QuickCheckoutPracticeScreen({
     if (nextFinish === null) {
       setFeedback({
         tone: "info",
-        title: "No route data",
-        body: "No detailed route yet for this range. Pick another range for now."
+        title: t.quickCheckout.noRouteData,
+        body: t.quickCheckout.noDetailedRouteInRange
       });
       return;
     }
@@ -374,8 +376,8 @@ export function QuickCheckoutPracticeScreen({
       if (!scenario) {
         setFeedback({
           tone: "info",
-          title: "No scenario data",
-          body: "No valid single-miss scenarios for this range yet."
+          title: t.quickCheckout.noScenarioData,
+          body: t.quickCheckout.noScenarioInRange
         });
         return;
       }
@@ -391,8 +393,8 @@ export function QuickCheckoutPracticeScreen({
     if (nextFinish === null) {
       setFeedback({
         tone: "info",
-        title: "No route data",
-        body: "No detailed route yet for this range. Pick another range for now."
+        title: t.quickCheckout.noRouteData,
+        body: t.quickCheckout.noDetailedRouteInRange
       });
       return;
     }
@@ -446,7 +448,7 @@ export function QuickCheckoutPracticeScreen({
           saveAttempt("failed");
           setFeedback({
             tone: "wrong",
-            title: "No continuation",
+            title: t.quickCheckout.noScenarioData,
             body: `You hit ${singleHitTarget}. ${continuation?.remaining} left, but no detailed follow-up exists yet.`
           });
         }
@@ -459,10 +461,10 @@ export function QuickCheckoutPracticeScreen({
       setCompleted(true);
       setFeedback({
         tone: "wrong",
-        title: "Wrong",
+        title: t.common.wrong,
         body: missScenario
           ? `Wrong continuation for ${missScenario.remaining} left.`
-          : "That pick does not match the hidden route."
+          : t.quickCheckout.wrongHiddenRoute
       });
       return;
     }
@@ -478,7 +480,7 @@ export function QuickCheckoutPracticeScreen({
       triggerHaptic(settings.vibrationFeedback);
       setFeedback({
         tone: "complete",
-        title: "Correct",
+        title: t.common.correct,
         body: missScenario
           ? `Correct continuation for ${missScenario.remaining} left.`
           : "Correct hidden route."
@@ -496,12 +498,12 @@ export function QuickCheckoutPracticeScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Quick Checkout Practice" subtitle="Learning mode: tap the board target-by-target." onBack={onBack} />
+      <ScreenTitle title={t.quickCheckout.title} subtitle={t.quickCheckout.subtitle} onBack={onBack} />
 
       {stage === "setup" ? (
         <Card>
-          <h3>Setup</h3>
-          <p className="muted">Range</p>
+          <h3>{t.quickCheckout.setup}</h3>
+          <p className="muted">{t.quickCheckout.range}</p>
           <Segmented
             value={selectedRange}
             options={CHECKOUT_RANGE_PRESETS.map((preset) => ({ label: preset.label, value: preset.key }))}
@@ -526,9 +528,9 @@ export function QuickCheckoutPracticeScreen({
             </div>
           ) : null}
           {selectedRange === "custom" && !customRange ? (
-            <p className="warn-text top-gap">Custom range must be 61-170 and From must be less than or equal to To.</p>
+            <p className="warn-text top-gap">{t.quickCheckout.customRangeError}</p>
           ) : null}
-          <p className="muted top-gap">Timer</p>
+          <p className="muted top-gap">{t.quickCheckout.timer}</p>
           <Segmented
             value={timerSeconds}
             options={TIMER_OPTIONS.map((option) => ({
@@ -537,18 +539,18 @@ export function QuickCheckoutPracticeScreen({
             }))}
             onChange={setTimerSeconds}
           />
-          <p className="muted top-gap">Mode</p>
+          <p className="muted top-gap">{t.quickCheckout.mode}</p>
           <Segmented
             value={practiceMode}
             options={[
-              { label: "Main route", value: "main-route" },
-              { label: "Single miss scenarios", value: "single-miss-scenario" }
+              { label: t.quickCheckout.mainRoute, value: "main-route" },
+              { label: t.quickCheckout.singleMissScenarios, value: "single-miss-scenario" }
             ]}
             onChange={(value) => setPracticeMode(value as PracticeMode)}
           />
-          <p className="muted top-gap">Playable finishes in this range: {playableCountForMode}</p>
+          <p className="muted top-gap">{t.quickCheckout.playableFinishes}: {playableCountForMode}</p>
           {practiceMode === "single-miss-scenario" ? (
-            <p className="muted">Available scenarios: {missScenarios.length}</p>
+            <p className="muted">{t.quickCheckout.availableScenarios}: {missScenarios.length}</p>
           ) : null}
           <div className="top-gap">
             <Button
@@ -560,7 +562,7 @@ export function QuickCheckoutPracticeScreen({
                 (selectedRange === "custom" && !customRange)
               }
             >
-              Start practice
+              {t.quickCheckout.startPractice}
             </Button>
           </div>
           {feedback?.tone === "info" ? <p className="warn-text top-gap">{feedback.body}</p> : null}
@@ -574,20 +576,20 @@ export function QuickCheckoutPracticeScreen({
             <Pill tone="neutral">Preferred double: {settings.preferredDouble}</Pill>
           </div>
 
-          <p className="big-number">Finish: {finish}</p>
+          <p className="big-number">{t.quickCheckout.finish}: {finish}</p>
           {practiceMode === "single-miss-scenario" && missScenario ? (
             <>
               <p>
                 Tried {missScenario.triedTreble}, hit {missScenario.hitSingle}.
               </p>
-              <p>{missScenario.remaining} left. Choose the continuation.</p>
+              <p>{missScenario.remaining} left. {t.quickCheckout.chooseContinuation}</p>
             </>
           ) : null}
           <p>
-            <span className="muted">Current remaining:</span> {remaining}
+            <span className="muted">{t.quickCheckout.currentRemaining}:</span> {remaining}
           </p>
           <div className="pick-row">
-            <span className="muted">Your picks:</span>
+            <span className="muted">{t.quickCheckout.yourPicks}:</span>
             <div className="pick-chips">
               {shownPicks.map((pick, index) => (
                 <span key={`pick-${index}`} className="pick-chip">
@@ -596,7 +598,7 @@ export function QuickCheckoutPracticeScreen({
               ))}
             </div>
           </div>
-          {!completed ? <p className="muted">Tap your target choice on the board.</p> : null}
+          {!completed ? <p className="muted">{t.quickCheckout.tapBoard}</p> : null}
 
           {timerSeconds > 0 ? (
             <div className="timer-wrap">
@@ -640,16 +642,16 @@ export function QuickCheckoutPracticeScreen({
               {completed ? (
                 <>
                   <p>
-                    <span className="muted">Your picks:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
+                    <span className="muted">{t.quickCheckout.yourPicks}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
                   </p>
                   <p>
-                    <span className="muted">{missScenario ? "Correct continuation" : "Correct route"}:</span>{" "}
+                    <span className="muted">{missScenario ? t.quickCheckout.correctContinuation : t.quickCheckout.correctRoute}:</span>{" "}
                     {routeForFeedback.length > 0 ? formatRoute(routeForFeedback) : "No valid route yet."}
                   </p>
                   {!missScenario ? (
                     <div className="route-box top-gap">
                       <p className="route-compact-line">
-                        <span className="muted">Why this route</span>
+                        <span className="muted">{t.quickCheckout.whyThisRoute}</span>
                       </p>
                       {primaryContinuation && firstTarget ? (
                         <p className="route-compact-line">
@@ -658,18 +660,18 @@ export function QuickCheckoutPracticeScreen({
                           <strong>{primaryContinuation.remaining} left</strong>{" "}
                           {primaryContinuation.continuationRoute.length > 0
                             ? `\u2192 ${formatRoute(primaryContinuation.continuationRoute)}`
-                            : "\u2192 No saved single-hit continuation yet."}
+                            : `\u2192 ${t.quickCheckout.noSavedSingleHit}`}
                         </p>
                       ) : (
-                        <p className="route-compact-line">No saved single-hit continuation yet.</p>
+                        <p className="route-compact-line">{t.quickCheckout.noSavedSingleHit}</p>
                       )}
                     </div>
                   ) : null}
                   <div className="row top-gap">
                     <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
-                      {routeVisible ? "HIDE DETAILS" : "SHOW DETAILS"}
+                      {routeVisible ? t.common.hideDetails.toUpperCase() : t.common.showDetails.toUpperCase()}
                     </Button>
-                    <Button onClick={nextCheckout}>NEXT CHECKOUT</Button>
+                    <Button onClick={nextCheckout}>{t.quickCheckout.nextCheckout.toUpperCase()}</Button>
                   </div>
                 </>
               ) : null}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button, Card, ScreenTitle, Segmented } from "../components/ui";
-import { ThemeMode, TimerOption, UserSettings } from "../types/models";
+import { AppLanguageMode, ThemeMode, TimerOption, UserSettings } from "../types/models";
 import { calculateSecondsPerThreeFromFiveMinuteTest } from "../utils/pace";
 import { formatClock } from "../utils/time";
+import { useI18n } from "../i18n";
 
 const PREFERRED_DOUBLES = ["D16", "D20", "D18", "D12", "Not sure"] as const;
 const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim", "system"];
@@ -37,6 +38,7 @@ export function SettingsScreen({
   onUpdateSettings: (next: UserSettings) => void;
   onBack: () => void;
 }) {
+  const { t } = useI18n();
   const [customPaceDraft, setCustomPaceDraft] = useState<string>("");
   const [paceTestRunning, setPaceTestRunning] = useState(false);
   const [paceTestSecondsLeft, setPaceTestSecondsLeft] = useState(300);
@@ -75,10 +77,10 @@ export function SettingsScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Settings" subtitle="Local-only preferences for practice flow." onBack={onBack} />
+      <ScreenTitle title={t.settings.title} subtitle={t.settings.subtitle} onBack={onBack} />
 
       <Card>
-        <h3>Preferred double</h3>
+        <h3>{t.settings.preferredDouble}</h3>
         <Segmented
           value={settings.preferredDouble}
           options={PREFERRED_DOUBLES.map((value) => ({ label: value, value }))}
@@ -87,7 +89,7 @@ export function SettingsScreen({
       </Card>
 
       <Card>
-        <h3>Default timer</h3>
+        <h3>{t.settings.defaultTimer}</h3>
         <Segmented
           value={settings.defaultTimer}
           options={TIMER_OPTIONS.map((value) => ({
@@ -99,7 +101,7 @@ export function SettingsScreen({
       </Card>
 
       <Card>
-        <h3>Theme</h3>
+        <h3>{t.settings.theme}</h3>
         <Segmented
           value={settings.themeMode}
           options={THEME_OPTIONS.map((value) => ({ label: value[0].toUpperCase() + value.slice(1), value }))}
@@ -108,7 +110,7 @@ export function SettingsScreen({
       </Card>
 
       <Card>
-        <h3>Vibration feedback</h3>
+        <h3>{t.settings.vibrationFeedback}</h3>
         <Segmented
           value={settings.vibrationFeedback ? "on" : "off"}
           options={[
@@ -126,7 +128,20 @@ export function SettingsScreen({
       </Card>
 
       <Card>
-        <h3>Throw pace</h3>
+        <h3>{t.settings.language}</h3>
+        <Segmented
+          value={settings.languageMode}
+          options={[
+            { label: t.settings.english, value: "en" as AppLanguageMode },
+            { label: t.settings.finnish, value: "fi" as AppLanguageMode },
+            { label: t.settings.system, value: "system" as AppLanguageMode }
+          ]}
+          onChange={(languageMode) => onUpdateSettings({ ...settings, languageMode })}
+        />
+      </Card>
+
+      <Card>
+        <h3>{t.settings.throwPace}</h3>
         <p className="muted">{formatCurrentPace(settings)}</p>
         {paceSuccess ? <p className="good-text">{paceSuccess}</p> : null}
         {paceError ? <p className="warn-text">{paceError}</p> : null}
