@@ -41,3 +41,10 @@ export function I18nProvider({
 export function useI18n() {
   return useContext(I18nContext);
 }
+
+export function formatI18n(template: string, values: Record<string, string | number>): string {
+  return Object.entries(values).reduce((text, [key, value]) => {
+    const token = `{${key}}`;
+    return text.split(token).join(String(value));
+  }, template);
+}

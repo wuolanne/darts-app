@@ -5,7 +5,7 @@ import {
   CheckoutRouteOption,
   getCheckoutRouteDetails
 } from "../utils/checkoutLibrary";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 const RANGES = [
   { label: "60-80", min: 60, max: 80 },
@@ -19,13 +19,19 @@ function formatRoute(route: string[]): string {
   return route.join(" \u2192 ");
 }
 
-function RouteDetail({ option, labels }: { option: CheckoutRouteOption; labels: { main: string; note: string; singleHit: string; preferredRoute: string } }) {
+function RouteDetail({
+  option,
+  labels
+}: {
+  option: CheckoutRouteOption;
+  labels: { main: string; note: string; preferredRoute: string; ifSingleTemplate: string };
+}) {
   const mainLine = formatRoute(option.route);
   const continuationLine =
     option.singleHitTarget && option.followUpRoute && option.followUpRoute.length > 0
-      ? `If ${option.singleHitTarget}: ${option.remainingAfterSingle} left \u2192 ${formatRoute(option.followUpRoute)}`
+      ? `${formatI18n(labels.ifSingleTemplate, { hit: option.singleHitTarget, remaining: option.remainingAfterSingle })} \u2192 ${formatRoute(option.followUpRoute)}`
       : option.singleHitTarget
-        ? `If ${option.singleHitTarget}: ${option.remainingAfterSingle} left`
+        ? formatI18n(labels.ifSingleTemplate, { hit: option.singleHitTarget, remaining: option.remainingAfterSingle })
         : null;
 
   return (
@@ -39,7 +45,7 @@ function RouteDetail({ option, labels }: { option: CheckoutRouteOption; labels: 
       </p>
       {continuationLine ? (
         <p className="route-compact-line">
-          <span className="muted">{labels.singleHit}:</span> <strong>{continuationLine}</strong>
+          <strong>{continuationLine}</strong>
         </p>
       ) : null}
       {option.note ? (
@@ -113,8 +119,8 @@ export function CheckoutLibraryScreen({
                       labels={{
                         main: t.checkoutLibrary.main,
                         note: t.checkoutLibrary.note,
-                        singleHit: t.checkoutLibrary.singleHit,
-                        preferredRoute: "Preferred double route"
+                        preferredRoute: "Preferred double route",
+                        ifSingleTemplate: t.checkoutLibrary.ifSingleTemplate
                       }}
                     />
                   ))}

@@ -14,7 +14,8 @@ export const fi: TranslationDict = {
     timeUp: "Aika loppui",
     showDetails: "Näytä tiedot",
     hideDetails: "Piilota tiedot",
-    noDataYet: "Ei vielä riittävästi dataa."
+    noDataYet: "Ei vielä riittävästi dataa.",
+    left: "jäljellä"
   },
   home: {
     title: "Darts Practice",
@@ -43,6 +44,9 @@ export const fi: TranslationDict = {
     correctContinuation: "Oikea jatko",
     whyThisRoute: "Miksi tämä reitti",
     chooseContinuation: "Valitse jatko.",
+    triedHit: "Yritettiin {tried}, osui {hit}.",
+    ifHit: "Jos {from} osuu {to}:een:",
+    leftChooseContinuation: "{remaining} jäljellä. Valitse jatko.",
     nextCheckout: "Seuraava checkout",
     startPractice: "Aloita harjoitus",
     playableFinishes: "Pelattavia checkoutteja tällä alueella",
@@ -55,7 +59,10 @@ export const fi: TranslationDict = {
     customRangeError: "Mukautetun alueen pitää olla 61-170 ja alku enintään loppu.",
     timerEnded: "Aika loppui ennen checkoutin valmistumista.",
     wrongHiddenRoute: "Valinta ei vastaa piilotettua reittiä.",
-    noSavedSingleHit: "Tallennettua single-osuman jatkoa ei vielä ole."
+    noSavedSingleHit: "Tallennettua single-osuman jatkoa ei vielä ole.",
+    youHitNoFollowUp: "Osui {hit}. {remaining} jäljellä, mutta jatkoa ei ole vielä tallennettu.",
+    wrongContinuation: "Väärä jatko tilanteessa {remaining} jäljellä.",
+    correctContinuationFor: "Oikea jatko tilanteessa {remaining} jäljellä."
   },
   checkoutTimedRun: {
     title: "Checkout-harjoitus aikaa vastaan",
@@ -65,6 +72,9 @@ export const fi: TranslationDict = {
     sequential: "Järjestyksessä",
     random: "Satunnainen",
     route: "Reitti",
+    singleHit: "Single-osuma",
+    ifHit: "Jos {from} osuu {to}:een:",
+    noDirectTwoDart: "Suoraa kahden tikan jatkoa ei ole vielä tallennettu.",
     showRoute: "Näytä reitti",
     hideRoute: "Piilota reitti",
     endRun: "Lopeta harjoitus",
@@ -109,6 +119,7 @@ export const fi: TranslationDict = {
     subtitle: "Kaikki checkoutit 60-170. Suosikkitupla",
     optimalRoute: "Optimaalinen reitti",
     singleHit: "Single-osuma",
+    ifSingleTemplate: "Jos {hit}: {remaining} jäljellä",
     main: "Pääreitti",
     note: "Huomio",
     finish: "Checkout",

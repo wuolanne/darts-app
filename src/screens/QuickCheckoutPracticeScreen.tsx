@@ -21,7 +21,7 @@ import {
 } from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 type Stage = "setup" | "playing";
 
@@ -107,7 +107,7 @@ function buildMissScenarios(
   return scenarios;
 }
 
-function routePanel(details: CheckoutRouteDetails | null): JSX.Element {
+function routePanel(details: CheckoutRouteDetails | null, t: ReturnType<typeof useI18n>["t"]): JSX.Element {
   if (!details || details.routes.length === 0) {
     return <p className="warn-text">No detailed route yet.</p>;
   }
@@ -125,13 +125,13 @@ function routePanel(details: CheckoutRouteDetails | null): JSX.Element {
           </p>
           {option.singleHitTarget ? (
             <p>
-              <span className="muted">If single hit:</span> If {option.firstTarget} becomes{" "}
-              {option.singleHitTarget}
+              <span className="muted">{t.checkoutLibrary.singleHit}:</span>{" "}
+              {formatI18n(t.quickCheckout.ifHit, { from: option.firstTarget, to: option.singleHitTarget })}
             </p>
           ) : null}
           {option.singleHitTarget ? (
             <p>
-              <span className="muted">Remaining:</span> {option.remainingAfterSingle} left
+              <span className="muted">{t.quickCheckout.currentRemaining}:</span> {option.remainingAfterSingle} {t.common.left}
             </p>
           ) : null}
           {option.followUpRoute && option.followUpRoute.length > 0 ? (
@@ -449,7 +449,10 @@ export function QuickCheckoutPracticeScreen({
           setFeedback({
             tone: "wrong",
             title: t.quickCheckout.noScenarioData,
-            body: `You hit ${singleHitTarget}. ${continuation?.remaining} left, but no detailed follow-up exists yet.`
+            body: formatI18n(t.quickCheckout.youHitNoFollowUp, {
+              hit: singleHitTarget,
+              remaining: continuation?.remaining ?? 0
+            })
           });
         }
         return;
@@ -463,7 +466,7 @@ export function QuickCheckoutPracticeScreen({
         tone: "wrong",
         title: t.common.wrong,
         body: missScenario
-          ? `Wrong continuation for ${missScenario.remaining} left.`
+          ? formatI18n(t.quickCheckout.wrongContinuation, { remaining: missScenario.remaining })
           : t.quickCheckout.wrongHiddenRoute
       });
       return;
@@ -482,7 +485,7 @@ export function QuickCheckoutPracticeScreen({
         tone: "complete",
         title: t.common.correct,
         body: missScenario
-          ? `Correct continuation for ${missScenario.remaining} left.`
+          ? formatI18n(t.quickCheckout.correctContinuationFor, { remaining: missScenario.remaining })
           : "Correct hidden route."
       });
       return;
@@ -580,9 +583,12 @@ export function QuickCheckoutPracticeScreen({
           {practiceMode === "single-miss-scenario" && missScenario ? (
             <>
               <p>
-                Tried {missScenario.triedTreble}, hit {missScenario.hitSingle}.
+                {formatI18n(t.quickCheckout.triedHit, {
+                  tried: missScenario.triedTreble,
+                  hit: missScenario.hitSingle
+                })}
               </p>
-              <p>{missScenario.remaining} left. {t.quickCheckout.chooseContinuation}</p>
+              <p>{formatI18n(t.quickCheckout.leftChooseContinuation, { remaining: missScenario.remaining })}</p>
             </>
           ) : null}
           <p>
@@ -631,7 +637,7 @@ export function QuickCheckoutPracticeScreen({
           {completed && routeVisible ? (
             <div className="finish-inline-detail">
               <h4>Finish {finish}</h4>
-              {routePanel(routeDetails)}
+              {routePanel(routeDetails, t)}
             </div>
           ) : null}
 
@@ -655,9 +661,11 @@ export function QuickCheckoutPracticeScreen({
                       </p>
                       {primaryContinuation && firstTarget ? (
                         <p className="route-compact-line">
-                          If <strong>{firstTarget}</strong> becomes{" "}
-                          <strong>{normalizeDartTarget(primaryContinuation.singleHitTarget)}</strong>:{" "}
-                          <strong>{primaryContinuation.remaining} left</strong>{" "}
+                          {formatI18n(t.quickCheckout.ifHit, {
+                            from: firstTarget,
+                            to: normalizeDartTarget(primaryContinuation.singleHitTarget)
+                          })}{" "}
+                          <strong>{primaryContinuation.remaining} {t.common.left}</strong>{" "}
                           {primaryContinuation.continuationRoute.length > 0
                             ? `\u2192 ${formatRoute(primaryContinuation.continuationRoute)}`
                             : `\u2192 ${t.quickCheckout.noSavedSingleHit}`}

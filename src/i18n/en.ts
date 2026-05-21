@@ -12,7 +12,8 @@ export const en = {
     timeUp: "Time up",
     showDetails: "Show details",
     hideDetails: "Hide details",
-    noDataYet: "Not enough data yet."
+    noDataYet: "Not enough data yet.",
+    left: "left"
   },
   home: {
     title: "Darts Practice",
@@ -41,6 +42,9 @@ export const en = {
     correctContinuation: "Correct continuation",
     whyThisRoute: "Why this route",
     chooseContinuation: "Choose the continuation.",
+    triedHit: "Tried {tried}, hit {hit}.",
+    ifHit: "If {from} becomes {to}:",
+    leftChooseContinuation: "{remaining} left. Choose the continuation.",
     nextCheckout: "Next checkout",
     startPractice: "Start practice",
     playableFinishes: "Playable finishes in this range",
@@ -53,7 +57,10 @@ export const en = {
     customRangeError: "Custom range must be 61-170 and From must be less than or equal to To.",
     timerEnded: "The timer ended before checkout completion.",
     wrongHiddenRoute: "That pick does not match the hidden route.",
-    noSavedSingleHit: "No saved single-hit continuation yet."
+    noSavedSingleHit: "No saved single-hit continuation yet.",
+    youHitNoFollowUp: "You hit {hit}. {remaining} left, but no detailed follow-up exists yet.",
+    wrongContinuation: "Wrong continuation for {remaining} left.",
+    correctContinuationFor: "Correct continuation for {remaining} left."
   },
   checkoutTimedRun: {
     title: "Checkout Timed Run",
@@ -63,6 +70,9 @@ export const en = {
     sequential: "Sequential",
     random: "Random",
     route: "Route",
+    singleHit: "Single hit",
+    ifHit: "If {from} becomes {to}:",
+    noDirectTwoDart: "No direct two-dart finish saved yet.",
     showRoute: "Show route",
     hideRoute: "Hide route",
     endRun: "End run",
@@ -107,6 +117,7 @@ export const en = {
     subtitle: "All finishes 60-170. Preferred double",
     optimalRoute: "Optimal route",
     singleHit: "Single hit",
+    ifSingleTemplate: "If {hit}: {remaining} left",
     main: "Main",
     note: "Note",
     finish: "Finish",

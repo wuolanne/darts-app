@@ -22,7 +22,7 @@ import {
 } from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 interface RunningState {
   list: number[];
@@ -330,13 +330,16 @@ export function CheckoutSpeedrunScreen({
               </p>
               {singleHitContinuation ? (
                 <p className="route-compact-line">
-                  <span className="muted">Single hit:</span>{" "}
+                  <span className="muted">{t.checkoutTimedRun.singleHit}:</span>{" "}
                   <strong>
-                    If {firstTarget ?? "first dart"} becomes {singleHitContinuation.singleHitTarget}:{" "}
-                    {singleHitContinuation.remaining} left{" "}
+                    {formatI18n(t.checkoutTimedRun.ifHit, {
+                      from: firstTarget ?? "first dart",
+                      to: singleHitContinuation.singleHitTarget
+                    })}{" "}
+                    {singleHitContinuation.remaining} {t.common.left}{" "}
                     {showTwoDartContinuation
                       ? `\u2192 ${formatRoute(singleHitContinuation.continuationRoute)}`
-                      : "\u2192 No direct two-dart finish saved yet."}
+                      : `\u2192 ${t.checkoutTimedRun.noDirectTwoDart}`}
                   </strong>
                 </p>
               ) : null}
