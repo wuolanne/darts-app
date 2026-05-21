@@ -1,5 +1,5 @@
 :root {
-  font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif;
+  font-family: "Bahnschrift", "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif;
 }
 
 * {
@@ -10,6 +10,7 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
+  letter-spacing: 0.01em;
 }
 
 #root {
@@ -22,7 +23,9 @@ body {
   margin: 0 auto;
   padding: 20px 14px 40px;
   background:
-    radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 16%, transparent), transparent 40%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 18%, transparent), transparent 42%),
+    radial-gradient(circle at 10% 90%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 36%),
+    linear-gradient(180deg, color-mix(in oklab, var(--surface) 35%, transparent), transparent 32%),
     var(--bg);
 }
 
@@ -34,7 +37,8 @@ body {
 
 .screen-head h1 {
   margin: 4px 0;
-  font-size: 1.8rem;
+  font-size: 2rem;
+  letter-spacing: 0.015em;
 }
 
 .screen-head p {
@@ -48,11 +52,13 @@ body {
 }
 
 .card {
-  background: linear-gradient(165deg, var(--surface), var(--surface-alt));
+  background: linear-gradient(165deg, color-mix(in oklab, var(--surface) 92%, black 8%), var(--surface-alt));
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 14px;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--text) 7%, transparent),
+    0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .card h3 {
@@ -86,11 +92,13 @@ body {
 }
 
 .btn {
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid transparent;
   padding: 12px 14px;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
 }
 
@@ -105,7 +113,7 @@ body {
 
 .btn-primary {
   background: var(--accent);
-  color: #041425;
+  color: #101706;
 }
 
 .btn-secondary {
@@ -116,17 +124,17 @@ body {
 
 .btn-success {
   background: var(--success);
-  color: #03220f;
+  color: #101706;
 }
 
 .btn-warning {
   background: var(--warning);
-  color: #2f1e02;
+  color: #2e1f04;
 }
 
 .btn-danger {
   background: var(--danger);
-  color: #2b0911;
+  color: #210606;
 }
 
 .btn-ghost {
@@ -140,6 +148,7 @@ body {
   background: transparent;
   color: var(--accent);
   font-weight: 700;
+  letter-spacing: 0.03em;
   cursor: pointer;
   padding: 0;
 }
@@ -149,8 +158,9 @@ body {
   align-items: center;
   border-radius: 999px;
   padding: 3px 9px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   border: 1px solid var(--border);
 }
 
@@ -180,10 +190,12 @@ body {
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 8px 10px;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   cursor: pointer;
 }
 
@@ -204,9 +216,10 @@ body {
 }
 
 .big-number {
-  font-size: clamp(2rem, 8vw, 3rem);
+  font-size: clamp(2.35rem, 9vw, 3.45rem);
   margin: 10px 0;
-  font-weight: 800;
+  font-weight: 900;
+  letter-spacing: 0.01em;
 }
 
 .metric-grid {
@@ -216,7 +229,8 @@ body {
 }
 
 .metric-grid strong {
-  font-size: 1.2rem;
+  font-size: 1.28rem;
+  letter-spacing: 0.02em;
 }
 
 .action-grid {
@@ -257,15 +271,16 @@ body {
   width: 100%;
   background: var(--surface-alt);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   color: var(--text);
   padding: 10px;
+  font-weight: 700;
 }
 
 .route-box,
 .feedback-box {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 10px;
   background: color-mix(in oklab, var(--surface-alt) 65%, transparent);
 }
@@ -337,7 +352,7 @@ body {
   align-items: center;
   border: 1px solid var(--border);
   background: color-mix(in oklab, var(--surface-alt) 62%, transparent);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 7px 9px;
 }
 
@@ -351,9 +366,10 @@ body {
   border: 1px solid var(--border);
   background: color-mix(in oklab, var(--surface-alt) 62%, transparent);
   color: var(--text);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 8px 4px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   font-size: 0.86rem;
   cursor: pointer;
 }
@@ -366,7 +382,7 @@ body {
 .finish-inline-detail {
   margin-top: 10px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 10px;
   background: color-mix(in oklab, var(--surface-alt) 60%, transparent);
 }
@@ -390,7 +406,7 @@ body {
   gap: 8px;
   border: 1px solid var(--border);
   background: color-mix(in oklab, var(--surface-alt) 62%, transparent);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 7px 9px;
 }
 
