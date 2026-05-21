@@ -17,6 +17,7 @@ export const en = {
   home: {
     title: "Darts Practice",
     subtitle: "Low-input practice modes for daily reps.",
+    quickCheckoutTitle: "Quick Checkout Practice",
     quickCheckoutDescription: "Low-input checkout reps with fast feedback.",
     timedRunDescription: "Complete a checkout range as fast as possible.",
     aroundDescription: "Timed sectors and targets with minimal taps.",

@@ -6,7 +6,7 @@ export function HomeScreen({ onNavigate }: { onNavigate: (screen: AppScreen) => 
   const { t } = useI18n();
   const items: { title: string; screen: AppScreen; description: string; active: boolean }[] = [
     {
-      title: t.stats.quickCheckoutPractice,
+      title: t.home.quickCheckoutTitle,
       screen: "quick-checkout",
       description: t.home.quickCheckoutDescription,
       active: true
