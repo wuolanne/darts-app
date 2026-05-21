@@ -284,6 +284,15 @@ body {
   display: block;
 }
 
+.dart-clickable {
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.dart-clickable:hover {
+  opacity: 0.86;
+}
+
 .timer-wrap {
   margin: 8px 0;
 }

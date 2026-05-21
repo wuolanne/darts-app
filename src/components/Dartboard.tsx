@@ -78,14 +78,29 @@ function isHighlighted(targets: HighlightTarget[], sector: number, kind: Highlig
   return targets.some((target) => target.number === sector && target.kind === kind);
 }
 
+function tokenFor(sector: number, kind: HighlightKind): string {
+  if (kind === "single") return `S${sector}`;
+  if (kind === "double") return `D${sector}`;
+  if (kind === "treble") return `T${sector}`;
+  if (kind === "outer-bull") return "25";
+  return "Bull";
+}
+
 export function Dartboard({
   route,
-  reveal
+  reveal,
+  onTargetSelect,
+  selectedTarget,
+  disabled = false
 }: {
   route: string;
   reveal: boolean;
+  onTargetSelect?: (target: string) => void;
+  selectedTarget?: string | null;
+  disabled?: boolean;
 }) {
   const targets = reveal ? parseRoute(route) : [];
+  const selected = selectedTarget ? parseToken(selectedTarget) : null;
   const cx = 200;
   const cy = 200;
   const segmentSize = (Math.PI * 2) / 20;
@@ -106,18 +121,34 @@ export function Dartboard({
               <path
                 d={annularSectorPath(cx, cy, 170, 190, start, end)}
                 fill={isDark ? "#e42d2a" : "#22a33a"}
+                className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+                onClick={() =>
+                  onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "double")) : undefined
+                }
               />
               <path
                 d={annularSectorPath(cx, cy, 110, 170, start, end)}
                 fill={isDark ? "#ecefe8" : "#0f1115"}
+                className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+                onClick={() =>
+                  onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "single")) : undefined
+                }
               />
               <path
                 d={annularSectorPath(cx, cy, 90, 110, start, end)}
                 fill={isDark ? "#e42d2a" : "#22a33a"}
+                className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+                onClick={() =>
+                  onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "treble")) : undefined
+                }
               />
               <path
                 d={annularSectorPath(cx, cy, 40, 90, start, end)}
                 fill={isDark ? "#ecefe8" : "#0f1115"}
+                className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+                onClick={() =>
+                  onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "single")) : undefined
+                }
               />
 
               {isHighlighted(targets, sector, "double") ? (
@@ -148,18 +179,71 @@ export function Dartboard({
                   />
                 </>
               ) : null}
+
+              {selected && selected.number === sector && selected.kind === "double" ? (
+                <path
+                  d={annularSectorPath(cx, cy, 170, 190, start, end)}
+                  fill="#ffce3a"
+                  fillOpacity={0.8}
+                />
+              ) : null}
+              {selected && selected.number === sector && selected.kind === "treble" ? (
+                <path
+                  d={annularSectorPath(cx, cy, 90, 110, start, end)}
+                  fill="#ffce3a"
+                  fillOpacity={0.8}
+                />
+              ) : null}
+              {selected && selected.number === sector && selected.kind === "single" ? (
+                <>
+                  <path
+                    d={annularSectorPath(cx, cy, 110, 170, start, end)}
+                    fill="#ffce3a"
+                    fillOpacity={0.7}
+                  />
+                  <path
+                    d={annularSectorPath(cx, cy, 40, 90, start, end)}
+                    fill="#ffce3a"
+                    fillOpacity={0.7}
+                  />
+                </>
+              ) : null}
             </g>
           );
         })}
 
-        <circle cx={cx} cy={cy} r={40} fill="#22a33a" />
-        <circle cx={cx} cy={cy} r={18} fill="#e42d2a" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={40}
+          fill="#22a33a"
+          className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+          onClick={() =>
+            onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "outer-bull")) : undefined
+          }
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={18}
+          fill="#e42d2a"
+          className={onTargetSelect && !disabled ? "dart-clickable" : ""}
+          onClick={() =>
+            onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "bull")) : undefined
+          }
+        />
 
         {targets.some((item) => item.kind === "outer-bull") ? (
           <circle cx={cx} cy={cy} r={40} fill="#39c7ff" fillOpacity={0.45} />
         ) : null}
         {targets.some((item) => item.kind === "bull") ? (
           <circle cx={cx} cy={cy} r={18} fill="#39c7ff" fillOpacity={0.65} />
+        ) : null}
+        {selected?.kind === "outer-bull" ? (
+          <circle cx={cx} cy={cy} r={40} fill="#ffce3a" fillOpacity={0.7} />
+        ) : null}
+        {selected?.kind === "bull" ? (
+          <circle cx={cx} cy={cy} r={18} fill="#ffce3a" fillOpacity={0.9} />
         ) : null}
 
         {BOARD_ORDER.map((sector, idx) => {

@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { Dartboard } from "../components/Dartboard";
-import {
-  CheckoutAttempt,
-  CheckoutRangeKey,
-  CheckoutResult,
-  TimerOption,
-  UserSettings
-} from "../types/models";
+import { CheckoutAttempt, CheckoutRangeKey, CheckoutResult, TimerOption, UserSettings } from "../types/models";
 import { CHECKOUT_RANGE_PRESETS, TIMER_OPTIONS } from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
 import { triggerHaptic } from "../utils/haptics";
@@ -19,19 +13,49 @@ function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function feedbackForResult(result: CheckoutResult, preferredDouble: string): string {
-  if (result === "finished") {
-    return "Good route. Confident finish.";
+function normalizeToken(token: string): string {
+  return token.trim().toUpperCase();
+}
+
+function firstTargetFromRoute(route: string): string | null {
+  const first = route
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)[0];
+  if (!first) {
+    return null;
   }
-  if (result === "good_leave") {
-    return preferredDouble === "D16"
-      ? "Good leave. Leaves D16 chain."
-      : "Good leave. Keeps checkout options open.";
+  if (first === "BULL") {
+    return "BULL";
   }
-  if (result === "bust") {
-    return "Bust risk. Reset with a simpler setup route.";
+  if (first === "25") {
+    return "25";
   }
-  return "Bad leave. Does not match your preferred double route.";
+  if (/^\d{1,2}$/.test(first)) {
+    return `S${first}`;
+  }
+  return first.toUpperCase();
+}
+
+function whyGoodRoute(route: string, usedPreferredRoute: boolean, preferredDouble: string): string {
+  const darts = route.split(",").length;
+  if (usedPreferredRoute) {
+    return `Good because it supports your preferred double ${preferredDouble} in ${darts}-dart flow.`;
+  }
+  if (darts <= 2) {
+    return "Good because it is a clean high-percentage 2-dart route.";
+  }
+  return "Good because it avoids awkward leaves and keeps a clear finish path.";
+}
+
+function missPlanForSingleMiss(finish: number, expectedTarget: string, route: string): string {
+  const trebleMatch = expectedTarget.match(/^T(\d{1,2})$/);
+  if (!trebleMatch) {
+    return "If first dart misses, set up a clean double for the next dart.";
+  }
+  const singleScore = Number(trebleMatch[1]);
+  const left = finish - singleScore;
+  return `If ${expectedTarget} drops to S${singleScore}, ${left} left. Switch to safe setup route: ${route}.`;
 }
 
 export function QuickCheckoutPracticeScreen({
@@ -52,6 +76,8 @@ export function QuickCheckoutPracticeScreen({
   const [routeVisible, setRouteVisible] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [lastResult, setLastResult] = useState<CheckoutResult | null>(null);
+  const [lastPick, setLastPick] = useState<string | null>(null);
+  const [expectedPick, setExpectedPick] = useState<string | null>(null);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -68,6 +94,18 @@ export function QuickCheckoutPracticeScreen({
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           window.clearInterval(timer);
+          const expected = firstTargetFromRoute(route.route);
+          setExpectedPick(expected ? normalizeToken(expected) : null);
+          setFeedback(
+            expected
+              ? `Time over. Best first target was ${normalizeToken(expected)}. ${whyGoodRoute(
+                  route.route,
+                  route.usedPreferredRoute,
+                  settings.preferredDouble
+                )}`
+              : "Time over."
+          );
+          setRouteVisible(true);
           completeAttempt("failed");
           return 0;
         }
@@ -75,7 +113,17 @@ export function QuickCheckoutPracticeScreen({
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [stage, timerSeconds]);
+  }, [stage, timerSeconds, route.route, route.usedPreferredRoute, settings.preferredDouble]);
+
+  useEffect(() => {
+    if (stage !== "feedback") {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      startNext();
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [stage]);
 
   const startNext = () => {
     const nextFinish = randomBetween(selectedPreset.min, selectedPreset.max);
@@ -84,6 +132,8 @@ export function QuickCheckoutPracticeScreen({
     setRouteVisible(false);
     setFeedback("");
     setLastResult(null);
+    setLastPick(null);
+    setExpectedPick(null);
     setSecondsLeft(timerSeconds);
     setStage("attempt");
   };
@@ -104,9 +154,34 @@ export function QuickCheckoutPracticeScreen({
     };
     onSaveAttempt(attempt);
     triggerHaptic(settings.vibrationFeedback);
-    setFeedback(feedbackForResult(result, settings.preferredDouble));
     setLastResult(result);
     setStage("feedback");
+  };
+
+  const handleBoardPick = (pickedTarget: string) => {
+    if (stage !== "attempt") {
+      return;
+    }
+    const expected = firstTargetFromRoute(route.route);
+    if (!expected) {
+      completeAttempt("failed");
+      return;
+    }
+
+    const normalizedPick = normalizeToken(pickedTarget);
+    const normalizedExpected = normalizeToken(expected);
+    const correct = normalizedPick === normalizedExpected;
+    const reason = whyGoodRoute(route.route, route.usedPreferredRoute, settings.preferredDouble);
+    const missPlan = missPlanForSingleMiss(finish, normalizedExpected, route.route);
+    const nextFeedback = correct
+      ? `Correct: ${normalizedPick}. ${reason}`
+      : `Wrong: ${normalizedPick}. Best was ${normalizedExpected}. ${reason} ${missPlan}`;
+
+    setLastPick(normalizedPick);
+    setExpectedPick(normalizedExpected);
+    setFeedback(nextFeedback);
+    setRouteVisible(true);
+    completeAttempt(correct ? "finished" : "failed");
   };
 
   return (
@@ -171,39 +246,29 @@ export function QuickCheckoutPracticeScreen({
             </div>
           ) : null}
 
-          <Dartboard route={route.route} reveal={routeVisible} />
+          <p className="muted">Tap the board for your first target choice.</p>
+          <Dartboard
+            route={route.route}
+            reveal={routeVisible || stage === "feedback"}
+            onTargetSelect={handleBoardPick}
+            selectedTarget={lastPick}
+            disabled={stage !== "attempt"}
+          />
 
           {stage === "attempt" ? (
-            <div className="action-grid">
-              <Button variant="success" onClick={() => completeAttempt("finished")}>
-                FINISHED
-              </Button>
-              <Button variant="secondary" onClick={() => completeAttempt("good_leave")}>
-                GOOD LEAVE
-              </Button>
-              <Button variant="danger" onClick={() => completeAttempt("failed")}>
-                FAILED
-              </Button>
-              <Button variant="warning" onClick={() => completeAttempt("bust")}>
-                BUST
-              </Button>
+            <div className="top-gap">
               <Button variant="ghost" onClick={() => setRouteVisible((prev) => !prev)}>
-                SHOW ROUTE
+                {routeVisible ? "HIDE ROUTE" : "SHOW ROUTE"}
               </Button>
             </div>
           ) : null}
 
           {stage === "feedback" ? (
             <div className="feedback-box">
-              <h4>Feedback</h4>
+              <h4>{lastResult === "finished" ? "Correct" : "Wrong"}</h4>
               <p>{feedback}</p>
-              {lastResult === "finished" ? <p className="muted">Good route and confident closeout.</p> : null}
-              {lastResult === "good_leave" ? <p className="muted">Leaves D16 chain or a stable next dart.</p> : null}
-              {lastResult === "failed" ? <p className="muted">Bad leave. Reset to avoid bogey numbers.</p> : null}
-              {lastResult === "bust" ? <p className="muted">Bust risk detected. Use safer first dart.</p> : null}
-              <Button full onClick={startNext}>
-                Next checkout
-              </Button>
+              {expectedPick ? <p className="muted">Best first target: {expectedPick}</p> : null}
+              <p className="muted">Moving to next checkout…</p>
             </div>
           ) : null}
         </Card>
