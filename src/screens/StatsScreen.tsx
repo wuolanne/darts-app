@@ -165,7 +165,7 @@ export function StatsScreen({
                   key={row.rangeLabel}
                   left={row.rangeLabel}
                   middle={`${row.sessions} sessions`}
-                  right={`B ${formatClock(row.bestTime)} / A ${formatClock(row.averageTime)} / L ${formatClock(row.latestTime)}`}
+                  right={`Best ${formatClock(row.bestTime)} · Latest ${formatClock(row.latestTime)} · Avg ${formatClock(row.averageTime)}`}
                 />
               ))}
             </details>
@@ -178,7 +178,7 @@ export function StatsScreen({
                   key={`speedrun-finish-${row.finish}`}
                   left={row.finish}
                   middle={`${row.completions}/${row.attempts}`}
-                  right={`B ${formatSeconds(row.bestTime)} / A ${formatSeconds(row.averageTime)}`}
+                  right={`Best ${formatSeconds(row.bestTime)} · Avg ${formatSeconds(row.averageTime)}`}
                 />
               ))}
             </details>
@@ -214,7 +214,7 @@ export function StatsScreen({
                   key={`most-${row.finish}`}
                   left={row.finish}
                   middle={`${row.attempts} attempts`}
-                  right={`B ${formatSeconds(row.bestTime)}`}
+                  right={`Best ${formatSeconds(row.bestTime)}`}
                 />
               ))}
             </details>
@@ -268,7 +268,7 @@ export function StatsScreen({
                   key={row.mode}
                   left={row.mode}
                   middle={`${row.sessions} sessions`}
-                  right={`B ${formatClock(row.best)} / L ${formatClock(row.latest)} / A ${formatClock(row.average)}`}
+                  right={`Best ${formatClock(row.best)} · Latest ${formatClock(row.latest)} · Avg ${formatClock(row.average)}`}
                 />
               ))}
             </details>
@@ -280,8 +280,8 @@ export function StatsScreen({
                 <CompactRow
                   key={`target-${row.key}`}
                   left={row.key}
-                  middle={`B ${formatSeconds(row.best)} / L ${formatSeconds(row.latest)}`}
-                  right={`A ${formatSeconds(row.average)}`}
+                  middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                  right={`Avg ${formatSeconds(row.average)}`}
                 />
               ))}
             </details>
