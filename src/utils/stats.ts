@@ -101,7 +101,9 @@ function toModeLabel(mode: AroundClockMode, doubleRequirement: 1 | 2 | null): st
 
 function normalizeAroundTarget(mode: AroundClockMode, target: string): string {
   if (mode !== "full_sector") return target;
-  if (target === "Bull/25" || target === "25/Bull") return "Bull/25";
+  if (target === "Bull/25" || target === "25/Bull" || target === "Bull" || target === "25") {
+    return "Bull/25";
+  }
   const sectorMatch = target.match(/^S(\d{1,2})\s\+\sT\1\s\+\sD\1(?:\s\+\sD\1)?$/);
   if (sectorMatch) {
     return `Sector ${Number(sectorMatch[1])}`;
