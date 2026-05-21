@@ -270,6 +270,20 @@ body {
   background: color-mix(in oklab, var(--surface-alt) 65%, transparent);
 }
 
+.dartboard-wrap {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  background: #060a13;
+}
+
+.dartboard-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .timer-wrap {
   margin: 8px 0;
 }

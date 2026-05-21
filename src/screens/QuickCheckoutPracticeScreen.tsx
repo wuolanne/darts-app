@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
+import { Dartboard } from "../components/Dartboard";
 import {
   CheckoutAttempt,
   CheckoutRangeKey,
@@ -169,6 +170,8 @@ export function QuickCheckoutPracticeScreen({
               <p className="muted">{route.note}</p>
             </div>
           ) : null}
+
+          <Dartboard route={route.route} reveal={routeVisible} />
 
           {stage === "attempt" ? (
             <div className="action-grid">
