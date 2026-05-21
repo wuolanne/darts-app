@@ -10,6 +10,7 @@ export interface RouteView {
 interface RouteEntry {
   defaultRoute: string;
   d16Route?: string;
+  preferredRoutes?: Partial<Record<"D20" | "D18" | "D12", string>>;
   note: string;
 }
 
@@ -98,6 +99,47 @@ const TABLE: Record<number, RouteEntry> = {
   170: { defaultRoute: "T20, T20, D25", note: "Maximum checkout route." }
 };
 
+const PREFERRED_DOUBLE_VALUE: Record<"D20" | "D18" | "D12", number> = {
+  D20: 20,
+  D18: 18,
+  D12: 12
+};
+
+function oneDartScoreLabel(score: number): string | null {
+  if (score >= 1 && score <= 20) {
+    return `${score}`;
+  }
+  if (score === 25) {
+    return "25";
+  }
+  if (score === 50) {
+    return "Bull";
+  }
+  if (score % 2 === 0 && score <= 40) {
+    return `D${score / 2}`;
+  }
+  if (score % 3 === 0 && score / 3 <= 20) {
+    return `T${score / 3}`;
+  }
+  return null;
+}
+
+function generatedPreferredRoute(
+  finish: number,
+  preferredDouble: "D20" | "D18" | "D12"
+): string | null {
+  const doubleValue = PREFERRED_DOUBLE_VALUE[preferredDouble] * 2;
+  const remainder = finish - doubleValue;
+  if (remainder <= 0 || remainder > 60) {
+    return null;
+  }
+  const firstDart = oneDartScoreLabel(remainder);
+  if (!firstDart) {
+    return null;
+  }
+  return `${firstDart}, ${preferredDouble}`;
+}
+
 export function getRouteForFinish(
   finish: number,
   preferredDouble: PreferredDouble
@@ -119,6 +161,28 @@ export function getRouteForFinish(
       note: `Preferred route for D16. ${entry.note}`,
       usedPreferredRoute: true
     };
+  }
+
+  if (preferredDouble === "D20" || preferredDouble === "D18" || preferredDouble === "D12") {
+    const explicit = entry.preferredRoutes?.[preferredDouble];
+    if (explicit) {
+      return {
+        finish,
+        route: explicit,
+        note: `Preferred route for ${preferredDouble}. ${entry.note}`,
+        usedPreferredRoute: true
+      };
+    }
+
+    const generated = generatedPreferredRoute(finish, preferredDouble);
+    if (generated) {
+      return {
+        finish,
+        route: generated,
+        note: `Generated route to ${preferredDouble}. ${entry.note}`,
+        usedPreferredRoute: true
+      };
+    }
   }
 
   return {
