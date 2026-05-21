@@ -1,63 +1,63 @@
-# FinishLab / Darts Practice App
+# FinishLab / Darts-harjoitussovellus
 
-A mobile-first darts training app focused on real practice, not scorekeeping.
+FinishLab on mobiili ensin suunniteltu dartsin harjoitussovellus. Sovelluksen tarkoitus on auttaa oikeassa treenissä, ei toimia otteluiden pistelaskurina.
 
-This app is **not** intended to replace DartCounter as a match scorer. DartCounter can remain the best tool for games and scoring. This app focuses on the parts that many scorer apps do not handle well: checkout practice, timed routines, sector-by-sector training, personal bests, and low-input training.
+Sovellus ei yritä korvata DartCounteria otteluissa. DartCounter voi jatkossakin olla paras työkalu peleihin ja pistelaskuun. FinishLab keskittyy niihin osa-alueisiin, joita monet scorer-sovellukset eivät tee tarpeeksi hyvin: checkout-harjoittelu, kelloa vastaan tehtävät treenit, sektorikohtainen Around the Clock, omat ennätykset ja vähäinen näpyttely treenin aikana.
 
-## Product positioning
+**Huomio:** vaikka tämä README on suomeksi, itse sovelluksen käyttöliittymä tehdään MVP-vaiheessa englanniksi. Darts-termit ja kohdemarkkina ovat kansainvälisiä.
 
-**Not a scorer. Not just a checkout table. A fast darts practice app for finishing, routines, and timed training.**
+## Tuotteen positiointi
 
-The app should be built in English from the beginning because darts terminology and the target market are international.
+**Ei pistelaskuri. Ei pelkkä checkout-taulukko. Nopea dartsin treenisovellus lopetuksiin, rutiineihin ja kelloa vastaan harjoitteluun.**
 
-Core principles:
+Perusperiaatteet:
 
-- English-only UI for the MVP.
-- Mobile-first design.
-- Dark, clean, sport-focused UI.
-- Large buttons, large numbers, easy one-handed use.
-- During practice the user should look at the dartboard, not the phone.
-- Do not require logging every dart.
-- Default experience is low-input: one tap when a target, sector, or attempt is complete.
-- Detailed dart-by-dart input can be added later, but it must never be required.
+- Sovelluksen UI on MVP:ssä englanniksi.
+- Mobiili ensin.
+- Tumma, selkeä ja urheilullinen käyttöliittymä.
+- Isot painikkeet, isot numerot ja yhden käden käyttö.
+- Treenin aikana käyttäjän pitää katsoa taulua, ei puhelinta.
+- Sovellus ei saa vaatia jokaisen heiton kirjaamista.
+- Oletuskäyttö on low-input: yksi painallus, kun kohde, sektori tai yritys on valmis.
+- Tarkempi heitto heitolta -kirjaus voidaan lisätä myöhemmin vapaaehtoisena ominaisuutena, mutta sitä ei saa koskaan vaatia.
 
-## Main feature pillars
+## Pääominaisuudet
 
 ### 1. Checkout Practice
 
-DartZone-style checkout thinking, but with our own product identity and training philosophy.
+DartZone-henkinen checkout-ajattelu, mutta omalla tuoteidentiteetillä ja omalla treenifilosofialla.
 
-The app should generate checkout situations and help the player learn good finishing routes, bogey avoidance, and preferred-double thinking.
+Sovellus antaa checkout-tilanteita ja auttaa pelaajaa oppimaan hyviä lopetusreittejä, bogey-numeroiden välttämistä ja suosikkituplaan perustuvaa ajattelua.
 
-MVP behaviour:
+MVP-toiminnallisuus:
 
-- Generate random checkout numbers by range.
-- Supported ranges:
+- Satunnaiset checkout-numerot valitulta alueelta.
+- Tuetut alueet:
   - 41-60
   - 61-80
   - 81-100
   - 101-130
   - 131-170
-- User can choose preferred double:
+- Käyttäjä voi valita suosikkituplan:
   - D16
   - D20
   - D18
   - D12
-  - Custom later
-- Timer options:
+  - Custom myöhemmin
+- Ajastinvaihtoehdot:
   - Off
-  - 10 seconds
-  - 20 seconds
-  - 30 seconds
-- Low-input result buttons:
+  - 10 sekuntia
+  - 20 sekuntia
+  - 30 sekuntia
+- Low-input-tulosnapit:
   - FINISHED
   - GOOD LEAVE
   - FAILED
   - BUST
   - SHOW ROUTE
-- The app should show short, clear feedback after each attempt.
+- Sovelluksen pitää näyttää lyhyt ja selkeä palaute jokaisen yrityksen jälkeen.
 
-Example feedback language:
+Esimerkkejä palauteteksteistä:
 
 - Good route
 - Leaves D16 chain
@@ -67,69 +67,69 @@ Example feedback language:
 - Bust risk
 - Does not match your preferred double route
 
-The app should avoid unclear terms such as “rest easy double”. Use clear darts English: finish, leave, bogey, preferred double, route, bust, setup.
+Sovelluksen pitää välttää epäselviä termejä kuten “rest easy double”. Käytetään selkeää darts-englantia: finish, leave, bogey, preferred double, route, bust, setup.
 
 ### 2. Timed Around the Clock
 
-This is a core differentiator. The app must support timed practice where the user taps only when a target or sector is completed.
+Tämä on yksi sovelluksen tärkeimmistä erottavista ominaisuuksista. Sovelluksen pitää tukea kelloa vastaan tehtävää treeniä, jossa käyttäjä painaa nappia vasta, kun kohde tai sektori on valmis.
 
-Basic modes:
+Perusmoodit:
 
 - Around the Clock Singles
 - Around the Clock Doubles
 - Around the Clock Trebles
 - Full Sector Around the Clock
-- Custom Routine later
+- Custom Routine myöhemmin
 
-For timed training, the app records:
+Kelloa vastaan -treeneissä sovellus tallentaa:
 
-- Total time
-- Active time
-- Pause time
-- Time per target/sector
-- Fastest target/sector
-- Slowest target/sector
-- Average target/sector time
-- Personal best comparison
-- Estimated darts, if throw pace is set
+- Kokonaisajan
+- Aktiivisen ajan
+- Taukoajan
+- Ajan per kohde/sektori
+- Nopeimman kohteen/sektorin
+- Hitaimman kohteen/sektorin
+- Keskimääräisen kohde-/sektoriajan
+- Vertailun omaan ennätykseen
+- Arvioidun heittomäärän, jos heittotahti on asetettu
 
 ### 3. Full Sector Around the Clock
 
-The app must support a training mode called **Full Sector Around the Clock**.
+Sovelluksen pitää tukea treenimoodia nimeltä **Full Sector Around the Clock**.
 
-Default order:
+Oletusjärjestys:
 
 1. Bull
 2. 25
-3. Sector 1
-4. Sector 2
+3. Sektori 1
+4. Sektori 2
 5. ...
-6. Sector 20
+6. Sektori 20
 
-For Bull:
+Bull:
 
-- User completes Bull.
-- User taps TARGET DONE.
+- Käyttäjä suorittaa Bull-kohteen.
+- Käyttäjä painaa TARGET DONE.
 
-For 25:
+25:
 
-- User completes 25.
-- User taps TARGET DONE.
+- Käyttäjä suorittaa 25-kohteen.
+- Käyttäjä painaa TARGET DONE.
 
-For each numbered sector, the user must complete the selected requirements, for example:
+Numeroiduissa sektoreissa käyttäjän pitää suorittaa valitut vaatimukset, esimerkiksi:
 
 - S7 + T7 + D7
-- or S7 + T7 + D7 + D7
+- tai S7 + T7 + D7 + D7
 
-The double requirement must be configurable:
+Tuplavaatimus pitää olla asetettava:
 
-- 1 double hit
-- 2 double hits
-- custom amount later
+- 1 tuplaosuma
+- 2 tuplaosumaa
+- custom-määrä myöhemmin
 
-Important: the app must **not** ask the user to mark individual hits. It only shows what needs to be completed. The user taps **SECTOR DONE** when the full sector is complete.
+Tärkeää: sovellus ei saa pyytää käyttäjää merkkaamaan yksittäisiä osumia. Sovellus näyttää vain, mitä pitää suorittaa. Käyttäjä painaa **SECTOR DONE**, kun koko sektori on valmis.
 
-Example screen content:
+Esimerkkinäkymä:
 
 ```text
 Full Sector Around the Clock
@@ -147,34 +147,34 @@ Total time: 18:42
 [UNDO]
 ```
 
-### 4. Throw Pace and Estimated Darts
+### 4. Throw Pace ja Estimated Darts
 
-The user can optionally set an average throw pace. This is used to estimate darts thrown in long timed sessions.
+Käyttäjä voi halutessaan asettaa oman heittotahdin. Tätä käytetään pitkissä treeneissä arvioimaan heitettyjen tikkojen määrä.
 
-Settings:
+Asetukset:
 
-- Fast: 7 seconds per 3 darts
-- Normal: 10 seconds per 3 darts
-- Relaxed: 13 seconds per 3 darts
+- Fast: 7 sekuntia / 3 tikkaa
+- Normal: 10 sekuntia / 3 tikkaa
+- Relaxed: 13 sekuntia / 3 tikkaa
 - Custom seconds per 3 darts
 - Skip / not set
 
-The app should always display this as an estimate:
+Sovelluksen pitää aina näyttää tämä arviona, ei tarkkana totuutena:
 
 ```text
 Estimated darts: ~716
 Based on 9 sec / 3 darts
 ```
 
-Pause time should not count toward estimated darts.
+Taukoaikaa ei saa laskea arvioituun heittomäärään.
 
-The setup can be offered during first launch, but it must not block the user. It must also be editable later in Settings.
+Heittotahdin voi tarjota kevyenä asetuksena ensimmäisellä käynnistyksellä, mutta se ei saa estää sovelluksen käyttöä. Asetusta pitää voida muuttaa myöhemmin Settings-näkymässä.
 
 ### 5. Training Sessions
 
-The app should include ready-made sessions so the user does not need to think what to practice.
+Sovellukseen pitää tulla valmiita treenisessioita, jotta käyttäjän ei tarvitse aina itse miettiä, mitä harjoitella.
 
-Examples:
+Esimerkkejä:
 
 - 15 min D16 Finishing
 - 10 min Checkout Pressure
@@ -185,7 +185,7 @@ Examples:
 - D16 Ladder
 - Favourite Double Pressure
 
-Example 15 minute session:
+Esimerkki 15 minuutin treenistä:
 
 ```text
 15 min D16 Finishing
@@ -198,9 +198,9 @@ Example 15 minute session:
 
 ### 6. Stats
 
-Keep stats useful but not overwhelming.
+Tilastojen pitää olla hyödyllisiä, mutta ei liian raskaita.
 
-MVP stats:
+MVP-tilastot:
 
 - Last 7 days
 - Last 30 days
@@ -216,11 +216,11 @@ MVP stats:
 - Fastest and slowest sectors
 - Estimated darts for timed sessions
 
-## Suggested MVP screens
+## MVP-näkymät
 
 ### Home / Training
 
-Cards:
+Kortit:
 
 - Quick Checkout Practice
 - 15 Min Training
@@ -232,11 +232,11 @@ Cards:
 
 ### Checkout Practice
 
-- Finish number
-- Timer/progress bar if enabled
-- Preferred double indicator
-- Optional route hint
-- Large result buttons:
+- Finish-numero
+- Timer/progress bar, jos ajastin on päällä
+- Preferred double -indikaattori
+- Reittivihje Show route -napin takana
+- Isot tulosnapit:
   - FINISHED
   - GOOD LEAVE
   - FAILED
@@ -245,11 +245,11 @@ Cards:
 
 ### Around the Clock
 
-- Mode selection
-- Current target/sector
-- Total time
-- Current target/sector time
-- Large TARGET DONE or SECTOR DONE button
+- Moodin valinta
+- Nykyinen kohde/sektori
+- Kokonaisaika
+- Nykyisen kohteen/sektorin aika
+- Iso TARGET DONE tai SECTOR DONE -nappi
 - Pause
 - Undo
 
@@ -258,8 +258,8 @@ Cards:
 - Total time
 - Active time
 - Pause time
-- Success rate when relevant
-- Estimated darts when throw pace is set
+- Success rate, jos relevantti
+- Estimated darts, jos heittotahti on asetettu
 - Personal best comparison
 - Fastest/slowest sector
 - Full sector breakdown
@@ -270,42 +270,42 @@ Cards:
 - Throw pace
 - Timer defaults
 - Vibration feedback
-- Data export/import later
+- Data export/import myöhemmin
 
-## What not to build in MVP
+## Mitä MVP:hen ei rakenneta
 
-Do not build these yet:
+Näitä ei rakenneta vielä:
 
 - Online match play
-- Full X01 scorer
-- Camera or automatic scoring
+- Täysi X01-scorer
+- Kamera tai automaattinen pisteytys
 - Cloud sync
-- Leaderboards
-- Payments/subscriptions
-- User accounts
-- Heavy gamification
-- Exact DartZone UI clone
-- Pixel-font retro copy
-- Detailed dart-by-dart logging as the default
+- Leaderboardit
+- Maksut/tilaukset
+- Käyttäjätilit
+- Raskas gamification
+- Suora DartZone-UI-kopio
+- Pixel-font/retro-kopio
+- Pakollinen heitto heitolta -kirjaus
 
-## Visual direction
+## Visuaalinen suunta
 
-Do not copy DartZone visually. It uses a strong pixel-font / dark blue / retro game style. Our app should have its own identity:
+DartZonea ei kopioida visuaalisesti. DartZonessa on vahva pixel-fontti / tummansininen / retro game -tyyli. FinishLabille tehdään oma identiteetti:
 
-- Dark, clean, modern sports UI
-- Large readable typography
-- Clear cards
-- High contrast
-- Minimal interaction during practice
-- Big buttons suitable for sweaty hands / quick taps between throws
+- Tumma, selkeä ja moderni urheilullinen UI
+- Isot ja helposti luettavat tekstit
+- Selkeät kortit
+- Korkea kontrasti
+- Minimaalinen interaktio treenin aikana
+- Isot napit, joita on helppo painaa nopeasti heittovuorojen välissä
 
-## Working name
+## Työnimi
 
-Possible names:
+Mahdollisia nimiä:
 
 - FinishLab
 - CheckoutLab
 - OcheTimer
 - Darts Practice Timer
 
-Current preferred working name: **FinishLab**.
+Nykyinen suosikki työnimeksi: **FinishLab**.
