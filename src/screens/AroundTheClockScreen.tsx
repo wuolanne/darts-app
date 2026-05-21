@@ -25,16 +25,29 @@ const ALL_DOUBLES = Array.from({ length: 20 }, (_, i) => `D${i + 1}`);
 const ALL_TREBLES = Array.from({ length: 20 }, (_, i) => `T${i + 1}`);
 const D16_PATH_TARGETS = ["D16", "D8", "D4", "D2", "D1"] as const;
 const CUSTOM_TARGETS_KEY = "around_clock_custom_targets";
+const TARGET_PICKER_ORDER = [...ALL_SINGLES, ...ALL_DOUBLES, ...ALL_TREBLES, ...CENTER_TARGETS];
+
+function summarizeTargetsCompact(prefix: string, targets: string[], limit = 4): string {
+  if (targets.length === 0) {
+    return `${prefix}: None selected`;
+  }
+  const shown = targets.slice(0, limit).join(", ");
+  if (targets.length <= limit) {
+    return `${prefix}: ${shown}`;
+  }
+  return `${prefix}: ${shown} + ${targets.length - limit} more`;
+}
 
 function sanitizeCustomTargets(values: string[]): string[] {
-  const allowed = new Set<string>([...ALL_SINGLES, ...ALL_DOUBLES, ...ALL_TREBLES, ...CENTER_TARGETS]);
+  const allowed = new Set<string>(TARGET_PICKER_ORDER);
+  const order = new Map<string, number>(TARGET_PICKER_ORDER.map((target, index) => [target, index]));
   const next: string[] = [];
   for (const value of values) {
     if (allowed.has(value) && !next.includes(value)) {
       next.push(value);
     }
   }
-  return next;
+  return next.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
 }
 
 function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2, customTargets: string[]): string[] {
@@ -80,6 +93,35 @@ function modeLabel(mode: AroundClockMode): string {
     return "Custom";
   }
   return "Full Sector";
+}
+
+function setupModeSummary(mode: AroundClockMode, customTargets: string[]): string {
+  if (mode === "singles") {
+    return "Singles: S1-S20";
+  }
+  if (mode === "doubles") {
+    return "Doubles: D1-D20";
+  }
+  if (mode === "trebles") {
+    return "Trebles: T1-T20";
+  }
+  if (mode === "full_sector") {
+    return "Full Sector: Bull, 25, then S/T/D for sectors 1-20";
+  }
+  if (mode === "common_doubles") {
+    return `Common Doubles: ${COMMON_DOUBLES_TARGETS.join(", ")}`;
+  }
+  return summarizeTargetsCompact("Custom", customTargets);
+}
+
+function activeModeSummary(mode: AroundClockMode, targets: string[]): string {
+  if (mode === "common_doubles") {
+    return COMMON_DOUBLES_TARGETS.join(" -> ");
+  }
+  if (mode === "custom") {
+    return summarizeTargetsCompact(`Custom: ${targets.length} targets`, targets);
+  }
+  return summarizeTargetsCompact(modeLabel(mode), targets);
 }
 
 export function AroundTheClockScreen({
@@ -274,6 +316,7 @@ export function AroundTheClockScreen({
             ]}
             onChange={setMode}
           />
+          <p className="muted top-gap">{setupModeSummary(mode, customTargets)}</p>
           {mode === "custom" ? (
             <div className="top-gap">
               <p className="muted">Pick custom targets (order is preserved).</p>
@@ -406,6 +449,7 @@ export function AroundTheClockScreen({
             </Pill>
           </div>
           <p className="big-number">{currentTarget}</p>
+          <p className="muted practice-summary">{activeModeSummary(running.mode, running.targets)}</p>
           <div className="metric-grid">
             <div>
               <p className="muted">Total time</p>

@@ -244,6 +244,12 @@ body {
   color: var(--text-muted);
 }
 
+.practice-summary {
+  margin-top: -2px;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
 .top-gap {
   margin-top: 12px;
 }
