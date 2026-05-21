@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.tsbuildinfo
 npm-debug.log*
+
+.vercel

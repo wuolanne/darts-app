@@ -13,6 +13,7 @@ export interface UserSettings {
   preferredDouble: PreferredDouble;
   defaultTimer: TimerOption;
   themeMode: ThemeMode;
+  vibrationFeedback: boolean;
   throwPace: ThrowPaceSetting;
 }
 
@@ -78,6 +79,8 @@ export interface AroundClockSession {
   entries: AroundClockEntry[];
   totalActiveSeconds: number;
   pauseSeconds: number;
+  estimatedDarts: number | null;
+  throwPaceSecondsPerThree: number | null;
 }
 
 export type StatsRange = "7d" | "30d" | "total";

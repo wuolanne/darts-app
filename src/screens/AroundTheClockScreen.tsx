@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AroundClockSession, AroundClockMode, UserSettings } from "../types/models";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { estimateDartsFromActiveTime } from "../utils/pace";
+import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatSeconds, toRoundedSeconds } from "../utils/time";
 
 interface RunningState {
@@ -114,9 +115,14 @@ export function AroundTheClockScreen({
     const now = Date.now();
     const seconds = toRoundedSeconds(now - running.targetStartedAt);
     const nextEntries = [...running.entries, { target: currentTarget, seconds }];
+    triggerHaptic(settings.vibrationFeedback);
     const nextIndex = running.index + 1;
     if (nextIndex >= running.targets.length) {
       const totalActive = toRoundedSeconds(now - running.startedAt - running.pauseMs);
+      const estimatedDarts = estimateDartsFromActiveTime(
+        totalActive,
+        settings.throwPace.secondsPerThree
+      );
       const session: AroundClockSession = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
@@ -124,7 +130,9 @@ export function AroundTheClockScreen({
         doubleRequirement: running.doubleRequirement,
         entries: nextEntries,
         totalActiveSeconds: totalActive,
-        pauseSeconds: toRoundedSeconds(running.pauseMs)
+        pauseSeconds: toRoundedSeconds(running.pauseMs),
+        estimatedDarts,
+        throwPaceSecondsPerThree: settings.throwPace.secondsPerThree
       };
       const comparable = previousSessions
         .filter(
@@ -181,10 +189,7 @@ export function AroundTheClockScreen({
     });
   };
 
-  const estimated =
-    result && settings.throwPace.secondsPerThree
-      ? estimateDartsFromActiveTime(result.totalActiveSeconds, settings.throwPace.secondsPerThree)
-      : null;
+  const estimated = result?.estimatedDarts ?? null;
   const resultFastest =
     result?.entries.reduce<{ target: string; seconds: number } | null>((best, entry) => {
       if (!best || entry.seconds < best.seconds) {
@@ -294,11 +299,11 @@ export function AroundTheClockScreen({
           {resultAverage !== null ? (
             <p className="muted">Average target/sector time: {formatSeconds(resultAverage)}</p>
           ) : null}
-          {estimated ? (
+          {estimated !== null ? (
             <p className="muted">
               Estimated darts: ~{estimated}
               <br />
-              Based on {settings.throwPace.secondsPerThree?.toFixed(2)} sec / 3 darts
+              Based on {result.throwPaceSecondsPerThree?.toFixed(2)} sec / 3 darts
             </p>
           ) : null}
           {pbDelta !== null ? (

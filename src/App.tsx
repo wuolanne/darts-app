@@ -69,6 +69,7 @@ function AppBody({
     return (
       <CheckoutSpeedrunScreen
         onBack={() => setScreen("home")}
+        settings={settings}
         previousSessions={speedruns}
         onSaveSession={(session) => {
           const next = appendCheckoutSpeedrun(session);

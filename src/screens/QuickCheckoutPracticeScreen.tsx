@@ -9,6 +9,7 @@ import {
 } from "../types/models";
 import { CHECKOUT_RANGE_PRESETS, TIMER_OPTIONS } from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
+import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 
 type Stage = "setup" | "attempt" | "feedback";
@@ -98,9 +99,10 @@ export function QuickCheckoutPracticeScreen({
       range: selectedRange,
       preferredDouble: settings.preferredDouble,
       result,
-      elapsedSeconds: elapsed
+      elapsedSeconds: timerSeconds > 0 ? elapsed : null
     };
     onSaveAttempt(attempt);
+    triggerHaptic(settings.vibrationFeedback);
     setFeedback(feedbackForResult(result, settings.preferredDouble));
     setLastResult(result);
     setStage("feedback");

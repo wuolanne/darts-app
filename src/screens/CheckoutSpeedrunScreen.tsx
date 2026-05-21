@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
-import { CheckoutSpeedrunSession, SpeedrunEntryResult, SpeedrunOrder } from "../types/models";
+import {
+  CheckoutSpeedrunSession,
+  SpeedrunEntryResult,
+  SpeedrunOrder,
+  UserSettings
+} from "../types/models";
 import { CHECKOUT_RANGE_PRESETS } from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
+import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatSeconds, toRoundedSeconds } from "../utils/time";
 
 interface RunningState {
@@ -43,11 +49,13 @@ function getSuccessRate(entries: { result: SpeedrunEntryResult }[]): number {
 export function CheckoutSpeedrunScreen({
   onBack,
   onSaveSession,
-  previousSessions
+  previousSessions,
+  settings
 }: {
   onBack: () => void;
   onSaveSession: (session: CheckoutSpeedrunSession) => void;
   previousSessions: CheckoutSpeedrunSession[];
+  settings: UserSettings;
 }) {
   const [preset, setPreset] = useState(CHECKOUT_RANGE_PRESETS[1].key);
   const [customMode, setCustomMode] = useState(false);
@@ -74,7 +82,7 @@ export function CheckoutSpeedrunScreen({
   );
 
   const currentCheckout = running ? running.list[running.index] : null;
-  const route = currentCheckout ? getRouteForFinish(currentCheckout, "D16") : null;
+  const route = currentCheckout ? getRouteForFinish(currentCheckout, settings.preferredDouble) : null;
 
   const activeTotalSeconds = running
     ? toRoundedSeconds((ticker - running.startedAt - running.pauseMs - (running.pauseStartedAt ? ticker - running.pauseStartedAt : 0)))
@@ -136,6 +144,7 @@ export function CheckoutSpeedrunScreen({
     const now = Date.now();
     const checkoutSeconds = toRoundedSeconds(now - running.currentCheckoutStartedAt);
     const nextEntries = [...running.entries, { checkout: running.list[running.index], seconds: checkoutSeconds, result: resultType }];
+    triggerHaptic(settings.vibrationFeedback);
     const nextIndex = running.index + 1;
     if (nextIndex >= running.list.length) {
       const totalActive = toRoundedSeconds(now - running.startedAt - running.pauseMs);
@@ -325,6 +334,7 @@ export function CheckoutSpeedrunScreen({
             {result.entries.filter((entry) => entry.result === "bust").length}
           </p>
           <p className="muted">Success rate: {getSuccessRate(result.entries).toFixed(1)}%</p>
+          <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
               Fastest checkout: {resultFastest.checkout} ({formatSeconds(resultFastest.seconds)})

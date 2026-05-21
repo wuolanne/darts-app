@@ -120,6 +120,7 @@ interface AroundModeStats {
   bestTime: number;
   latestTime: number;
   averageTime: number;
+  latestEstimatedDarts: number | null;
 }
 
 export function getAroundClockStats(sessions: AroundClockSession[], range: StatsRange) {
@@ -139,7 +140,8 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
         sessions: 1,
         bestTime: session.totalActiveSeconds,
         latestTime: session.totalActiveSeconds,
-        averageTime: session.totalActiveSeconds
+        averageTime: session.totalActiveSeconds,
+        latestEstimatedDarts: session.estimatedDarts ?? null
       });
       continue;
     }
@@ -151,7 +153,8 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
       bestTime: Math.min(existing.bestTime, session.totalActiveSeconds),
       latestTime: session.totalActiveSeconds,
       averageTime:
-        (existing.averageTime * existing.sessions + session.totalActiveSeconds) / nextSessions
+        (existing.averageTime * existing.sessions + session.totalActiveSeconds) / nextSessions,
+      latestEstimatedDarts: session.estimatedDarts ?? null
     });
   }
 

@@ -86,6 +86,24 @@ export function SettingsScreen({
       </Card>
 
       <Card>
+        <h3>Vibration feedback</h3>
+        <Segmented
+          value={settings.vibrationFeedback ? "on" : "off"}
+          options={[
+            { label: "On", value: "on" },
+            { label: "Off", value: "off" }
+          ]}
+          onChange={(value) =>
+            onUpdateSettings({
+              ...settings,
+              vibrationFeedback: value === "on"
+            })
+          }
+        />
+        <p className="muted">Uses device vibration when available.</p>
+      </Card>
+
+      <Card>
         <h3>Throw pace</h3>
         <p className="muted">
           Current:{" "}

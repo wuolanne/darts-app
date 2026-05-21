@@ -38,6 +38,7 @@ Nama tiedostot ohjaavat MVP-suuntaa:
   - Preferred double: D16 / D20 / D18 / D12 / Not sure
   - Default timer: Off / 10 / 20 / 30 sec
   - Theme: Dark / Light / Dim / System
+  - Vibration feedback: On / Off
   - Throw pace:
     - Fast / Normal / Relaxed
     - Custom sec / 3 darts

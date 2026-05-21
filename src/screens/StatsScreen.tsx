@@ -86,6 +86,15 @@ export function StatsScreen({
             </span>
           </div>
         ))}
+        {around.modes.some((item) => item.latestEstimatedDarts !== null) ? (
+          <p>
+            Latest estimated darts:{" "}
+            {around.modes
+              .filter((item) => item.latestEstimatedDarts !== null)
+              .map((item) => `${item.mode} ~${item.latestEstimatedDarts}`)
+              .join(" | ")}
+          </p>
+        ) : null}
         {around.fastest ? (
           <p>
             Fastest target/sector: {around.fastest.target} in {formatSeconds(around.fastest.seconds)}
