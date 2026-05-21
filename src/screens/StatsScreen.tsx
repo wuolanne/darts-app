@@ -208,7 +208,10 @@ export function StatsScreen({
                 <details
                   className="stats-subsection top-gap"
                   open={showAllTargetsOpen}
-                  onToggle={(event) => setShowAllTargetsOpen((event.currentTarget as HTMLDetailsElement).open)}
+                  onToggle={(event) => {
+                    const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+                    setShowAllTargetsOpen(isOpen);
+                  }}
                 >
                   <summary>{t.stats.showAllTargetsSectors}</summary>
                   {around.byTargetGrouped.map((group) => (
@@ -216,12 +219,13 @@ export function StatsScreen({
                       key={group.mode}
                       className="stats-subsection top-gap"
                       open={openTargetModes[group.mode] === true}
-                      onToggle={(event) =>
+                      onToggle={(event) => {
+                        const isOpen = (event.currentTarget as HTMLDetailsElement).open;
                         setOpenTargetModes((prev) => ({
                           ...prev,
-                          [group.mode]: (event.currentTarget as HTMLDetailsElement).open
-                        }))
-                      }
+                          [group.mode]: isOpen
+                        }));
+                      }}
                     >
                       <summary>{group.mode}</summary>
                       {group.rows.map((row) => (
