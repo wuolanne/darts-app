@@ -87,8 +87,33 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   58: { finish: 58, label: "Optimal route", route: ["S18", "D20"] },
   59: { finish: 59, label: "Optimal route", route: ["S19", "D20"] },
   60: { finish: 60, label: "Optimal route", route: ["S20", "D20"] },
-  61: { finish: 61, label: "Optimal route", route: ["T15", "D8"] },
-  62: { finish: 62, label: "Optimal route", route: ["T10", "D16"] },
+  61: {
+    finish: 61,
+    label: "Optimal route",
+    route: ["T11", "D14"],
+    singleHitContinuation: {
+      singleHitTarget: "S11",
+      remaining: 50,
+      continuationRoute: ["Bull"]
+    },
+    alternativeRoutes: [{ label: "Alternative route", route: ["T15", "D8"] }]
+  },
+  62: {
+    finish: 62,
+    label: "Optimal route",
+    route: ["T10", "D16"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T12", "D13"],
+        singleHitContinuation: {
+          singleHitTarget: "S12",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
+  },
   63: {
     finish: 63,
     label: "Optimal route",
@@ -99,13 +124,112 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
       continuationRoute: ["Bull"]
     }
   },
-  64: { finish: 64, label: "Optimal route", route: ["T16", "D8"] },
-  65: { finish: 65, label: "Optimal route", route: ["T11", "D16"] },
-  66: { finish: 66, label: "Optimal route", route: ["T10", "D18"] },
-  67: { finish: 67, label: "Optimal route", route: ["T17", "D8"] },
-  68: { finish: 68, label: "Optimal route", route: ["T20", "D4"] },
-  69: { finish: 69, label: "Optimal route", route: ["T15", "D12"] },
-  70: { finish: 70, label: "Optimal route", route: ["T18", "D8"] },
+  64: {
+    finish: 64,
+    label: "Optimal route",
+    route: ["T16", "D8"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T14", "D11"],
+        singleHitContinuation: {
+          singleHitTarget: "S14",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
+  },
+  65: {
+    finish: 65,
+    label: "Optimal route",
+    route: ["T15", "D10"],
+    singleHitContinuation: {
+      singleHitTarget: "S15",
+      remaining: 50,
+      continuationRoute: ["Bull"]
+    },
+    alternativeRoutes: [
+      {
+        label: "Alternative route",
+        route: ["T11", "D16"],
+        singleHitContinuation: {
+          singleHitTarget: "S11",
+          remaining: 54,
+          continuationRoute: ["S14", "D20"]
+        }
+      }
+    ]
+  },
+  66: {
+    finish: 66,
+    label: "Optimal route",
+    route: ["T10", "D18"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T16", "D9"],
+        singleHitContinuation: {
+          singleHitTarget: "S16",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
+  },
+  67: {
+    finish: 67,
+    label: "Optimal route",
+    route: ["T17", "D8"],
+    singleHitContinuation: {
+      singleHitTarget: "S17",
+      remaining: 50,
+      continuationRoute: ["Bull"]
+    }
+  },
+  68: {
+    finish: 68,
+    label: "Optimal route",
+    route: ["T20", "D4"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T18", "D7"],
+        singleHitContinuation: {
+          singleHitTarget: "S18",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
+  },
+  69: {
+    finish: 69,
+    label: "Optimal route",
+    route: ["T19", "D6"],
+    singleHitContinuation: {
+      singleHitTarget: "S19",
+      remaining: 50,
+      continuationRoute: ["Bull"]
+    },
+    alternativeRoutes: [{ label: "Alternative route", route: ["T15", "D12"] }]
+  },
+  70: {
+    finish: 70,
+    label: "Optimal route",
+    route: ["T18", "D8"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T20", "D5"],
+        singleHitContinuation: {
+          singleHitTarget: "S20",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
+  },
   71: { finish: 71, label: "Optimal route", route: ["T13", "D16"] },
   72: { finish: 72, label: "Optimal route", route: ["T16", "D12"] },
   73: { finish: 73, label: "Optimal route", route: ["T19", "D8"] },
@@ -345,6 +469,57 @@ function preferredDoubleRank(route: CheckoutRoute, preferredDouble: PreferredDou
   return 1;
 }
 
+const AWKWARD_DOUBLE_TARGETS = new Set(["D15", "D13", "D11", "D9", "D7", "D5"]);
+const EXPLICIT_ROUTE_PREFERENCES: Record<number, string> = {
+  65: "T15->D10",
+  67: "T17->D8",
+  69: "T19->D6"
+};
+
+function routeKey(route: CheckoutRoute): string {
+  return route.route.map((target) => normalizeDartTarget(target)).join("->");
+}
+
+function scoreRouteStrength(route: CheckoutRoute, preferredDouble: PreferredDouble): number {
+  if (route.route.length === 0) return -999;
+
+  const normalizedRoute = route.route.map((target) => normalizeDartTarget(target));
+  const first = normalizedRoute[0] ?? "";
+  const last = normalizedRoute[normalizedRoute.length - 1] ?? "";
+  const continuation = route.singleHitContinuation;
+  const continuationTargets = continuation?.continuationRoute ?? [];
+
+  let score = 0;
+
+  if (first.startsWith("T")) score += 4;
+  if (normalizedRoute.length === 2) score += 2;
+  if (last === "Bull") score += 1;
+
+  if (preferredDouble !== "Not sure" && (route.preferredDouble === preferredDouble || last === preferredDouble)) {
+    score += 3;
+  }
+
+  if (
+    continuation &&
+    continuation.remaining === 50 &&
+    continuationTargets.length > 0 &&
+    normalizeDartTarget(continuationTargets[0]) === "Bull"
+  ) {
+    score += 5;
+  }
+
+  if (AWKWARD_DOUBLE_TARGETS.has(last)) {
+    score -= 3;
+  }
+
+  const explicit = EXPLICIT_ROUTE_PREFERENCES[route.finish];
+  if (explicit && routeKey(route) === explicit) {
+    score += 20;
+  }
+
+  return score;
+}
+
 function isValidFinalTarget(target: DartTarget): boolean {
   const normalized = normalizeDartTarget(target);
   if (!normalized) return false;
@@ -538,7 +713,11 @@ export function getCheckoutRoutes(
   });
 
   const combined = [primary, ...alternatives];
-  combined.sort((a, b) => preferredDoubleRank(a, preferredDouble) - preferredDoubleRank(b, preferredDouble));
+  combined.sort((a, b) => {
+    const strengthDiff = scoreRouteStrength(b, preferredDouble) - scoreRouteStrength(a, preferredDouble);
+    if (strengthDiff !== 0) return strengthDiff;
+    return preferredDoubleRank(a, preferredDouble) - preferredDoubleRank(b, preferredDouble);
+  });
   return combined;
 }
 
