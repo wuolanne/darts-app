@@ -31,6 +31,28 @@ interface FeedbackState {
   body: string;
 }
 
+type PracticeMode = "main-route" | "single-miss-scenario";
+
+interface MissScenario {
+  finish: number;
+  triedTreble: string;
+  hitSingle: string;
+  remaining: number;
+  continuationRoute: DartTarget[];
+}
+
+interface RouteSnapshot {
+  activeRoute: DartTarget[];
+  activeRouteLabel: string;
+  stepIndex: number;
+  remaining: number;
+}
+
+interface PickHistoryItem {
+  target: string;
+  snapshot: RouteSnapshot;
+}
+
 function randomPick<T>(values: T[]): T | null {
   if (values.length === 0) return null;
   const index = Math.floor(Math.random() * values.length);
@@ -46,6 +68,35 @@ function buildPlayableFinishes(
     const route = getPrimaryCheckoutRoute(value, preferredDouble);
     return Boolean(route && !route.isBogey && route.route.length > 0);
   });
+}
+
+function buildMissScenarios(
+  min: number,
+  max: number,
+  preferredDouble: UserSettings["preferredDouble"]
+): MissScenario[] {
+  const scenarios: MissScenario[] = [];
+  const candidates = buildPlayableFinishes(min, max, preferredDouble);
+
+  for (const finish of candidates) {
+    const primary = getPrimaryCheckoutRoute(finish, preferredDouble);
+    if (!primary || primary.route.length === 0) continue;
+    const first = normalizeDartTarget(primary.route[0] ?? "");
+    if (!first.startsWith("T")) continue;
+    const continuation = getSingleHitContinuation(primary);
+    if (!continuation) continue;
+    const continuationRoute = continuation.continuationRoute.map((item) => normalizeDartTarget(item));
+    if (continuationRoute.length === 0 || continuationRoute.length > 2) continue;
+    scenarios.push({
+      finish,
+      triedTreble: first,
+      hitSingle: normalizeDartTarget(continuation.singleHitTarget),
+      remaining: continuation.remaining,
+      continuationRoute
+    });
+  }
+
+  return scenarios;
 }
 
 function routePanel(details: CheckoutRouteDetails | null): JSX.Element {
@@ -101,6 +152,7 @@ export function QuickCheckoutPracticeScreen({
   onSaveAttempt: (attempt: CheckoutAttempt) => void;
 }) {
   const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-70");
+  const [practiceMode, setPracticeMode] = useState<PracticeMode>("main-route");
   const [customStart, setCustomStart] = useState("61");
   const [customEnd, setCustomEnd] = useState("70");
   const [timerSeconds, setTimerSeconds] = useState<TimerOption>(settings.defaultTimer);
@@ -119,6 +171,9 @@ export function QuickCheckoutPracticeScreen({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [completed, setCompleted] = useState(false);
   const [savedResult, setSavedResult] = useState(false);
+  const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
+  const [pickedTargets, setPickedTargets] = useState<string[]>([]);
+  const [pickHistory, setPickHistory] = useState<PickHistoryItem[]>([]);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -136,6 +191,10 @@ export function QuickCheckoutPracticeScreen({
 
   const playableFinishes = useMemo(
     () => buildPlayableFinishes(activeRange.min, activeRange.max, settings.preferredDouble),
+    [activeRange.min, activeRange.max, settings.preferredDouble]
+  );
+  const missScenarios = useMemo(
+    () => buildMissScenarios(activeRange.min, activeRange.max, settings.preferredDouble),
     [activeRange.min, activeRange.max, settings.preferredDouble]
   );
 
@@ -178,7 +237,7 @@ export function QuickCheckoutPracticeScreen({
           setFeedback({
             tone: "wrong",
             title: "Timer ended",
-            body: "Time is up. Review the route and press NEXT CHECKOUT."
+            body: `Time is up. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : "No valid route yet."}`
           });
           return 0;
         }
@@ -189,6 +248,7 @@ export function QuickCheckoutPracticeScreen({
   }, [
     attemptStartedAt,
     completed,
+    currentRouteData,
     finish,
     onSaveAttempt,
     savedResult,
@@ -214,11 +274,7 @@ export function QuickCheckoutPracticeScreen({
     setSavedResult(true);
   }
 
-  function loadCheckout(nextFinish: number) {
-    const primary = getPrimaryCheckoutRoute(nextFinish, settings.preferredDouble);
-    const fallbackRoute = primary?.route ?? [];
-
-    setFinish(nextFinish);
+  function resetAttemptState() {
     setAttemptStartedAt(performance.now());
     setSecondsLeft(timerSeconds);
     setRouteVisible(false);
@@ -226,14 +282,49 @@ export function QuickCheckoutPracticeScreen({
     setFeedback(null);
     setCompleted(false);
     setSavedResult(false);
+    setPickedTargets([]);
+    setPickHistory([]);
     setStepIndex(0);
+  }
+
+  function loadCheckout(nextFinish: number) {
+    const primary = getPrimaryCheckoutRoute(nextFinish, settings.preferredDouble);
+    const fallbackRoute = primary?.route ?? [];
+
+    setFinish(nextFinish);
+    setMissScenario(null);
+    resetAttemptState();
     setRemaining(nextFinish);
     setActiveRoute(fallbackRoute);
     setActiveRouteLabel(primary?.label ?? "Optimal route");
     setStage("playing");
   }
 
+  function loadMissScenario(nextScenario: MissScenario) {
+    setFinish(nextScenario.finish);
+    setMissScenario(nextScenario);
+    resetAttemptState();
+    setRemaining(nextScenario.remaining);
+    setActiveRoute(nextScenario.continuationRoute);
+    setActiveRouteLabel("Continuation route");
+    setStage("playing");
+  }
+
   function startPractice() {
+    if (practiceMode === "single-miss-scenario") {
+      const scenario = randomPick(missScenarios);
+      if (!scenario) {
+        setFeedback({
+          tone: "info",
+          title: "No scenario data",
+          body: "No valid single-miss scenarios for this range yet."
+        });
+        return;
+      }
+      loadMissScenario(scenario);
+      return;
+    }
+
     const nextFinish = randomPick(playableFinishes);
     if (nextFinish === null) {
       setFeedback({
@@ -247,6 +338,20 @@ export function QuickCheckoutPracticeScreen({
   }
 
   function nextCheckout() {
+    if (practiceMode === "single-miss-scenario") {
+      const scenario = randomPick(missScenarios);
+      if (!scenario) {
+        setFeedback({
+          tone: "info",
+          title: "No scenario data",
+          body: "No valid single-miss scenarios for this range yet."
+        });
+        return;
+      }
+      loadMissScenario(scenario);
+      return;
+    }
+
     const nextFinish = randomPick(playableFinishes);
     if (nextFinish === null) {
       setFeedback({
@@ -259,6 +364,19 @@ export function QuickCheckoutPracticeScreen({
     loadCheckout(nextFinish);
   }
 
+  function handleUndo() {
+    if (completed || pickHistory.length === 0) return;
+    const latest = pickHistory[pickHistory.length - 1];
+    setPickHistory((prev) => prev.slice(0, -1));
+    setPickedTargets((prev) => prev.slice(0, -1));
+    setSelectedTarget(null);
+    setActiveRoute(latest.snapshot.activeRoute);
+    setActiveRouteLabel(latest.snapshot.activeRouteLabel);
+    setStepIndex(latest.snapshot.stepIndex);
+    setRemaining(latest.snapshot.remaining);
+    setFeedback(null);
+  }
+
   function handleTargetTap(rawTarget: string) {
     if (stage !== "playing" || completed || activeRoute.length === 0 || !expectedTarget) {
       return;
@@ -266,9 +384,18 @@ export function QuickCheckoutPracticeScreen({
 
     const chosenTarget = normalizeDartTarget(rawTarget);
     const expected = normalizeDartTarget(expectedTarget);
+    const nextPicks = [...pickedTargets, chosenTarget];
     setSelectedTarget(chosenTarget);
+    setPickedTargets(nextPicks);
+    setPickHistory((prev) => [
+      ...prev,
+      {
+        target: chosenTarget,
+        snapshot: { activeRoute, activeRouteLabel, stepIndex, remaining }
+      }
+    ]);
 
-    if (stepIndex === 0 && currentRouteData) {
+    if (practiceMode === "main-route" && stepIndex === 0 && currentRouteData) {
       const continuation = getSingleHitContinuation(currentRouteData);
       const singleHitTarget = continuation?.singleHitTarget
         ? normalizeDartTarget(continuation.singleHitTarget)
@@ -282,24 +409,26 @@ export function QuickCheckoutPracticeScreen({
         if (followUpRoute.length === 0) {
           setCompleted(true);
           saveAttempt("failed");
+          setFeedback({
+            tone: "wrong",
+            title: "No continuation",
+            body: `You hit ${singleHitTarget}. ${continuation?.remaining} left, but no detailed follow-up exists yet.`
+          });
         }
-        setFeedback({
-          tone: "single",
-          title: "Single hit",
-          body:
-            followUpRoute.length > 0
-              ? `You hit ${singleHitTarget}. ${continuation?.remaining} left. Continue: ${formatRoute(followUpRoute)}`
-              : `You hit ${singleHitTarget}. ${continuation?.remaining} left. No detailed follow-up yet.`
-        });
         return;
       }
     }
 
     if (chosenTarget !== expected) {
+      saveAttempt("failed");
+      setCompleted(true);
+      const correct = activeRoute.length > 0 ? formatRoute(activeRoute) : "No valid continuation yet.";
       setFeedback({
         tone: "wrong",
-        title: "Wrong target",
-        body: `You chose ${chosenTarget}. Expected ${expected}. Keep playing this same checkout.`
+        title: "Wrong",
+        body: missScenario
+          ? `Your picks: ${nextPicks.join(" -> ")}. Correct continuation from ${missScenario.remaining}: ${correct}.`
+          : `Your picks: ${nextPicks.join(" -> ")}. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : "No valid route yet."}`
       });
       return;
     }
@@ -315,26 +444,21 @@ export function QuickCheckoutPracticeScreen({
       triggerHaptic(settings.vibrationFeedback);
       setFeedback({
         tone: "complete",
-        title: "Checkout complete",
-        body: `Route done: ${formatRoute(activeRoute)}`
+        title: "Correct",
+        body: missScenario
+          ? `Correct! ${formatRoute(activeRoute)} finishes ${missScenario.remaining}.`
+          : `Correct! Good route. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : formatRoute(activeRoute)}`
       });
       return;
     }
 
     setStepIndex(nextStep);
     setRemaining(nextRemaining);
-    setFeedback({
-      tone: "correct",
-      title: "Correct",
-      body: `Good hit: ${expected}. Next target: ${normalizeDartTarget(activeRoute[nextStep]!)}`
-    });
   }
 
-  const boardRoute = routeVisible
+  const boardRoute = routeVisible || completed
     ? activeRoute.join(", ")
-    : expectedTarget
-      ? expectedTarget
-      : "";
+    : "";
 
   return (
     <div className="screen">
@@ -379,9 +503,29 @@ export function QuickCheckoutPracticeScreen({
             }))}
             onChange={setTimerSeconds}
           />
+          <p className="muted top-gap">Mode</p>
+          <Segmented
+            value={practiceMode}
+            options={[
+              { label: "Main route", value: "main-route" },
+              { label: "Single miss scenarios", value: "single-miss-scenario" }
+            ]}
+            onChange={(value) => setPracticeMode(value as PracticeMode)}
+          />
           <p className="muted top-gap">Playable finishes in this range: {playableFinishes.length}</p>
+          {practiceMode === "single-miss-scenario" ? (
+            <p className="muted">Available scenarios: {missScenarios.length}</p>
+          ) : null}
           <div className="top-gap">
-            <Button full onClick={startPractice} disabled={playableFinishes.length === 0 || (selectedRange === "custom" && !customRange)}>
+            <Button
+              full
+              onClick={startPractice}
+              disabled={
+                (practiceMode === "main-route" && playableFinishes.length === 0) ||
+                (practiceMode === "single-miss-scenario" && missScenarios.length === 0) ||
+                (selectedRange === "custom" && !customRange)
+              }
+            >
               Start practice
             </Button>
           </div>
@@ -397,22 +541,23 @@ export function QuickCheckoutPracticeScreen({
           </div>
 
           <p className="big-number">Finish: {finish}</p>
+          {practiceMode === "single-miss-scenario" && missScenario ? (
+            <>
+              <p>
+                Tried {missScenario.triedTreble}, hit {missScenario.hitSingle}.
+              </p>
+              <p>{missScenario.remaining} left. Choose the continuation.</p>
+            </>
+          ) : null}
           <p>
             <span className="muted">Current remaining:</span> {remaining}
           </p>
-          <p>
-            <span className="muted">Expected target:</span> {expectedTarget ?? "No valid route yet."}
-          </p>
-          <p>
-            <span className="muted">Best first target:</span> {bestFirstTarget ?? "No valid route yet."}
-          </p>
-          {currentRouteData ? (
+          {pickedTargets.length > 0 ? (
             <p>
-              <span className="muted">Optimal route:</span> {formatRoute(currentRouteData.route)}
+              <span className="muted">Your picks:</span> {pickedTargets.join(" -> ")}
             </p>
-          ) : (
-            <p className="warn-text">No valid route yet.</p>
-          )}
+          ) : null}
+          {!completed ? <p className="muted">Tap your target choice on the board.</p> : null}
 
           {timerSeconds > 0 ? (
             <div className="timer-wrap">
@@ -426,23 +571,23 @@ export function QuickCheckoutPracticeScreen({
             </div>
           ) : null}
 
-          <p className="muted">Tap the dartboard target shown above.</p>
-
           <Dartboard
             route={boardRoute}
-            reveal
+            reveal={completed || routeVisible}
             onTargetSelect={handleTargetTap}
             selectedTarget={selectedTarget}
             disabled={completed || activeRoute.length === 0}
           />
 
-          <div className="top-gap">
-            <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
-              {routeVisible ? "HIDE ROUTE" : "SHOW ROUTE"}
-            </Button>
-          </div>
+          {!completed && pickedTargets.length > 0 ? (
+            <div className="top-gap">
+              <Button variant="ghost" onClick={handleUndo}>
+                UNDO
+              </Button>
+            </div>
+          ) : null}
 
-          {routeVisible ? (
+          {completed && routeVisible ? (
             <div className="finish-inline-detail">
               <h4>Finish {finish}</h4>
               {routePanel(routeDetails)}
@@ -453,33 +598,22 @@ export function QuickCheckoutPracticeScreen({
             <div className="feedback-box quick-feedback-box">
               <h4>{feedback.title}</h4>
               <p>{feedback.body}</p>
-              <p>
-                <span className="muted">Route now:</span>{" "}
-                {activeRoute.length > 0 ? `${activeRouteLabel}: ${formatRoute(activeRoute)}` : "No valid route yet."}
-              </p>
-              {!completed && currentRouteData ? (
+              {completed ? (
                 <>
                   <p>
-                    <span className="muted">Best first target:</span> {bestFirstTarget ?? "No valid route yet."}
+                    <span className="muted">Your picks:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
                   </p>
-                  {currentRouteData.singleHitContinuation ? (
-                    <p>
-                      <span className="muted">If single hit:</span>{" "}
-                      {currentRouteData.singleHitContinuation.singleHitTarget} leaves{" "}
-                      {currentRouteData.singleHitContinuation.remaining}, follow-up{" "}
-                      {currentRouteData.singleHitContinuation.continuationRoute.length > 0
-                        ? formatRoute(currentRouteData.singleHitContinuation.continuationRoute)
-                        : "No detailed follow-up yet."}
-                    </p>
-                  ) : null}
+                  <p>
+                    <span className="muted">Route:</span>{" "}
+                    {activeRoute.length > 0 ? `${activeRouteLabel}: ${formatRoute(activeRoute)}` : "No valid route yet."}
+                  </p>
+                  <div className="row top-gap">
+                    <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
+                      {routeVisible ? "HIDE DETAILS" : "SHOW DETAILS"}
+                    </Button>
+                    <Button onClick={nextCheckout}>NEXT CHECKOUT</Button>
+                  </div>
                 </>
-              ) : null}
-              {completed ? (
-                <div className="top-gap">
-                  <Button full onClick={nextCheckout}>
-                    NEXT CHECKOUT
-                  </Button>
-                </div>
               ) : null}
             </div>
           ) : null}
