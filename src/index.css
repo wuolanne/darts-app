@@ -354,6 +354,18 @@ body {
   background: color-mix(in oklab, var(--accent) 25%, transparent);
 }
 
+.finish-inline-detail {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: color-mix(in oklab, var(--surface-alt) 60%, transparent);
+}
+
+.finish-inline-detail h4 {
+  margin: 0 0 8px;
+}
+
 .route-section {
   margin-top: 12px;
 }

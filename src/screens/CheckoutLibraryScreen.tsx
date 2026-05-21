@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { Card, Pill, ScreenTitle } from "../components/ui";
 import { PreferredDouble } from "../types/models";
-import { getCheckoutOptions } from "../utils/checkoutLibrary";
-import { getRouteForFinish } from "../utils/checkoutRoutes";
+import { CheckoutOption, getCheckoutOptions } from "../utils/checkoutLibrary";
 
 const RANGES = [
   { label: "2 - 40", min: 2, max: 40 },
@@ -16,9 +15,85 @@ const RANGES = [
   { label: "161 - 170", min: 161, max: 170 }
 ];
 
-function byDartsCount(dartsUsed: 1 | 2 | 3, limit: number) {
-  return (options: ReturnType<typeof getCheckoutOptions>["options"]) =>
-    options.filter((option) => option.dartsUsed === dartsUsed).slice(0, limit);
+function getPreferredDoubleValue(preferredDouble: PreferredDouble): number {
+  if (preferredDouble === "D20") return 40;
+  if (preferredDouble === "D18") return 36;
+  if (preferredDouble === "D12") return 24;
+  if (preferredDouble === "D16") return 32;
+  return 40;
+}
+
+function oneDartLabel(score: number): string | null {
+  if (score >= 1 && score <= 20) return `${score}`;
+  if (score === 25) return "25";
+  if (score === 50) return "Bull";
+  if (score % 2 === 0 && score <= 40) return `D${score / 2}`;
+  if (score % 3 === 0 && score / 3 <= 20) return `T${score / 3}`;
+  return null;
+}
+
+function pickRecommendedRoute(options: CheckoutOption[]): CheckoutOption | null {
+  if (options.length === 0) return null;
+  const twoDartPreferred = options.find((option) => option.dartsUsed === 2 && option.endsOnPreferred);
+  if (twoDartPreferred) return twoDartPreferred;
+  const twoDartAny = options.find((option) => option.dartsUsed === 2);
+  if (twoDartAny) return twoDartAny;
+  const preferred = options.find((option) => option.endsOnPreferred);
+  if (preferred) return preferred;
+  return options[0];
+}
+
+function getWhyBestMessage(
+  recommended: CheckoutOption,
+  preferredDouble: PreferredDouble
+): string {
+  if (recommended.dartsUsed === 2 && recommended.endsOnPreferred) {
+    return `Best because it is a 2-dart finish and ends on your preferred ${preferredDouble}.`;
+  }
+  if (recommended.dartsUsed === 2) {
+    return "Best because it is a direct 2-dart finish with high percentage.";
+  }
+  if (recommended.endsOnPreferred) {
+    return `Best because it keeps your preferred ${preferredDouble} as the finishing dart.`;
+  }
+  return "Best available practical route for this finish.";
+}
+
+function getMissPlan(
+  finish: number,
+  recommended: CheckoutOption,
+  preferredDouble: PreferredDouble
+): string {
+  const first = recommended.route[0];
+  const treble = first.match(/^T(\d{1,2})$/);
+  if (!treble) {
+    return "If first dart misses, switch to your highest-confidence setup to leave a clean double.";
+  }
+
+  const singleScore = Number(treble[1]);
+  const remainingAfterMiss = finish - singleScore;
+  const dartsLeft = recommended.dartsUsed - 1;
+  if (remainingAfterMiss <= 1) {
+    return "If it drops to single, reset and build a clean leave on the next visit.";
+  }
+
+  const afterMiss = getCheckoutOptions(remainingAfterMiss, preferredDouble);
+  const direct = afterMiss.options.find((option) => option.dartsUsed <= dartsLeft);
+  if (direct) {
+    return `If ${first} becomes S${singleScore}, ${remainingAfterMiss} left: go ${direct.route.join(" - ")}.`;
+  }
+
+  if (dartsLeft >= 1) {
+    const targetLeave = getPreferredDoubleValue(preferredDouble);
+    const setupScore = remainingAfterMiss - targetLeave;
+    const setup = oneDartLabel(setupScore);
+    if (setup) {
+      const pd = preferredDouble === "Not sure" ? "D20" : preferredDouble;
+      return `If ${first} becomes S${singleScore}, no direct finish with ${dartsLeft} dart left. Use ${setup} to leave ${pd}.`;
+    }
+  }
+
+  return `If ${first} becomes S${singleScore}, set up a clean checkout under 60 for the next visit.`;
 }
 
 export function CheckoutLibraryScreen({
@@ -29,14 +104,12 @@ export function CheckoutLibraryScreen({
   preferredDouble: PreferredDouble;
 }) {
   const [selectedFinish, setSelectedFinish] = useState(60);
-  const data = useMemo(
-    () => getCheckoutOptions(selectedFinish, preferredDouble),
-    [selectedFinish, preferredDouble]
-  );
-  const suggested = getRouteForFinish(selectedFinish, preferredDouble);
-  const oneDart = byDartsCount(1, 12)(data.options);
-  const twoDart = byDartsCount(2, 24)(data.options);
-  const threeDart = byDartsCount(3, 40)(data.options);
+  const detail = useMemo(() => {
+    const data = getCheckoutOptions(selectedFinish, preferredDouble);
+    const recommended = pickRecommendedRoute(data.options);
+    const twoDartOnly = data.options.filter((option) => option.dartsUsed === 2);
+    return { data, recommended, twoDartOnly };
+  }, [selectedFinish, preferredDouble]);
 
   return (
     <div className="screen">
@@ -66,64 +139,34 @@ export function CheckoutLibraryScreen({
               )
             )}
           </div>
+
+          {selectedFinish >= range.min && selectedFinish <= range.max ? (
+            <div className="finish-inline-detail">
+              <h4>Finish {selectedFinish}</h4>
+              {detail.recommended ? (
+                <>
+                  <p className="muted">
+                    Preferred route: <strong>{detail.recommended.route.join(" - ")}</strong>
+                  </p>
+                  <p className="muted">
+                    {detail.twoDartOnly.length > 0
+                      ? `${detail.twoDartOnly.length} two-dart route(s) available.`
+                      : `${detail.recommended.dartsUsed}-dart route available.`}
+                  </p>
+                  <p className="muted">{getWhyBestMessage(detail.recommended, preferredDouble)}</p>
+                  <p className="muted">
+                    {getMissPlan(selectedFinish, detail.recommended, preferredDouble)}
+                  </p>
+                </>
+              ) : (
+                <p className="warn-text">
+                  No direct checkout. Build a setup finish and avoid bogey numbers.
+                </p>
+              )}
+            </div>
+          ) : null}
         </Card>
       ))}
-
-      <Card>
-        <h3>Finish {selectedFinish}</h3>
-        <p className="muted">Suggested route: {suggested.route}</p>
-        <p className="muted">{suggested.note}</p>
-
-        {!data.isCheckoutPossible ? (
-          <div className="feedback-box">
-            <p className="warn-text">
-              No direct checkout from {selectedFinish}. Set up to a finishable number and avoid
-              bogey leaves.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="route-section">
-              <h4>1 Dart ({oneDart.length})</h4>
-              {oneDart.length === 0 ? <p className="muted">No 1-dart checkout.</p> : null}
-              <div className="breakdown-list">
-                {oneDart.map((option, idx) => (
-                  <div key={`one-${idx}`} className="route-row">
-                    <span>{option.route.join(" - ")}</span>
-                    {option.endsOnPreferred ? <Pill tone="success">Preferred</Pill> : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="route-section">
-              <h4>2 Darts ({twoDart.length})</h4>
-              {twoDart.length === 0 ? <p className="muted">No 2-dart checkout.</p> : null}
-              <div className="breakdown-list">
-                {twoDart.map((option, idx) => (
-                  <div key={`two-${idx}`} className="route-row">
-                    <span>{option.route.join(" - ")}</span>
-                    {option.endsOnPreferred ? <Pill tone="success">Preferred</Pill> : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="route-section">
-              <h4>3 Darts ({threeDart.length} shown)</h4>
-              <p className="muted">Showing first 40 practical routes.</p>
-              <div className="breakdown-list">
-                {threeDart.map((option, idx) => (
-                  <div key={`three-${idx}`} className="route-row">
-                    <span>{option.route.join(" - ")}</span>
-                    {option.endsOnPreferred ? <Pill tone="success">Preferred</Pill> : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
     </div>
   );
 }
