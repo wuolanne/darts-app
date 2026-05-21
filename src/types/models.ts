@@ -18,11 +18,15 @@ export interface UserSettings {
 }
 
 export type CheckoutRangeKey =
-  | "41-60"
-  | "61-80"
-  | "81-100"
-  | "101-130"
-  | "131-170";
+  | "61-70"
+  | "71-80"
+  | "81-90"
+  | "91-100"
+  | "101-120"
+  | "121-140"
+  | "141-170"
+  | "all"
+  | "custom";
 
 export interface CheckoutRangePreset {
   key: CheckoutRangeKey;

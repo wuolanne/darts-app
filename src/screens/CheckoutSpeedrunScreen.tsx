@@ -2,11 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import {
   CheckoutSpeedrunSession,
+  CheckoutRangeKey,
   SpeedrunEntryResult,
   SpeedrunOrder,
   UserSettings
 } from "../types/models";
-import { CHECKOUT_RANGE_PRESETS } from "../utils/constants";
+import {
+  CHECKOUT_RANGE_PRESETS,
+  listPlayableCheckoutNumbers,
+  normalizeCheckoutRangeKey,
+  sanitizeCheckoutCustomRange
+} from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
@@ -23,10 +29,6 @@ interface RunningState {
   rangeEnd: number;
   rangeLabel: string;
   order: SpeedrunOrder;
-}
-
-function createSequential(start: number, end: number): number[] {
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
 
 function shuffle(values: number[]): number[] {
@@ -57,9 +59,8 @@ export function CheckoutSpeedrunScreen({
   previousSessions: CheckoutSpeedrunSession[];
   settings: UserSettings;
 }) {
-  const [preset, setPreset] = useState(CHECKOUT_RANGE_PRESETS[1].key);
-  const [customMode, setCustomMode] = useState(false);
-  const [customStart, setCustomStart] = useState("60");
+  const [preset, setPreset] = useState<CheckoutRangeKey>("61-70");
+  const [customStart, setCustomStart] = useState("61");
   const [customEnd, setCustomEnd] = useState("70");
   const [order, setOrder] = useState<SpeedrunOrder>("sequential");
   const [running, setRunning] = useState<RunningState | null>(null);
@@ -77,9 +78,16 @@ export function CheckoutSpeedrunScreen({
   }, [running]);
 
   const selectedPreset = useMemo(
-    () => CHECKOUT_RANGE_PRESETS.find((item) => item.key === preset) ?? CHECKOUT_RANGE_PRESETS[1],
+    () => CHECKOUT_RANGE_PRESETS.find((item) => item.key === preset) ?? CHECKOUT_RANGE_PRESETS[0],
     [preset]
   );
+  const customRange = useMemo(
+    () => sanitizeCheckoutCustomRange(Number(customStart), Number(customEnd)),
+    [customStart, customEnd]
+  );
+  const activeRange = preset === "custom" && customRange
+    ? { label: `${customRange.min}-${customRange.max}`, min: customRange.min, max: customRange.max }
+    : selectedPreset;
 
   const currentCheckout = running ? running.list[running.index] : null;
   const route = currentCheckout ? getRouteForFinish(currentCheckout, settings.preferredDouble) : null;
@@ -111,12 +119,15 @@ export function CheckoutSpeedrunScreen({
     }, null) ?? null;
 
   const start = () => {
-    const rangeStart = customMode ? Number(customStart) : selectedPreset.min;
-    const rangeEnd = customMode ? Number(customEnd) : selectedPreset.max;
-    if (!Number.isFinite(rangeStart) || !Number.isFinite(rangeEnd) || rangeStart > rangeEnd) {
+    if (preset === "custom" && !customRange) {
       return;
     }
-    const base = createSequential(rangeStart, rangeEnd);
+    const rangeStart = activeRange.min;
+    const rangeEnd = activeRange.max;
+    const base = listPlayableCheckoutNumbers(rangeStart, rangeEnd);
+    if (base.length === 0) {
+      return;
+    }
     const list = order === "random" ? shuffle(base) : base;
     const now = Date.now();
     setResult(null);
@@ -132,7 +143,7 @@ export function CheckoutSpeedrunScreen({
       pauseMs: 0,
       rangeStart,
       rangeEnd,
-      rangeLabel: customMode ? `${rangeStart}-${rangeEnd}` : selectedPreset.label,
+      rangeLabel: activeRange.label,
       order
     });
   };
@@ -229,41 +240,32 @@ export function CheckoutSpeedrunScreen({
       {!running && !result ? (
         <Card>
           <h3>Setup</h3>
-          <div className="field-group">
-            <label>Range source</label>
-            <Segmented
-              value={customMode ? "custom" : "preset"}
-              options={[
-                { label: "Presets", value: "preset" },
-                { label: "Custom", value: "custom" }
-              ]}
-              onChange={(value) => setCustomMode(value === "custom")}
-            />
-          </div>
-          {!customMode ? (
-            <Segmented
-              value={preset}
-              options={CHECKOUT_RANGE_PRESETS.map((option) => ({ label: option.label, value: option.key }))}
-              onChange={setPreset}
-            />
-          ) : (
+          <Segmented
+            value={preset}
+            options={CHECKOUT_RANGE_PRESETS.map((option) => ({ label: option.label, value: option.key }))}
+            onChange={(value) => setPreset(normalizeCheckoutRangeKey(String(value)))}
+          />
+          {preset === "custom" ? (
             <div className="row">
               <input
                 className="text-input"
                 inputMode="numeric"
                 value={customStart}
                 onChange={(event) => setCustomStart(event.target.value)}
-                placeholder="Start"
+                placeholder="From (61-170)"
               />
               <input
                 className="text-input"
                 inputMode="numeric"
                 value={customEnd}
                 onChange={(event) => setCustomEnd(event.target.value)}
-                placeholder="End"
+                placeholder="To (61-170)"
               />
             </div>
-          )}
+          ) : null}
+          {preset === "custom" && !customRange ? (
+            <p className="warn-text top-gap">Custom range must be 61-170 and From must be less than or equal to To.</p>
+          ) : null}
           <div className="top-gap">
             <label>Order</label>
             <Segmented
@@ -276,7 +278,7 @@ export function CheckoutSpeedrunScreen({
             />
           </div>
           <div className="top-gap">
-            <Button full onClick={start}>
+            <Button full onClick={start} disabled={preset === "custom" && !customRange}>
               Start timed run
             </Button>
           </div>

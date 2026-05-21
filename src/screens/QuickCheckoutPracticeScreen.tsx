@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { Dartboard } from "../components/Dartboard";
 import { CheckoutAttempt, CheckoutRangeKey, CheckoutResult, TimerOption, UserSettings } from "../types/models";
-import { CHECKOUT_RANGE_PRESETS, TIMER_OPTIONS } from "../utils/constants";
+import {
+  CHECKOUT_RANGE_PRESETS,
+  TIMER_OPTIONS,
+  listPlayableCheckoutNumbers,
+  normalizeCheckoutRangeKey,
+  sanitizeCheckoutCustomRange
+} from "../utils/constants";
 import {
   CheckoutRouteDetails,
   DartTarget,
@@ -36,14 +42,10 @@ function buildPlayableFinishes(
   max: number,
   preferredDouble: UserSettings["preferredDouble"]
 ): number[] {
-  const list: number[] = [];
-  for (let value = min; value <= max; value += 1) {
+  return listPlayableCheckoutNumbers(min, max, (value) => {
     const route = getPrimaryCheckoutRoute(value, preferredDouble);
-    if (route && !route.isBogey && route.route.length > 0) {
-      list.push(value);
-    }
-  }
-  return list;
+    return Boolean(route && !route.isBogey && route.route.length > 0);
+  });
 }
 
 function routePanel(details: CheckoutRouteDetails | null): JSX.Element {
@@ -98,7 +100,9 @@ export function QuickCheckoutPracticeScreen({
   onBack: () => void;
   onSaveAttempt: (attempt: CheckoutAttempt) => void;
 }) {
-  const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-80");
+  const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-70");
+  const [customStart, setCustomStart] = useState("61");
+  const [customEnd, setCustomEnd] = useState("70");
   const [timerSeconds, setTimerSeconds] = useState<TimerOption>(settings.defaultTimer);
   const [stage, setStage] = useState<Stage>("setup");
 
@@ -117,13 +121,22 @@ export function QuickCheckoutPracticeScreen({
   const [savedResult, setSavedResult] = useState(false);
 
   const selectedPreset = useMemo(
-    () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[1],
+    () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
     [selectedRange]
   );
 
+  const customRange = useMemo(
+    () => sanitizeCheckoutCustomRange(Number(customStart), Number(customEnd)),
+    [customStart, customEnd]
+  );
+
+  const activeRange = selectedRange === "custom" && customRange
+    ? { label: `${customRange.min}-${customRange.max}`, min: customRange.min, max: customRange.max }
+    : selectedPreset;
+
   const playableFinishes = useMemo(
-    () => buildPlayableFinishes(selectedPreset.min, selectedPreset.max, settings.preferredDouble),
-    [selectedPreset.min, selectedPreset.max, settings.preferredDouble]
+    () => buildPlayableFinishes(activeRange.min, activeRange.max, settings.preferredDouble),
+    [activeRange.min, activeRange.max, settings.preferredDouble]
   );
 
   const currentRouteData = useMemo(
@@ -334,8 +347,29 @@ export function QuickCheckoutPracticeScreen({
           <Segmented
             value={selectedRange}
             options={CHECKOUT_RANGE_PRESETS.map((preset) => ({ label: preset.label, value: preset.key }))}
-            onChange={setSelectedRange}
+            onChange={(value) => setSelectedRange(normalizeCheckoutRangeKey(String(value)))}
           />
+          {selectedRange === "custom" ? (
+            <div className="row top-gap">
+              <input
+                className="text-input"
+                inputMode="numeric"
+                value={customStart}
+                onChange={(event) => setCustomStart(event.target.value)}
+                placeholder="From (61-170)"
+              />
+              <input
+                className="text-input"
+                inputMode="numeric"
+                value={customEnd}
+                onChange={(event) => setCustomEnd(event.target.value)}
+                placeholder="To (61-170)"
+              />
+            </div>
+          ) : null}
+          {selectedRange === "custom" && !customRange ? (
+            <p className="warn-text top-gap">Custom range must be 61-170 and From must be less than or equal to To.</p>
+          ) : null}
           <p className="muted top-gap">Timer</p>
           <Segmented
             value={timerSeconds}
@@ -347,7 +381,7 @@ export function QuickCheckoutPracticeScreen({
           />
           <p className="muted top-gap">Playable finishes in this range: {playableFinishes.length}</p>
           <div className="top-gap">
-            <Button full onClick={startPractice} disabled={playableFinishes.length === 0}>
+            <Button full onClick={startPractice} disabled={playableFinishes.length === 0 || (selectedRange === "custom" && !customRange)}>
               Start practice
             </Button>
           </div>
@@ -358,7 +392,7 @@ export function QuickCheckoutPracticeScreen({
       {stage === "playing" ? (
         <Card className="practice-card quick-practice-card">
           <div className="practice-header">
-            <Pill tone="neutral">{selectedPreset.label}</Pill>
+            <Pill tone="neutral">{activeRange.label}</Pill>
             <Pill tone="neutral">Preferred double: {settings.preferredDouble}</Pill>
           </div>
 
