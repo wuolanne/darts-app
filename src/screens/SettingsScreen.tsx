@@ -7,6 +7,26 @@ import { formatClock } from "../utils/time";
 const PREFERRED_DOUBLES = ["D16", "D20", "D18", "D12", "Not sure"] as const;
 const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim", "system"];
 const TIMER_OPTIONS: TimerOption[] = [0, 10, 20, 30];
+const MIN_REASONABLE_SECONDS_PER_THREE = 4;
+const MAX_REASONABLE_SECONDS_PER_THREE = 30;
+
+function isReasonableSecondsPerThree(value: number): boolean {
+  return (
+    Number.isFinite(value) &&
+    value >= MIN_REASONABLE_SECONDS_PER_THREE &&
+    value <= MAX_REASONABLE_SECONDS_PER_THREE
+  );
+}
+
+function formatCurrentPace(settings: UserSettings): string {
+  if (!settings.throwPace.secondsPerThree) {
+    return "Current: Not set";
+  }
+  if (settings.throwPace.mode === "calibrated") {
+    return `Current: Measured pace — ${settings.throwPace.secondsPerThree.toFixed(1)} sec / 3 darts`;
+  }
+  return `Current: Manual pace — ${settings.throwPace.secondsPerThree.toFixed(1)} sec / 3 darts`;
+}
 
 export function SettingsScreen({
   settings,
@@ -22,6 +42,8 @@ export function SettingsScreen({
   const [paceTestSecondsLeft, setPaceTestSecondsLeft] = useState(300);
   const [paceTestDarts, setPaceTestDarts] = useState("");
   const [paceTestReady, setPaceTestReady] = useState(false);
+  const [paceError, setPaceError] = useState<string | null>(null);
+  const [paceSuccess, setPaceSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!paceTestRunning) {
@@ -105,24 +127,49 @@ export function SettingsScreen({
 
       <Card>
         <h3>Throw pace</h3>
-        <p className="muted">
-          Current:{" "}
-          {settings.throwPace.secondsPerThree
-            ? `${settings.throwPace.secondsPerThree.toFixed(2)} sec / 3 darts`
-            : "Not set"}
-        </p>
+        <p className="muted">{formatCurrentPace(settings)}</p>
+        {paceSuccess ? <p className="good-text">{paceSuccess}</p> : null}
+        {paceError ? <p className="warn-text">{paceError}</p> : null}
 
         <div className="stack-row">
-          <Button onClick={() => setThrowPace(7, "manual")} variant="secondary">
+          <Button
+            onClick={() => {
+              setThrowPace(7, "manual");
+              setPaceError(null);
+              setPaceSuccess("Manual pace saved: 7.0 sec / 3 darts");
+            }}
+            variant="secondary"
+          >
             Fast: 7 sec / 3 darts
           </Button>
-          <Button onClick={() => setThrowPace(10, "manual")} variant="secondary">
+          <Button
+            onClick={() => {
+              setThrowPace(10, "manual");
+              setPaceError(null);
+              setPaceSuccess("Manual pace saved: 10.0 sec / 3 darts");
+            }}
+            variant="secondary"
+          >
             Normal: 10 sec / 3 darts
           </Button>
-          <Button onClick={() => setThrowPace(13, "manual")} variant="secondary">
+          <Button
+            onClick={() => {
+              setThrowPace(13, "manual");
+              setPaceError(null);
+              setPaceSuccess("Manual pace saved: 13.0 sec / 3 darts");
+            }}
+            variant="secondary"
+          >
             Relaxed: 13 sec / 3 darts
           </Button>
-          <Button onClick={() => setThrowPace(null, "not_set")} variant="ghost">
+          <Button
+            onClick={() => {
+              setThrowPace(null, "not_set");
+              setPaceError(null);
+              setPaceSuccess(null);
+            }}
+            variant="ghost"
+          >
             Not set
           </Button>
         </div>
@@ -142,10 +189,16 @@ export function SettingsScreen({
               variant="secondary"
               onClick={() => {
                 const parsed = Number(customPaceDraft);
-                if (!Number.isFinite(parsed) || parsed <= 0) {
+                if (!isReasonableSecondsPerThree(parsed)) {
+                  setPaceError(
+                    `Pace must be between ${MIN_REASONABLE_SECONDS_PER_THREE} and ${MAX_REASONABLE_SECONDS_PER_THREE} sec / 3 darts.`
+                  );
+                  setPaceSuccess(null);
                   return;
                 }
                 setThrowPace(parsed, "manual");
+                setPaceError(null);
+                setPaceSuccess(`Manual pace saved: ${parsed.toFixed(1)} sec / 3 darts`);
                 setCustomPaceDraft("");
               }}
             >
@@ -195,16 +248,28 @@ export function SettingsScreen({
                 placeholder="e.g. 97"
               />
               <Button
-                onClick={() => {
-                  const darts = Number(paceTestDarts);
-                  const calculated = calculateSecondsPerThreeFromFiveMinuteTest(darts);
-                  if (!calculated) {
-                    return;
-                  }
-                  setThrowPace(calculated, "calibrated");
-                  setPaceTestReady(false);
-                  setPaceTestDarts("");
-                }}
+              onClick={() => {
+                const darts = Number(paceTestDarts);
+                if (!Number.isFinite(darts) || darts <= 0) {
+                  setPaceError("Darts thrown must be a positive number.");
+                  setPaceSuccess(null);
+                  return;
+                }
+                const calculated = calculateSecondsPerThreeFromFiveMinuteTest(darts);
+                if (!calculated || !isReasonableSecondsPerThree(calculated)) {
+                  setPaceError(
+                    `Calculated pace must be between ${MIN_REASONABLE_SECONDS_PER_THREE} and ${MAX_REASONABLE_SECONDS_PER_THREE} sec / 3 darts.`
+                  );
+                  setPaceSuccess(null);
+                  return;
+                }
+                setThrowPace(calculated, "calibrated");
+                setCustomPaceDraft(calculated.toFixed(1));
+                setPaceError(null);
+                setPaceSuccess(`Measured pace saved: ${calculated.toFixed(1)} sec / 3 darts`);
+                setPaceTestReady(false);
+                setPaceTestDarts("");
+              }}
               >
                 Save calibrated pace
               </Button>
