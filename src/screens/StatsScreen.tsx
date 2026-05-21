@@ -66,7 +66,7 @@ export function StatsScreen({
         {checkout.attemptsCount === 0 ? <p className="muted">{t.stats.noAttempts}</p> : null}
         {checkout.attemptsCount > 0 ? (
           <>
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.attempts} right={checkout.attemptsCount} />
               <CompactRow left={t.stats.successRate} right={`${checkout.successRate.toFixed(1)}%`} />
@@ -82,7 +82,7 @@ export function StatsScreen({
               />
             </details>
 
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.byRange}</summary>
               {checkout.byRange.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {checkout.byRange.map((row) => (
@@ -136,7 +136,7 @@ export function StatsScreen({
         {speedrun.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
         {speedrun.sessions > 0 ? (
           <>
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.sessions} right={speedrun.sessions} />
               <CompactRow
@@ -155,10 +155,9 @@ export function StatsScreen({
                 left="Avg checkout time"
                 right={speedrun.averageCheckoutTime !== null ? formatSeconds(speedrun.averageCheckoutTime) : "Not enough data yet"}
               />
-              <CompactRow left="Completed checkouts" right={speedrun.completedCheckouts} />
             </details>
 
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.byRange}</summary>
               {speedrun.byRange.map((row) => (
                 <CompactRow
@@ -166,55 +165,6 @@ export function StatsScreen({
                   left={row.rangeLabel}
                   middle={`${row.sessions} sessions`}
                   right={`Best ${formatClock(row.bestTime)} · Latest ${formatClock(row.latestTime)} · Avg ${formatClock(row.averageTime)}`}
-                />
-              ))}
-            </details>
-
-            <details className="stats-subsection">
-              <summary>{t.stats.byFinish}</summary>
-              {speedrun.byFinish.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {speedrun.byFinish.slice(0, 10).map((row) => (
-                <CompactRow
-                  key={`speedrun-finish-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.completions}/${row.attempts}`}
-                  right={`Best ${formatSeconds(row.bestTime)} · Avg ${formatSeconds(row.averageTime)}`}
-                />
-              ))}
-            </details>
-
-            <details className="stats-subsection">
-              <summary>Fastest 5 finishes</summary>
-              {speedrun.fastestFinishes.map((row) => (
-                <CompactRow
-                  key={`fast-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.completions}/${row.attempts}`}
-                  right={formatSeconds(row.bestTime)}
-                />
-              ))}
-            </details>
-
-            <details className="stats-subsection">
-              <summary>Slowest 5 finishes</summary>
-              {speedrun.slowestFinishes.map((row) => (
-                <CompactRow
-                  key={`slow-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.completions}/${row.attempts}`}
-                  right={formatSeconds(row.averageTime)}
-                />
-              ))}
-            </details>
-
-            <details className="stats-subsection">
-              <summary>Most practiced 5 finishes</summary>
-              {speedrun.mostPracticedFinishes.map((row) => (
-                <CompactRow
-                  key={`most-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.attempts} attempts`}
-                  right={`Best ${formatSeconds(row.bestTime)}`}
                 />
               ))}
             </details>
@@ -240,7 +190,7 @@ export function StatsScreen({
         {around.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
         {around.sessions > 0 ? (
           <>
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.sessions} right={around.sessions} />
               <CompactRow
@@ -261,7 +211,7 @@ export function StatsScreen({
               />
             </details>
 
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.byMode}</summary>
               {around.byMode.map((row) => (
                 <CompactRow
@@ -276,17 +226,48 @@ export function StatsScreen({
             <details className="stats-subsection">
               <summary>{t.stats.byTargetSector}</summary>
               {around.byTarget.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {around.byTarget.slice(0, 18).map((row) => (
-                <CompactRow
-                  key={`target-${row.key}`}
-                  left={row.key}
-                  middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                  right={`Avg ${formatSeconds(row.average)}`}
-                />
-              ))}
+              {around.byTarget.length > 0 ? (
+                <>
+                  <p className="muted">Fastest 5 targets/sectors</p>
+                  {[...around.byTarget]
+                    .sort((a, b) => a.best - b.best)
+                    .slice(0, 5)
+                    .map((row) => (
+                      <CompactRow
+                        key={`fast-target-${row.key}`}
+                        left={row.key}
+                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                        right={`Avg ${formatSeconds(row.average)}`}
+                      />
+                    ))}
+                  <p className="muted top-gap">Slowest 5 targets/sectors</p>
+                  {[...around.byTarget]
+                    .sort((a, b) => b.average - a.average)
+                    .slice(0, 5)
+                    .map((row) => (
+                      <CompactRow
+                        key={`slow-target-${row.key}`}
+                        left={row.key}
+                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                        right={`Avg ${formatSeconds(row.average)}`}
+                      />
+                    ))}
+                  <details className="stats-subsection top-gap">
+                    <summary>Show all targets/sectors</summary>
+                    {around.byTarget.map((row) => (
+                      <CompactRow
+                        key={`target-${row.key}`}
+                        left={row.key}
+                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                        right={`Avg ${formatSeconds(row.average)}`}
+                      />
+                    ))}
+                  </details>
+                </>
+              ) : null}
             </details>
 
-            <details className="stats-subsection" open>
+            <details className="stats-subsection">
               <summary>{t.stats.fastestSlowest}</summary>
               <CompactRow
                 left="Fastest target/sector"
