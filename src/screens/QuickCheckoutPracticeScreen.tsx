@@ -31,6 +31,16 @@ interface FeedbackState {
   body: string;
 }
 
+type PracticeMode = "main-route" | "single-miss-scenario";
+
+interface MissScenario {
+  finish: number;
+  triedTreble: string;
+  hitSingle: string;
+  remaining: number;
+  continuationRoute: DartTarget[];
+}
+
 function randomPick<T>(values: T[]): T | null {
   if (values.length === 0) return null;
   const index = Math.floor(Math.random() * values.length);
@@ -46,6 +56,38 @@ function buildPlayableFinishes(
     const route = getPrimaryCheckoutRoute(value, preferredDouble);
     return Boolean(route && !route.isBogey && route.route.length > 0);
   });
+}
+
+function buildMissScenarios(
+  min: number,
+  max: number,
+  preferredDouble: UserSettings["preferredDouble"]
+): MissScenario[] {
+  const scenarios: MissScenario[] = [];
+  const candidates = listPlayableCheckoutNumbers(min, max, (value) => {
+    const route = getPrimaryCheckoutRoute(value, preferredDouble);
+    return Boolean(route && !route.isBogey && route.route.length > 0);
+  });
+
+  for (const finish of candidates) {
+    const primary = getPrimaryCheckoutRoute(finish, preferredDouble);
+    if (!primary || primary.route.length === 0) continue;
+    const first = normalizeDartTarget(primary.route[0] ?? "");
+    if (!first.startsWith("T")) continue;
+    const continuation = getSingleHitContinuation(primary);
+    if (!continuation) continue;
+    const continuationRoute = continuation.continuationRoute.map((item) => normalizeDartTarget(item));
+    if (continuationRoute.length === 0 || continuationRoute.length > 2) continue;
+    scenarios.push({
+      finish,
+      triedTreble: first,
+      hitSingle: normalizeDartTarget(continuation.singleHitTarget),
+      remaining: continuation.remaining,
+      continuationRoute
+    });
+  }
+
+  return scenarios;
 }
 
 function routePanel(details: CheckoutRouteDetails | null): JSX.Element {
@@ -101,6 +143,7 @@ export function QuickCheckoutPracticeScreen({
   onSaveAttempt: (attempt: CheckoutAttempt) => void;
 }) {
   const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-70");
+  const [practiceMode, setPracticeMode] = useState<PracticeMode>("main-route");
   const [customStart, setCustomStart] = useState("61");
   const [customEnd, setCustomEnd] = useState("70");
   const [timerSeconds, setTimerSeconds] = useState<TimerOption>(settings.defaultTimer);
@@ -119,6 +162,8 @@ export function QuickCheckoutPracticeScreen({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [completed, setCompleted] = useState(false);
   const [savedResult, setSavedResult] = useState(false);
+  const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
+  const [pickedTargets, setPickedTargets] = useState<string[]>([]);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -136,6 +181,10 @@ export function QuickCheckoutPracticeScreen({
 
   const playableFinishes = useMemo(
     () => buildPlayableFinishes(activeRange.min, activeRange.max, settings.preferredDouble),
+    [activeRange.min, activeRange.max, settings.preferredDouble]
+  );
+  const missScenarios = useMemo(
+    () => buildMissScenarios(activeRange.min, activeRange.max, settings.preferredDouble),
     [activeRange.min, activeRange.max, settings.preferredDouble]
   );
 
@@ -226,6 +275,7 @@ export function QuickCheckoutPracticeScreen({
     setFeedback(null);
     setCompleted(false);
     setSavedResult(false);
+    setPickedTargets([]);
     setStepIndex(0);
     setRemaining(nextFinish);
     setActiveRoute(fallbackRoute);
@@ -233,7 +283,39 @@ export function QuickCheckoutPracticeScreen({
     setStage("playing");
   }
 
+  function loadMissScenario(nextScenario: MissScenario) {
+    setFinish(nextScenario.finish);
+    setAttemptStartedAt(performance.now());
+    setSecondsLeft(timerSeconds);
+    setRouteVisible(false);
+    setSelectedTarget(null);
+    setFeedback(null);
+    setCompleted(false);
+    setSavedResult(false);
+    setPickedTargets([]);
+    setMissScenario(nextScenario);
+    setStepIndex(0);
+    setRemaining(nextScenario.remaining);
+    setActiveRoute(nextScenario.continuationRoute);
+    setActiveRouteLabel("Continuation route");
+    setStage("playing");
+  }
+
   function startPractice() {
+    if (practiceMode === "single-miss-scenario") {
+      const scenario = randomPick(missScenarios);
+      if (!scenario) {
+        setFeedback({
+          tone: "info",
+          title: "No scenario data",
+          body: "No valid single-miss scenarios for this range yet."
+        });
+        return;
+      }
+      loadMissScenario(scenario);
+      return;
+    }
+
     const nextFinish = randomPick(playableFinishes);
     if (nextFinish === null) {
       setFeedback({
@@ -247,6 +329,20 @@ export function QuickCheckoutPracticeScreen({
   }
 
   function nextCheckout() {
+    if (practiceMode === "single-miss-scenario") {
+      const scenario = randomPick(missScenarios);
+      if (!scenario) {
+        setFeedback({
+          tone: "info",
+          title: "No scenario data",
+          body: "No valid single-miss scenarios for this range yet."
+        });
+        return;
+      }
+      loadMissScenario(scenario);
+      return;
+    }
+
     const nextFinish = randomPick(playableFinishes);
     if (nextFinish === null) {
       setFeedback({
@@ -267,8 +363,9 @@ export function QuickCheckoutPracticeScreen({
     const chosenTarget = normalizeDartTarget(rawTarget);
     const expected = normalizeDartTarget(expectedTarget);
     setSelectedTarget(chosenTarget);
+    setPickedTargets((prev) => [...prev, chosenTarget]);
 
-    if (stepIndex === 0 && currentRouteData) {
+    if (practiceMode === "main-route" && stepIndex === 0 && currentRouteData) {
       const continuation = getSingleHitContinuation(currentRouteData);
       const singleHitTarget = continuation?.singleHitTarget
         ? normalizeDartTarget(continuation.singleHitTarget)
@@ -296,10 +393,15 @@ export function QuickCheckoutPracticeScreen({
     }
 
     if (chosenTarget !== expected) {
+      saveAttempt("failed");
+      setCompleted(true);
+      const correct = activeRoute.length > 0 ? formatRoute(activeRoute) : "No valid continuation yet.";
       setFeedback({
         tone: "wrong",
-        title: "Wrong target",
-        body: `You chose ${chosenTarget}. Expected ${expected}. Keep playing this same checkout.`
+        title: "Wrong",
+        body: missScenario
+          ? `Wrong. From ${missScenario.remaining} the continuation is ${correct}.\nYour picks: ${[...pickedTargets, chosenTarget].join(" -> ")}`
+          : `Wrong. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : "No valid route yet."}\nYour picks: ${[...pickedTargets, chosenTarget].join(" -> ")}`
       });
       return;
     }
@@ -315,8 +417,10 @@ export function QuickCheckoutPracticeScreen({
       triggerHaptic(settings.vibrationFeedback);
       setFeedback({
         tone: "complete",
-        title: "Checkout complete",
-        body: `Route done: ${formatRoute(activeRoute)}`
+        title: "Correct",
+        body: missScenario
+          ? `Correct! ${formatRoute(activeRoute)} finishes ${missScenario.remaining}.`
+          : `Checkout complete. Route done: ${formatRoute(activeRoute)}`
       });
       return;
     }
@@ -326,7 +430,7 @@ export function QuickCheckoutPracticeScreen({
     setFeedback({
       tone: "correct",
       title: "Correct",
-      body: `Good hit: ${expected}. Next target: ${normalizeDartTarget(activeRoute[nextStep]!)}`
+      body: `Good hit: ${expected}. Next target: ${normalizeDartTarget(activeRoute[nextStep]!)}`   
     });
   }
 
@@ -370,7 +474,7 @@ export function QuickCheckoutPracticeScreen({
           {selectedRange === "custom" && !customRange ? (
             <p className="warn-text top-gap">Custom range must be 61-170 and From must be less than or equal to To.</p>
           ) : null}
-          <p className="muted top-gap">Timer</p>
+            <p className="muted top-gap">Timer</p>
           <Segmented
             value={timerSeconds}
             options={TIMER_OPTIONS.map((option) => ({
@@ -379,9 +483,29 @@ export function QuickCheckoutPracticeScreen({
             }))}
             onChange={setTimerSeconds}
           />
+          <p className="muted top-gap">Mode</p>
+          <Segmented
+            value={practiceMode}
+            options={[
+              { label: "Main route", value: "main-route" },
+              { label: "Single miss scenarios", value: "single-miss-scenario" }
+            ]}
+            onChange={(value) => setPracticeMode(value as PracticeMode)}
+          />
           <p className="muted top-gap">Playable finishes in this range: {playableFinishes.length}</p>
+          {practiceMode === "single-miss-scenario" ? (
+            <p className="muted">Available scenarios: {missScenarios.length}</p>
+          ) : null}
           <div className="top-gap">
-            <Button full onClick={startPractice} disabled={playableFinishes.length === 0 || (selectedRange === "custom" && !customRange)}>
+            <Button
+              full
+              onClick={startPractice}
+              disabled={
+                (practiceMode === "main-route" && playableFinishes.length === 0) ||
+                (practiceMode === "single-miss-scenario" && missScenarios.length === 0) ||
+                (selectedRange === "custom" && !customRange)
+              }
+            >
               Start practice
             </Button>
           </div>
@@ -397,6 +521,14 @@ export function QuickCheckoutPracticeScreen({
           </div>
 
           <p className="big-number">Finish: {finish}</p>
+          {practiceMode === "single-miss-scenario" && missScenario ? (
+            <>
+              <p>
+                Tried {missScenario.triedTreble}, hit {missScenario.hitSingle}.
+              </p>
+              <p>{missScenario.remaining} left. Choose the continuation.</p>
+            </>
+          ) : null}
           <p>
             <span className="muted">Current remaining:</span> {remaining}
           </p>
@@ -453,6 +585,11 @@ export function QuickCheckoutPracticeScreen({
             <div className="feedback-box quick-feedback-box">
               <h4>{feedback.title}</h4>
               <p>{feedback.body}</p>
+              {pickedTargets.length > 0 ? (
+                <p>
+                  <span className="muted">Your picks:</span> {pickedTargets.join(" -> ")}
+                </p>
+              ) : null}
               <p>
                 <span className="muted">Route now:</span>{" "}
                 {activeRoute.length > 0 ? `${activeRouteLabel}: ${formatRoute(activeRoute)}` : "No valid route yet."}
