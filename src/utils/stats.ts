@@ -131,8 +131,16 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
   for (const session of filtered) {
     const modeKey =
       session.mode === "full_sector"
-        ? `full_sector (${session.doubleRequirement === 2 ? "2 doubles" : "1 double"})`
-        : session.mode;
+        ? `Full Sector (${session.doubleRequirement === 2 ? "2 doubles" : "1 double"})`
+        : session.mode === "common_doubles"
+          ? "Common Doubles"
+          : session.mode === "custom"
+            ? `Custom (${session.entries.length} targets)`
+            : session.mode === "singles"
+              ? "Singles"
+              : session.mode === "doubles"
+                ? "Doubles"
+                : "Trebles";
     const existing = byMode.get(modeKey);
     if (!existing) {
       byMode.set(modeKey, {

@@ -4,6 +4,7 @@ import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { estimateDartsFromActiveTime } from "../utils/pace";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, formatSeconds, toRoundedSeconds } from "../utils/time";
+import { readJson, writeJson } from "../storage/localStorage";
 
 interface RunningState {
   mode: AroundClockMode;
@@ -17,7 +18,26 @@ interface RunningState {
   doubleRequirement: 1 | 2 | null;
 }
 
-function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2): string[] {
+const COMMON_DOUBLES_TARGETS = ["D20", "D10", "D5", "D16", "D8", "D4", "D12", "D18"] as const;
+const CENTER_TARGETS = ["25", "Bull"] as const;
+const ALL_SINGLES = Array.from({ length: 20 }, (_, i) => `S${i + 1}`);
+const ALL_DOUBLES = Array.from({ length: 20 }, (_, i) => `D${i + 1}`);
+const ALL_TREBLES = Array.from({ length: 20 }, (_, i) => `T${i + 1}`);
+const D16_PATH_TARGETS = ["D16", "D8", "D4", "D2", "D1"] as const;
+const CUSTOM_TARGETS_KEY = "around_clock_custom_targets";
+
+function sanitizeCustomTargets(values: string[]): string[] {
+  const allowed = new Set<string>([...ALL_SINGLES, ...ALL_DOUBLES, ...ALL_TREBLES, ...CENTER_TARGETS]);
+  const next: string[] = [];
+  for (const value of values) {
+    if (allowed.has(value) && !next.includes(value)) {
+      next.push(value);
+    }
+  }
+  return next;
+}
+
+function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2, customTargets: string[]): string[] {
   if (mode === "singles") {
     return [...Array.from({ length: 20 }, (_, i) => `S${i + 1}`), "Bull"];
   }
@@ -26,6 +46,12 @@ function createTargets(mode: AroundClockMode, doubleRequirement: 1 | 2): string[
   }
   if (mode === "trebles") {
     return Array.from({ length: 20 }, (_, i) => `T${i + 1}`);
+  }
+  if (mode === "common_doubles") {
+    return [...COMMON_DOUBLES_TARGETS];
+  }
+  if (mode === "custom") {
+    return [...customTargets];
   }
   return [
     "Bull",
@@ -47,6 +73,12 @@ function modeLabel(mode: AroundClockMode): string {
   if (mode === "trebles") {
     return "Trebles";
   }
+  if (mode === "common_doubles") {
+    return "Common Doubles";
+  }
+  if (mode === "custom") {
+    return "Custom";
+  }
   return "Full Sector";
 }
 
@@ -63,10 +95,20 @@ export function AroundTheClockScreen({
 }) {
   const [mode, setMode] = useState<AroundClockMode>("singles");
   const [doubleRequirement, setDoubleRequirement] = useState<1 | 2>(1);
+  const [customTargets, setCustomTargets] = useState<string[]>([]);
   const [running, setRunning] = useState<RunningState | null>(null);
   const [result, setResult] = useState<AroundClockSession | null>(null);
   const [pbDelta, setPbDelta] = useState<number | null>(null);
   const [ticker, setTicker] = useState(Date.now());
+
+  useEffect(() => {
+    const saved = readJson<string[]>(CUSTOM_TARGETS_KEY, []);
+    setCustomTargets(sanitizeCustomTargets(saved));
+  }, []);
+
+  useEffect(() => {
+    writeJson(CUSTOM_TARGETS_KEY, customTargets);
+  }, [customTargets]);
 
   useEffect(() => {
     if (!running) {
@@ -89,10 +131,14 @@ export function AroundTheClockScreen({
     : 0;
 
   const currentTarget = running ? running.targets[running.index] : "";
+  const canStart = mode !== "custom" || customTargets.length > 0;
 
   const start = () => {
+    if (!canStart) {
+      return;
+    }
     const now = Date.now();
-    const targets = createTargets(mode, doubleRequirement);
+    const targets = createTargets(mode, doubleRequirement, customTargets);
     setPbDelta(null);
     setResult(null);
     setRunning({
@@ -222,10 +268,114 @@ export function AroundTheClockScreen({
               { label: "Singles", value: "singles" },
               { label: "Doubles", value: "doubles" },
               { label: "Trebles", value: "trebles" },
+              { label: "Common Doubles", value: "common_doubles" },
+              { label: "Custom", value: "custom" },
               { label: "Full Sector", value: "full_sector" }
             ]}
             onChange={setMode}
           />
+          {mode === "custom" ? (
+            <div className="top-gap">
+              <p className="muted">Pick custom targets (order is preserved).</p>
+              <div className="custom-target-actions">
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_SINGLES)}>
+                  Select all singles
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_DOUBLES)}>
+                  Select all doubles
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_TREBLES)}>
+                  Select all trebles
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets([...CENTER_TARGETS])}>
+                  Select center
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets([...COMMON_DOUBLES_TARGETS])}>
+                  Common doubles
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets([...D16_PATH_TARGETS])}>
+                  D16 path
+                </button>
+                <button type="button" className="finish-chip" onClick={() => setCustomTargets([])}>
+                  Clear all
+                </button>
+              </div>
+
+              <p className="muted top-gap">Singles</p>
+              <div className="custom-target-grid">
+                {ALL_SINGLES.map((target) => (
+                  <button
+                    key={target}
+                    type="button"
+                    className={`finish-chip${customTargets.includes(target) ? " finish-chip-active" : ""}`}
+                    onClick={() =>
+                      setCustomTargets((prev) =>
+                        prev.includes(target) ? prev.filter((value) => value !== target) : [...prev, target]
+                      )
+                    }
+                  >
+                    {target}
+                  </button>
+                ))}
+              </div>
+              <p className="muted top-gap">Doubles</p>
+              <div className="custom-target-grid">
+                {ALL_DOUBLES.map((target) => (
+                  <button
+                    key={target}
+                    type="button"
+                    className={`finish-chip${customTargets.includes(target) ? " finish-chip-active" : ""}`}
+                    onClick={() =>
+                      setCustomTargets((prev) =>
+                        prev.includes(target) ? prev.filter((value) => value !== target) : [...prev, target]
+                      )
+                    }
+                  >
+                    {target}
+                  </button>
+                ))}
+              </div>
+              <p className="muted top-gap">Trebles</p>
+              <div className="custom-target-grid">
+                {ALL_TREBLES.map((target) => (
+                  <button
+                    key={target}
+                    type="button"
+                    className={`finish-chip${customTargets.includes(target) ? " finish-chip-active" : ""}`}
+                    onClick={() =>
+                      setCustomTargets((prev) =>
+                        prev.includes(target) ? prev.filter((value) => value !== target) : [...prev, target]
+                      )
+                    }
+                  >
+                    {target}
+                  </button>
+                ))}
+              </div>
+              <p className="muted top-gap">Center</p>
+              <div className="custom-target-grid">
+                {CENTER_TARGETS.map((target) => (
+                  <button
+                    key={target}
+                    type="button"
+                    className={`finish-chip${customTargets.includes(target) ? " finish-chip-active" : ""}`}
+                    onClick={() =>
+                      setCustomTargets((prev) =>
+                        prev.includes(target) ? prev.filter((value) => value !== target) : [...prev, target]
+                      )
+                    }
+                  >
+                    {target}
+                  </button>
+                ))}
+              </div>
+              {customTargets.length === 0 ? (
+                <p className="warn-text top-gap">Select at least one target.</p>
+              ) : (
+                <p className="muted top-gap">Selected: {customTargets.length}</p>
+              )}
+            </div>
+          ) : null}
           {mode === "full_sector" ? (
             <div className="top-gap">
               <label>Double requirement for each numbered sector</label>
@@ -240,7 +390,7 @@ export function AroundTheClockScreen({
             </div>
           ) : null}
           <div className="top-gap">
-            <Button full onClick={start}>
+            <Button full onClick={start} disabled={!canStart}>
               Start mode
             </Button>
           </div>

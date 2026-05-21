@@ -68,7 +68,13 @@ export interface CheckoutSpeedrunSession {
   pauseSeconds: number;
 }
 
-export type AroundClockMode = "singles" | "doubles" | "trebles" | "full_sector";
+export type AroundClockMode =
+  | "singles"
+  | "doubles"
+  | "trebles"
+  | "full_sector"
+  | "common_doubles"
+  | "custom";
 
 export interface AroundClockEntry {
   target: string;
