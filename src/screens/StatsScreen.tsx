@@ -40,6 +40,8 @@ export function StatsScreen({
 }) {
   const { t } = useI18n();
   const [range, setRange] = React.useState<StatsRange>("7d");
+  const [showAllTargetsOpen, setShowAllTargetsOpen] = React.useState(false);
+  const [openTargetModes, setOpenTargetModes] = React.useState<Record<string, boolean>>({});
 
   const checkout = getCheckoutStats(checkoutAttempts, range);
   const speedrun = getSpeedrunStats(speedruns, range);
@@ -203,10 +205,24 @@ export function StatsScreen({
               <summary>{t.stats.byTargetSector}</summary>
               {around.byTargetGrouped.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {around.byTargetGrouped.length > 0 ? (
-                <details className="stats-subsection top-gap">
+                <details
+                  className="stats-subsection top-gap"
+                  open={showAllTargetsOpen}
+                  onToggle={(event) => setShowAllTargetsOpen((event.currentTarget as HTMLDetailsElement).open)}
+                >
                   <summary>{t.stats.showAllTargetsSectors}</summary>
                   {around.byTargetGrouped.map((group) => (
-                    <details key={group.mode} className="stats-subsection top-gap">
+                    <details
+                      key={group.mode}
+                      className="stats-subsection top-gap"
+                      open={openTargetModes[group.mode] === true}
+                      onToggle={(event) =>
+                        setOpenTargetModes((prev) => ({
+                          ...prev,
+                          [group.mode]: (event.currentTarget as HTMLDetailsElement).open
+                        }))
+                      }
+                    >
                       <summary>{group.mode}</summary>
                       {group.rows.map((row) => (
                         <CompactRow
@@ -219,19 +235,6 @@ export function StatsScreen({
                   ))}
                 </details>
               ) : null}
-            </details>
-            <details className="stats-subsection">
-              <summary>{t.stats.fastestSlowest}</summary>
-              <CompactRow
-                left="Fastest target/sector"
-                middle={around.fastest ? `${around.fastest.mode} · ${around.fastest.key}` : "-"}
-                right={around.fastest ? `Best ${formatSeconds(around.fastest.best)}` : "-"}
-              />
-              <CompactRow
-                left="Slowest target/sector"
-                middle={around.slowest ? `${around.slowest.mode} · ${around.slowest.key}` : "-"}
-                right={around.slowest ? `Avg ${formatSeconds(around.slowest.average)}` : "-"}
-              />
             </details>
           </>
         ) : null}
