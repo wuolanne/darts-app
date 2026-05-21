@@ -5,7 +5,7 @@ Darts Practice on mobiili-ensin dartsin harjoitussovellus. Se ei ole X01-scoreri
 Paaidea:
 - low-input treeni (ei dartti kerrallaan pakkoa)
 - checkout-harjoittelu
-- checkout speedrun / range timer
+- checkout timed run / range timer
 - around the clock (myos full sector)
 - paikallinen stats-seuranta
 
@@ -28,7 +28,7 @@ Nama tiedostot ohjaavat MVP-suuntaa:
 
 - Home / Training
   - Quick Checkout Practice
-  - Checkout Speedrun
+  - Checkout Timed Run
   - Around the Clock
   - Checkout Library (kevyt MVP-versio)
   - Stats
@@ -51,7 +51,7 @@ Nama tiedostot ohjaavat MVP-suuntaa:
     - FINISHED / GOOD LEAVE / FAILED / BUST
   - SHOW ROUTE avaa reittivihjeen
 
-- Checkout Speedrun
+- Checkout Timed Run
   - Preset range tai custom range
   - Sequential / Random
   - FINISHED / FAILED / BUST
@@ -70,7 +70,7 @@ Nama tiedostot ohjaavat MVP-suuntaa:
 
 - Stats
   - Filter: 7 Days / 30 Days / Total
-  - Checkout-, Speedrun- ja Around the Clock -nakyma paikallisesta datasta
+- Checkout-, Timed Run- ja Around the Clock -nakyma paikallisesta datasta
 
 ## Projektin rakenne
 
@@ -113,7 +113,7 @@ npm run build
 Sovellus tallentaa paikallisesti:
 - user settings
 - checkout attempts
-- checkout speedrun sessions
+- checkout timed run sessions
 - around the clock sessions
 
 Dataa ei laheteta palvelimelle.

@@ -49,7 +49,7 @@ export function StatsScreen({
       </Card>
 
       <Card>
-        <h3>Checkout Speedrun</h3>
+        <h3>Checkout Timed Run</h3>
         <p>Sessions: {speedrun.sessions}</p>
         {speedrun.ranges.length === 0 ? <p className="muted">No sessions yet.</p> : null}
         {speedrun.ranges.map((item) => (

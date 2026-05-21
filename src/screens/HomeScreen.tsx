@@ -9,7 +9,7 @@ const items: { title: string; screen: AppScreen; description: string; active: bo
     active: true
   },
   {
-    title: "Checkout Speedrun",
+    title: "Checkout Timed Run",
     screen: "speedrun",
     description: "Complete a checkout range as fast as possible.",
     active: true

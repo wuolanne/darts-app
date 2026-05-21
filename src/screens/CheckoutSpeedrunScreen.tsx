@@ -9,7 +9,7 @@ import {
 import { CHECKOUT_RANGE_PRESETS } from "../utils/constants";
 import { getRouteForFinish } from "../utils/checkoutRoutes";
 import { triggerHaptic } from "../utils/haptics";
-import { formatClock, toRoundedSeconds } from "../utils/time";
+import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
 
 interface RunningState {
   list: number[];
@@ -44,10 +44,6 @@ function getSuccessRate(entries: { result: SpeedrunEntryResult }[]): number {
   }
   const finished = entries.filter((entry) => entry.result === "finished").length;
   return (finished / entries.length) * 100;
-}
-
-function displaySecondsAsClock(seconds: number): string {
-  return formatClock(Math.round(seconds));
 }
 
 export function CheckoutSpeedrunScreen({
@@ -228,7 +224,7 @@ export function CheckoutSpeedrunScreen({
 
   return (
     <div className="screen">
-      <ScreenTitle title="Checkout Speedrun" subtitle="Complete selected checkouts as fast as possible." onBack={onBack} />
+      <ScreenTitle title="Checkout Timed Run" subtitle="Complete selected checkouts as fast as possible." onBack={onBack} />
 
       {!running && !result ? (
         <Card>
@@ -281,7 +277,7 @@ export function CheckoutSpeedrunScreen({
           </div>
           <div className="top-gap">
             <Button full onClick={start}>
-              Start speedrun
+              Start timed run
             </Button>
           </div>
         </Card>
@@ -303,7 +299,7 @@ export function CheckoutSpeedrunScreen({
             </div>
             <div>
               <p className="muted">Current checkout</p>
-              <strong>{displaySecondsAsClock(currentCheckoutSeconds)}</strong>
+              <strong>{formatPracticeDuration(currentCheckoutSeconds)}</strong>
             </div>
           </div>
 
@@ -337,7 +333,7 @@ export function CheckoutSpeedrunScreen({
       {result ? (
         <Card>
           <h3>Result</h3>
-          <p className="big-number">{displaySecondsAsClock(result.totalActiveSeconds)}</p>
+          <p className="big-number">{formatPracticeDuration(result.totalActiveSeconds)}</p>
           <p className="muted">
             Completed: {result.entries.filter((entry) => entry.result === "finished").length} /{" "}
             {running ? running.list.length : result.rangeEnd - result.rangeStart + 1}
@@ -346,17 +342,17 @@ export function CheckoutSpeedrunScreen({
           <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
-              Fastest checkout: {resultFastest.checkout} ({displaySecondsAsClock(resultFastest.seconds)})
+              Fastest checkout: {resultFastest.checkout} ({formatPracticeDuration(resultFastest.seconds)})
             </p>
           ) : null}
           {resultSlowest ? (
             <p className="muted">
-              Slowest checkout: {resultSlowest.checkout} ({displaySecondsAsClock(resultSlowest.seconds)})
+              Slowest checkout: {resultSlowest.checkout} ({formatPracticeDuration(resultSlowest.seconds)})
             </p>
           ) : null}
           {pbDelta !== null ? (
             <p className={pbDelta <= 0 ? "good-text" : "warn-text"}>
-              {pbDelta <= 0 ? "New personal best!" : `PB diff: +${pbDelta.toFixed(1)}s`}
+              {pbDelta <= 0 ? "New personal best!" : `PB diff: +${formatPracticeDuration(pbDelta)}`}
             </p>
           ) : null}
 
@@ -365,13 +361,13 @@ export function CheckoutSpeedrunScreen({
               <div key={`${entry.checkout}-${index}`} className="breakdown-item">
                 <span>{entry.checkout}</span>
                 <span>{entry.result.toUpperCase()}</span>
-                <strong>{displaySecondsAsClock(entry.seconds)}</strong>
+                <strong>{formatPracticeDuration(entry.seconds)}</strong>
               </div>
             ))}
           </div>
           <div className="top-gap">
             <Button full onClick={() => setResult(null)}>
-              New speedrun
+              New timed run
             </Button>
           </div>
         </Card>

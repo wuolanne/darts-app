@@ -3,7 +3,7 @@ import { AroundClockSession, AroundClockMode, UserSettings } from "../types/mode
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import { estimateDartsFromActiveTime } from "../utils/pace";
 import { triggerHaptic } from "../utils/haptics";
-import { formatClock, formatSeconds, toRoundedSeconds } from "../utils/time";
+import { formatClock, formatPracticeDuration, formatSeconds, toRoundedSeconds } from "../utils/time";
 
 interface RunningState {
   mode: AroundClockMode;
@@ -308,7 +308,7 @@ export function AroundTheClockScreen({
           ) : null}
           {pbDelta !== null ? (
             <p className={pbDelta <= 0 ? "good-text" : "warn-text"}>
-              {pbDelta <= 0 ? "New personal best!" : `PB diff: +${pbDelta.toFixed(1)}s`}
+              {pbDelta <= 0 ? "New personal best!" : `PB diff: +${formatPracticeDuration(pbDelta)}`}
             </p>
           ) : null}
           <div className="breakdown-list">
