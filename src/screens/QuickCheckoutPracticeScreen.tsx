@@ -58,6 +58,14 @@ function randomPick<T>(values: T[]): T | null {
   return values[index] ?? null;
 }
 
+function randomPickAvoiding<T>(values: T[], getKey: (value: T) => string, avoidKey: string | null): T | null {
+  if (values.length === 0) return null;
+  if (!avoidKey || values.length === 1) return randomPick(values);
+  const filtered = values.filter((item) => getKey(item) !== avoidKey);
+  if (filtered.length === 0) return randomPick(values);
+  return randomPick(filtered);
+}
+
 function buildPlayableFinishes(
   min: number,
   max: number,
@@ -173,6 +181,8 @@ export function QuickCheckoutPracticeScreen({
   const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
   const [pickedTargets, setPickedTargets] = useState<string[]>([]);
   const [pickHistory, setPickHistory] = useState<PickHistoryItem[]>([]);
+  const [lastMainFinish, setLastMainFinish] = useState<number | null>(null);
+  const [lastScenarioKey, setLastScenarioKey] = useState<string | null>(null);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -196,6 +206,7 @@ export function QuickCheckoutPracticeScreen({
     () => buildMissScenarios(activeRange.min, activeRange.max, settings.preferredDouble),
     [activeRange.min, activeRange.max, settings.preferredDouble]
   );
+  const playableCountForMode = practiceMode === "single-miss-scenario" ? missScenarios.length : playableFinishes.length;
 
   const currentRouteData = useMemo(
     () => getPrimaryCheckoutRoute(finish, settings.preferredDouble),
@@ -303,6 +314,7 @@ export function QuickCheckoutPracticeScreen({
     setRemaining(nextFinish);
     setActiveRoute(fallbackRoute);
     setActiveRouteLabel(primary?.label ?? "Optimal route");
+    setLastMainFinish(nextFinish);
     setStage("playing");
   }
 
@@ -313,12 +325,17 @@ export function QuickCheckoutPracticeScreen({
     setRemaining(nextScenario.remaining);
     setActiveRoute(nextScenario.continuationRoute);
     setActiveRouteLabel("Continuation route");
+    setLastScenarioKey(`${nextScenario.finish}-${nextScenario.triedTreble}-${nextScenario.remaining}`);
     setStage("playing");
   }
 
   function startPractice() {
     if (practiceMode === "single-miss-scenario") {
-      const scenario = randomPick(missScenarios);
+      const scenario = randomPickAvoiding(
+        missScenarios,
+        (item) => `${item.finish}-${item.triedTreble}-${item.remaining}`,
+        null
+      );
       if (!scenario) {
         setFeedback({
           tone: "info",
@@ -331,7 +348,11 @@ export function QuickCheckoutPracticeScreen({
       return;
     }
 
-    const nextFinish = randomPick(playableFinishes);
+    const nextFinish = randomPickAvoiding(
+      playableFinishes,
+      (item) => String(item),
+      null
+    );
     if (nextFinish === null) {
       setFeedback({
         tone: "info",
@@ -345,7 +366,11 @@ export function QuickCheckoutPracticeScreen({
 
   function nextCheckout() {
     if (practiceMode === "single-miss-scenario") {
-      const scenario = randomPick(missScenarios);
+      const scenario = randomPickAvoiding(
+        missScenarios,
+        (item) => `${item.finish}-${item.triedTreble}-${item.remaining}`,
+        lastScenarioKey
+      );
       if (!scenario) {
         setFeedback({
           tone: "info",
@@ -358,7 +383,11 @@ export function QuickCheckoutPracticeScreen({
       return;
     }
 
-    const nextFinish = randomPick(playableFinishes);
+    const nextFinish = randomPickAvoiding(
+      playableFinishes,
+      (item) => String(item),
+      lastMainFinish !== null ? String(lastMainFinish) : null
+    );
     if (nextFinish === null) {
       setFeedback({
         tone: "info",
@@ -517,7 +546,7 @@ export function QuickCheckoutPracticeScreen({
             ]}
             onChange={(value) => setPracticeMode(value as PracticeMode)}
           />
-          <p className="muted top-gap">Playable finishes in this range: {playableFinishes.length}</p>
+          <p className="muted top-gap">Playable finishes in this range: {playableCountForMode}</p>
           {practiceMode === "single-miss-scenario" ? (
             <p className="muted">Available scenarios: {missScenarios.length}</p>
           ) : null}
@@ -526,8 +555,8 @@ export function QuickCheckoutPracticeScreen({
               full
               onClick={startPractice}
               disabled={
-                (practiceMode === "main-route" && playableFinishes.length === 0) ||
-                (practiceMode === "single-miss-scenario" && missScenarios.length === 0) ||
+                (practiceMode === "main-route" && playableCountForMode === 0) ||
+                (practiceMode === "single-miss-scenario" && playableCountForMode === 0) ||
                 (selectedRange === "custom" && !customRange)
               }
             >
