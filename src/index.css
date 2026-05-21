@@ -318,6 +318,47 @@ body {
   padding: 7px 9px;
 }
 
+.finish-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.finish-chip {
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface-alt) 62%, transparent);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 4px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.finish-chip-active {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 25%, transparent);
+}
+
+.route-section {
+  margin-top: 12px;
+}
+
+.route-section h4 {
+  margin: 0 0 8px;
+}
+
+.route-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface-alt) 62%, transparent);
+  border-radius: 10px;
+  padding: 7px 9px;
+}
+
 .good-text {
   color: var(--success);
   font-weight: 700;
@@ -336,5 +377,9 @@ body {
 
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .finish-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

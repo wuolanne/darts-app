@@ -92,7 +92,12 @@ function AppBody({
     );
   }
   if (screen === "checkout-library") {
-    return <CheckoutLibraryScreen onBack={() => setScreen("home")} />;
+    return (
+      <CheckoutLibraryScreen
+        onBack={() => setScreen("home")}
+        preferredDouble={settings.preferredDouble}
+      />
+    );
   }
   return (
     <StatsScreen
