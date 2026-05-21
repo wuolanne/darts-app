@@ -403,6 +403,34 @@ body {
   padding: 7px 9px;
 }
 
+.stats-subsection {
+  margin-top: 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 9px;
+  padding: 8px 9px;
+  background: color-mix(in oklab, var(--surface-alt) 80%, transparent);
+}
+
+.stats-subsection summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.stats-row {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.83rem;
+}
+
+.stats-row strong {
+  font-size: 0.82rem;
+}
+
 .finish-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
