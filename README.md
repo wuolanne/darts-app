@@ -14,12 +14,37 @@ Perusperiaatteet:
 
 - Sovelluksen UI on MVP:ssä englanniksi.
 - Mobiili ensin.
-- Tumma, selkeä ja urheilullinen käyttöliittymä.
+- Tumma, selkeä ja urheilullinen käyttöliittymä oletuksena.
+- Käyttäjä voi vaihtaa teemaa: tumma, vaalea ja näiden väliin sijoittuvat väliteemat.
 - Isot painikkeet, isot numerot ja yhden käden käyttö.
 - Treenin aikana käyttäjän pitää katsoa taulua, ei puhelinta.
 - Sovellus ei saa vaatia jokaisen heiton kirjaamista.
 - Oletuskäyttö on low-input: yksi painallus, kun kohde, sektori tai yritys on valmis.
 - Tarkempi heitto heitolta -kirjaus voidaan lisätä myöhemmin vapaaehtoisena ominaisuutena, mutta sitä ei saa koskaan vaatia.
+
+## Teemat
+
+Sovellukseen pitää tulla vaihdettavat teemat. Tämä on osa tuotteen käyttömukavuutta, koska käyttäjät treenaavat eri valaistuksissa: kotona, hallilla, pubissa, kirkkaassa päivänvalossa tai pimeässä treenihuoneessa.
+
+MVP-teemat:
+
+- **Dark** – oletusteema, tumma sporttinen näkymä.
+- **Light** – selkeä vaalea teema kirkkaaseen käyttöön.
+- **Dim** – tumman ja vaalean välimuoto, pehmeämpi ja vähemmän kontrastinen kuin Dark.
+- **System** – seuraa laitteen omaa asetusta, jos toteutettavassa tekniikassa se on järkevää.
+
+Teemojen pitää vaikuttaa koko sovellukseen:
+
+- taustat
+- kortit
+- tekstit
+- napit
+- korostusvärit
+- timer/progress-elementit
+- stats-näkymät
+- treeninäkymät
+
+Toteutuksessa pitää käyttää keskitettyä theme/tokens-rakennetta. Värit eivät saa olla hajallaan yksittäisissä komponenteissa hardcodattuina. Uusia teemoja pitää voida lisätä myöhemmin helposti.
 
 ## Pääominaisuudet
 
@@ -269,6 +294,7 @@ Kortit:
 - Preferred double
 - Throw pace
 - Timer defaults
+- Theme: Dark / Light / Dim / System
 - Vibration feedback
 - Data export/import myöhemmin
 
@@ -292,12 +318,14 @@ Näitä ei rakenneta vielä:
 
 DartZonea ei kopioida visuaalisesti. DartZonessa on vahva pixel-fontti / tummansininen / retro game -tyyli. FinishLabille tehdään oma identiteetti:
 
-- Tumma, selkeä ja moderni urheilullinen UI
+- Tumma, selkeä ja moderni urheilullinen UI oletuksena
+- Vaihdettavat teemat: Dark, Light, Dim ja System
 - Isot ja helposti luettavat tekstit
 - Selkeät kortit
-- Korkea kontrasti
+- Korkea kontrasti, mutta Dim-teemassa pehmeämpi kontrasti
 - Minimaalinen interaktio treenin aikana
 - Isot napit, joita on helppo painaa nopeasti heittovuorojen välissä
+- Teemat toteutetaan keskitetysti design tokenien kautta
 
 ## Työnimi
 
