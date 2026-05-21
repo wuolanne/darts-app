@@ -8,9 +8,26 @@ Sovelluksen nimen pitää alkaa sanalla **Darts**, koska käyttäjät hakevat t�
 
 Nimen kannattaa olla mieluiten yksi sana tai vähintään sellainen, joka tuntuu yhdeltä brändiltä.
 
+## Markkinatutkimus: DartsLab
+
+DartsLab-nimeä ei kannata käyttää.
+
+Haussa löytyi jo olemassa oleva **DartsLab** osoitteessa `dartslab.app`. Sivun mukaan DartsLab on darts-sovellus, joka sisältää muun muassa:
+
+- darts scoreboard -ominaisuuksia
+- 501- ja Cricket-pelaamista
+- DartBot-haasteen
+- checkout- ja matematiikkaharjoittelua
+- AI-videoanalyysiä
+- personoituja harjoitusohjelmia
+- XP:tä, saavutuksia, streakkejä ja leaderboardeja
+
+Tämä on liian lähellä meidän sovelluksen markkinaa ja nimeä. Vaikka meidän MVP:n painotus on eri, DartsLab aiheuttaisi todennäköisesti sekaannusta käyttäjille ja voisi aiheuttaa myös brändi-/tavaramerkkiriskin.
+
+Päätös: **DartsLab poistetaan suositelluista nimistä.**
+
 ## Yhden sanan nimiehdotuksia
 
-- DartsLab
 - DartsFlow
 - DartsTimer
 - DartsTrainer
@@ -30,18 +47,28 @@ Nimen kannattaa olla mieluiten yksi sana tai vähintään sellainen, joka tuntuu
 - DartsPilot
 - DartsMeter
 - DartsForge
+- DartsPace
+- DartsRep
+- DartsMarks
+- DartsFinishr
+- DartsRoute
+- DartsRoutes
+- DartsPractice
+- DartsSession
 
 Tämän hetken parhaat vaihtoehdot:
 
-1. **DartsLab**
-2. **DartsTrainer**
-3. **DartsTimer**
-4. **DartsFlow**
-5. **DartsFinish**
+1. **DartsFlow**
+2. **DartsTimer**
+3. **DartsTrainer**
+4. **DartsFinish**
+5. **DartsPace**
 
-Suositus MVP:lle: **DartsLab**.
+Suositus MVP:lle: **DartsFlow**.
 
-Perustelu: lyhyt, helppo muistaa, alkaa hakusanalla Darts, ei rajaa sovellusta pelkkään checkoutiin tai kelloon, ja antaa tilaa myöhemmille ominaisuuksille.
+Perustelu: lyhyt, alkaa hakusanalla Darts, tuntuu yhdeltä brändiltä, ei ole liian kapea pelkkään checkoutiin eikä pelkkään kelloon, ja sopii low-input-treenifilosofiaan: treenin pitää virrata ilman jatkuvaa näpyttelyä.
+
+Varasuositus: **DartsTimer**, jos halutaan korostaa kelloa vastaan treenaamista ja sektorikohtaisia aikoja.
 
 ## Ansaintamallin periaate
 
@@ -140,6 +167,8 @@ Tekstin pitää olla oma, ei DartZonen kopio.
 
 ## Päätös tällä hetkellä
 
-Rakennetaan ensin hyvä ilmainen MVP nimellä **DartsLab** tai työnimellä **Darts FinishLab**.
+Ei käytetä nimeä **DartsLab**, koska se on jo käytössä samassa markkinassa.
+
+Rakennetaan ensin hyvä ilmainen MVP työnimellä **DartsFlow** tai varanimellä **DartsTimer**.
 
 Pro/support-malli jätetään myöhemmäksi, mutta arkkitehtuuri tehdään niin, että maksulliset ominaisuudet voidaan lisätä myöhemmin ilman isoa uudelleenkirjoitusta.
