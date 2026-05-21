@@ -328,6 +328,7 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
   const entryMap = new Map<string, { mode: string; key: string; seconds: number; timestamp: string }[]>();
   for (const session of filtered) {
     for (const entry of session.entries) {
+      if (entry.seconds <= 0) continue;
       const mode = aroundTargetGroupLabel(session.mode);
       const key = normalizeAroundTarget(session.mode, entry.target);
       const aggregateKey = `${mode}::${key}`;

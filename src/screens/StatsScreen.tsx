@@ -203,42 +203,21 @@ export function StatsScreen({
               <summary>{t.stats.byTargetSector}</summary>
               {around.byTargetGrouped.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {around.byTargetGrouped.length > 0 ? (
-                <>
-                  <p className="muted">Fastest 5 targets/sectors</p>
-                  {[...around.byTarget].sort((a, b) => a.best - b.best).slice(0, 5).map((row) => (
-                    <CompactRow
-                      key={`fast-${row.mode}-${row.key}`}
-                      left={`${row.mode} · ${row.key}`}
-                      middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                      right={`Avg ${formatSeconds(row.average)}`}
-                    />
+                <details className="stats-subsection top-gap">
+                  <summary>{t.stats.showAllTargetsSectors}</summary>
+                  {around.byTargetGrouped.map((group) => (
+                    <details key={group.mode} className="stats-subsection top-gap">
+                      <summary>{group.mode}</summary>
+                      {group.rows.map((row) => (
+                        <CompactRow
+                          key={`${group.mode}-${row.key}`}
+                          left={row.key}
+                          right={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)} · Avg ${formatSeconds(row.average)}`}
+                        />
+                      ))}
+                    </details>
                   ))}
-                  <p className="muted top-gap">Slowest 5 targets/sectors</p>
-                  {[...around.byTarget].sort((a, b) => b.average - a.average).slice(0, 5).map((row) => (
-                    <CompactRow
-                      key={`slow-${row.mode}-${row.key}`}
-                      left={`${row.mode} · ${row.key}`}
-                      middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                      right={`Avg ${formatSeconds(row.average)}`}
-                    />
-                  ))}
-                  <details className="stats-subsection top-gap">
-                    <summary>Show all targets/sectors</summary>
-                    {around.byTargetGrouped.map((group) => (
-                      <div key={group.mode} className="top-gap">
-                        <p className="muted">{group.mode}</p>
-                        {group.rows.map((row) => (
-                          <CompactRow
-                            key={`${group.mode}-${row.key}`}
-                            left={row.key}
-                            middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                            right={`Avg ${formatSeconds(row.average)}`}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </details>
-                </>
+                </details>
               ) : null}
             </details>
             <details className="stats-subsection">

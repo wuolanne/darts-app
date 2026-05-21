@@ -141,6 +141,7 @@ export const en = {
     byFinish: "By finish",
     byMode: "By mode",
     byTargetSector: "By target / sector",
+    showAllTargetsSectors: "Show all targets/sectors",
     problemFinishes: "Problem finishes",
     bestFinishes: "Best finishes",
     fastestSlowest: "Fastest & slowest",

@@ -143,6 +143,7 @@ export const fi: TranslationDict = {
     byFinish: "Checkouteittain",
     byMode: "Tiloittain",
     byTargetSector: "Kohde-/sektorikohtaisesti",
+    showAllTargetsSectors: "Näytä kaikki kohteet/sektorit",
     problemFinishes: "Haastavat checkoutit",
     bestFinishes: "Parhaat checkoutit",
     fastestSlowest: "Nopein & hitain",
