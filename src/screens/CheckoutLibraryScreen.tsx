@@ -29,21 +29,25 @@ function RouteDetail({ option }: { option: CheckoutRouteOption }) {
       <p>
         <span className="muted">Route:</span> {formatRoute(option.route)}
       </p>
-      <p>
-        <span className="muted">If single hit:</span>{" "}
-        {option.singleHitTarget
-          ? `If ${option.firstTarget} becomes ${option.singleHitTarget}`
-          : "No single-hit follow-up yet."}
-      </p>
-      <p>
-        <span className="muted">Remaining:</span> {option.remainingAfterSingle}
-      </p>
-      <p>
-        <span className="muted">Follow-up:</span>{" "}
-        {option.followUpRoute && option.followUpRoute.length > 0
-          ? formatRoute(option.followUpRoute)
-          : "No detailed follow-up yet."}
-      </p>
+      {option.singleHitTarget ? (
+        <p>
+          <span className="muted">If single hit:</span> If {option.firstTarget} becomes{" "}
+          {option.singleHitTarget}
+        </p>
+      ) : null}
+      {option.singleHitTarget ? (
+        <p>
+          <span className="muted">Remaining:</span> {option.remainingAfterSingle} left
+        </p>
+      ) : null}
+      {option.singleHitTarget ? (
+        <p>
+          <span className="muted">Follow-up:</span>{" "}
+          {option.followUpRoute && option.followUpRoute.length > 0
+            ? formatRoute(option.followUpRoute)
+            : "No detailed follow-up yet."}
+        </p>
+      ) : null}
       {option.note ? (
         <p>
           <span className="muted">Note:</span> {option.note}
@@ -101,7 +105,11 @@ export function CheckoutLibraryScreen({
           selectedFinish <= range.max ? (
             <div className="finish-inline-detail">
               <h4>Finish {selectedFinish}</h4>
-              {detail ? (
+              {detail?.isBogey ? (
+                <div className="route-teach-card">
+                  <p className="warn-text">{detail.note ?? "Bogey number - cannot be finished in three darts."}</p>
+                </div>
+              ) : detail ? (
                 <>
                   {detail.routes.map((option, idx) => (
                     <RouteDetail key={`${selectedFinish}-${option.label}-${idx}`} option={option} />
