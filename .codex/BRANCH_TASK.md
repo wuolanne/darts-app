@@ -1,24 +1,22 @@
-# Branch task: Quick Checkout hidden route game flow
+# Branch task: Checkout alternative route / single-miss scenario mode
 
-Branch: `feature-quick-checkout-game-flow`
+Branch: `feature-checkout-miss-scenarios`
 Base: `main`
 
 ## Goal
 
-Quick Checkout Practice should be a real learning/test game. During the attempt the app must not reveal the route too early. The player should know or decide the route, tap targets on the board, and only after success/failure/time-up should the app explain the route.
+Add a separate checkout practice mode for alternative routes after a treble attempt lands in the single. The app gives the scenario and the user must choose the continuation.
 
 The app UI language must remain English.
 
 ## Requirements implemented in this merge
 
-- Hide route guidance during active attempts.
-- Show selected/tapped targets as `Your picks`.
-- Allow undo before attempt result.
-- Keep result feedback visible until explicit `NEXT CHECKOUT`.
-- Add `Single miss scenarios` mode where the app gives a tried treble + hit single situation and the player must choose the continuation.
-- Keep first-dart treble miss continuation max two darts.
-- Bull is valid 50.
-- Do not invent invalid targets like D25, T25, S50, S104.
+- Add a Quick Checkout mode selector with `Main route` and `Single miss scenarios`.
+- Generate scenarios from checkout route data when the planned first dart is a treble and the single-hit continuation is a valid max two-dart route.
+- Show the miss scenario before the answer, for example `Tried T18, hit S18. 104 left. Choose the continuation.`
+- Keep the continuation answer hidden until the result panel.
+- Keep feedback visible until explicit `NEXT CHECKOUT`.
+- Keep Bull valid as 50 and avoid invalid targets like D25, T25, S50, S104.
 
 ## Important example
 
@@ -32,11 +30,9 @@ Finish 122:
 
 Verify:
 
-- Route is hidden before answer.
-- Tapped targets are visible.
-- Undo works before result.
-- Correct route gives praise.
-- Wrong route/time-up reveals the optimal route only after result.
-- Result panel remains visible until Next.
-- Single miss scenarios are selectable in setup.
+- Finish 122 scenario: Tried T18, hit S18, 104 left, answer T18 -> Bull.
+- 101/104/107/110 bull endings are supported.
+- No invalid targets are generated.
+- Wrong answer reveals correct continuation only after result.
+- Result remains visible until Next.
 - `npm run typecheck` and `npm run build` pass if available.
