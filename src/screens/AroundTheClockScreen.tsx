@@ -29,6 +29,8 @@ const ALL_TREBLES = Array.from({ length: 20 }, (_, i) => `T${i + 1}`);
 const D16_PATH_TARGETS = ["D16", "D8", "D4", "D2", "D1"] as const;
 const CUSTOM_TARGETS_KEY = "around_clock_custom_targets";
 const FULL_SECTOR_ORDER_KEY = "around_clock_full_sector_order";
+const FULL_SECTOR_CENTER_START = "Bull/25";
+const FULL_SECTOR_CENTER_END = "25/Bull";
 
 function sanitizeCustomTargets(values: string[]): string[] {
   const allowed = new Set<string>([...ALL_SINGLES, ...ALL_DOUBLES, ...ALL_TREBLES, ...CENTER_TARGETS]);
@@ -67,9 +69,9 @@ function createTargets(
     return doubleRequirement === 2 ? `S${n} + T${n} + D${n} + D${n}` : `S${n} + T${n} + D${n}`;
   });
   if (fullSectorOrder === "end_with_bull") {
-    return [...sectorTargets, "25", "Bull"];
+    return [...sectorTargets, FULL_SECTOR_CENTER_END];
   }
-  return ["Bull", "25", ...sectorTargets];
+  return [FULL_SECTOR_CENTER_START, ...sectorTargets];
 }
 
 function modeLabel(mode: AroundClockMode): string {
@@ -406,8 +408,8 @@ export function AroundTheClockScreen({
               />
               <p className="muted top-gap">
                 {fullSectorOrder === "start_with_bull"
-                  ? "Full Sector: Bull, 25, then S/T/D for sectors 1-20"
-                  : "Full Sector: S/T/D for sectors 1-20, then 25 and Bull"}
+                  ? "Full Sector: Bull/25, then S/T/D for sectors 1-20"
+                  : "Full Sector: S/T/D for sectors 1-20, then 25/Bull"}
               </p>
             </div>
           ) : null}
@@ -444,8 +446,8 @@ export function AroundTheClockScreen({
           {running.mode === "full_sector" ? (
             <p className="muted">
               {running.fullSectorOrder === "end_with_bull"
-                ? "Full Sector: S/T/D for sectors 1-20, then 25 and Bull"
-                : "Full Sector: Bull, 25, then S/T/D for sectors 1-20"}
+                ? "Full Sector: S/T/D for sectors 1-20, then 25/Bull"
+                : "Full Sector: Bull/25, then S/T/D for sectors 1-20"}
             </p>
           ) : null}
           <div className="metric-grid">
