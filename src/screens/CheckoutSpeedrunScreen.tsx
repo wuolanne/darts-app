@@ -13,7 +13,13 @@ import {
   normalizeCheckoutRangeKey,
   sanitizeCheckoutCustomRange
 } from "../utils/constants";
-import { getRouteForFinish } from "../utils/checkoutRoutes";
+import {
+  formatRoute,
+  getPrimaryCheckoutRoute,
+  getSingleHitContinuation,
+  isValidDartTarget,
+  normalizeDartTarget
+} from "../utils/checkoutLibrary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
 
@@ -90,7 +96,16 @@ export function CheckoutSpeedrunScreen({
     : selectedPreset;
 
   const currentCheckout = running ? running.list[running.index] : null;
-  const route = currentCheckout ? getRouteForFinish(currentCheckout, settings.preferredDouble) : null;
+  const primaryRoute = currentCheckout ? getPrimaryCheckoutRoute(currentCheckout, settings.preferredDouble) : null;
+  const singleHitContinuation = primaryRoute ? getSingleHitContinuation(primaryRoute) : undefined;
+  const firstTarget = primaryRoute?.route[0] ? normalizeDartTarget(primaryRoute.route[0]) : null;
+  const showTwoDartContinuation = Boolean(
+    singleHitContinuation &&
+      isValidDartTarget(singleHitContinuation.singleHitTarget) &&
+      singleHitContinuation.continuationRoute.length > 0 &&
+      singleHitContinuation.continuationRoute.length <= 2 &&
+      singleHitContinuation.continuationRoute.every((target) => isValidDartTarget(target))
+  );
 
   const activeTotalSeconds = running
     ? toRoundedSeconds((ticker - running.startedAt - running.pauseMs - (running.pauseStartedAt ? ticker - running.pauseStartedAt : 0)))
@@ -305,11 +320,25 @@ export function CheckoutSpeedrunScreen({
             </div>
           </div>
 
-          {showRoute && route ? (
+          {showRoute && primaryRoute ? (
             <div className="route-box">
-              <h4>Route hint</h4>
-              <p>{route.route}</p>
-              <p className="muted">{route.note}</p>
+              <h4>Route</h4>
+              <p className="route-compact-line">
+                <span className="muted">Optimal:</span> <strong>{formatRoute(primaryRoute.route)}</strong>
+              </p>
+              {singleHitContinuation ? (
+                <p className="route-compact-line">
+                  <span className="muted">Single hit:</span>{" "}
+                  <strong>
+                    If {firstTarget ?? "first dart"} becomes {singleHitContinuation.singleHitTarget}:{" "}
+                    {singleHitContinuation.remaining} left{" "}
+                    {showTwoDartContinuation
+                      ? `\u2192 ${formatRoute(singleHitContinuation.continuationRoute)}`
+                      : "\u2192 No direct two-dart finish saved yet."}
+                  </strong>
+                </p>
+              ) : null}
+              {primaryRoute.note ? <p className="muted">{primaryRoute.note}</p> : null}
             </div>
           ) : null}
 

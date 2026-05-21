@@ -89,7 +89,16 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   60: { finish: 60, label: "Optimal route", route: ["S20", "D20"] },
   61: { finish: 61, label: "Optimal route", route: ["T15", "D8"] },
   62: { finish: 62, label: "Optimal route", route: ["T10", "D16"] },
-  63: { finish: 63, label: "Optimal route", route: ["T13", "D12"] },
+  63: {
+    finish: 63,
+    label: "Optimal route",
+    route: ["T13", "D12"],
+    singleHitContinuation: {
+      singleHitTarget: "S13",
+      remaining: 50,
+      continuationRoute: ["Bull"]
+    }
+  },
   64: { finish: 64, label: "Optimal route", route: ["T16", "D8"] },
   65: { finish: 65, label: "Optimal route", route: ["T11", "D16"] },
   66: { finish: 66, label: "Optimal route", route: ["T10", "D18"] },
@@ -216,7 +225,16 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   119: { finish: 119, label: "Optimal route", route: ["T19", "S10", "D16"] },
   120: { finish: 120, label: "Optimal route", route: ["T20", "S20", "D20"] },
   121: { finish: 121, label: "Optimal route", route: ["T17", "T10", "D20"] },
-  122: { finish: 122, label: "Optimal route", route: ["T18", "T20", "D4"] },
+  122: {
+    finish: 122,
+    label: "Optimal route",
+    route: ["T18", "T20", "D4"],
+    singleHitContinuation: {
+      singleHitTarget: "S18",
+      remaining: 104,
+      continuationRoute: ["T18", "Bull"]
+    }
+  },
   123: { finish: 123, label: "Optimal route", route: ["T19", "T16", "D9"] },
   124: { finish: 124, label: "Optimal route", route: ["T20", "T16", "D8"] },
   125: { finish: 125, label: "Optimal route", route: ["25", "T20", "D20"] },
