@@ -21,6 +21,7 @@ Perusperiaatteet:
 - Sovellus ei saa vaatia jokaisen heiton kirjaamista.
 - Oletuskäyttö on low-input: yksi painallus, kun kohde, sektori tai yritys on valmis.
 - Tarkempi heitto heitolta -kirjaus voidaan lisätä myöhemmin vapaaehtoisena ominaisuutena, mutta sitä ei saa koskaan vaatia.
+- MVP:hen ei tehdä raskasta onboardingia. Heittotahti asetetaan ja kalibroidaan Settings-näkymässä.
 
 ## Teemat
 
@@ -94,7 +95,35 @@ Esimerkkejä palauteteksteistä:
 
 Sovelluksen pitää välttää epäselviä termejä kuten “rest easy double”. Käytetään selkeää darts-englantia: finish, leave, bogey, preferred double, route, bust, setup.
 
-### 2. Timed Around the Clock
+### 2. Checkout Range Timer / Speedrun
+
+Checkoutteihin pitää tulla kelloa vastaan tehtävä harjoitus. Tämä ei ole valmis harjoitteluohje, vaan mittaava treenimoodi.
+
+Idea:
+
+- Käyttäjä valitsee checkout-alueen, esimerkiksi 60-70.
+- Sovellus käy alueen checkoutit läpi järjestyksessä tai satunnaisesti.
+- Käyttäjä yrittää saada jokaisen checkoutin valmiiksi.
+- Käyttäjä painaa vain yhden low-input-tulosnapin jokaisen checkoutin jälkeen.
+- Sovellus kellottaa kokonaisajan ja halutessa ajan per checkout.
+
+Esimerkkejä:
+
+- Kuinka kauan menee saada kaikki checkoutit 60-70?
+- Kuinka monta checkoutia alueelta 41-60 onnistuu 10 minuutissa?
+- Mikä on oma ennätys alueelle 61-80?
+
+Tulosnäkymässä näytetään:
+
+- Kokonaisaika
+- Onnistuneet checkoutit
+- Epäonnistuneet checkoutit
+- Onnistumisprosentti
+- Hitain checkout
+- Nopein checkout
+- Oma ennätys, jos sellainen on
+
+### 3. Timed Around the Clock
 
 Tämä on yksi sovelluksen tärkeimmistä erottavista ominaisuuksista. Sovelluksen pitää tukea kelloa vastaan tehtävää treeniä, jossa käyttäjä painaa nappia vasta, kun kohde tai sektori on valmis.
 
@@ -118,7 +147,7 @@ Kelloa vastaan -treeneissä sovellus tallentaa:
 - Vertailun omaan ennätykseen
 - Arvioidun heittomäärän, jos heittotahti on asetettu
 
-### 3. Full Sector Around the Clock
+### 4. Full Sector Around the Clock
 
 Sovelluksen pitää tukea treenimoodia nimeltä **Full Sector Around the Clock**.
 
@@ -172,19 +201,29 @@ Total time: 18:42
 [UNDO]
 ```
 
-### 4. Throw Pace ja Estimated Darts
+### 5. Throw Pace ja Estimated Darts
 
-Käyttäjä voi halutessaan asettaa oman heittotahdin. Tätä käytetään pitkissä treeneissä arvioimaan heitettyjen tikkojen määrä.
+Käyttäjä voi halutessaan asettaa tai kalibroida oman heittotahdin Settings-näkymässä. Tätä käytetään pitkissä treeneissä arvioimaan heitettyjen tikkojen määrä.
 
-Asetukset:
+Heittotahtia ei kysytä onboardingissa.
 
-- Fast: 7 sekuntia / 3 tikkaa
-- Normal: 10 sekuntia / 3 tikkaa
-- Relaxed: 13 sekuntia / 3 tikkaa
-- Custom seconds per 3 darts
-- Skip / not set
+Settingsissä pitää olla kaksi tapaa asettaa heittotahti:
 
-Sovelluksen pitää aina näyttää tämä arviona, ei tarkkana totuutena:
+1. Manuaaliset oletukset:
+   - Fast: 7 sekuntia / 3 tikkaa
+   - Normal: 10 sekuntia / 3 tikkaa
+   - Relaxed: 13 sekuntia / 3 tikkaa
+   - Custom seconds per 3 darts
+   - Not set
+
+2. **5 Minute Throw Pace Test**:
+   - Käyttäjä käynnistää 5 minuutin testin.
+   - Käyttäjä heittää normaalilla rytmillä 5 minuuttia.
+   - Testin lopuksi käyttäjä syöttää, montako tikkaa heitti.
+   - Sovellus laskee heittotahdin kaavalla: `300 sekuntia / (tikat / 3)`.
+   - Laskettu arvo tallennetaan käyttäjän heittotahdiksi.
+
+Sovelluksen pitää aina näyttää heittomäärä arviona, ei tarkkana totuutena:
 
 ```text
 Estimated darts: ~716
@@ -192,34 +231,6 @@ Based on 9 sec / 3 darts
 ```
 
 Taukoaikaa ei saa laskea arvioituun heittomäärään.
-
-Heittotahdin voi tarjota kevyenä asetuksena ensimmäisellä käynnistyksellä, mutta se ei saa estää sovelluksen käyttöä. Asetusta pitää voida muuttaa myöhemmin Settings-näkymässä.
-
-### 5. Training Sessions
-
-Sovellukseen pitää tulla valmiita treenisessioita, jotta käyttäjän ei tarvitse aina itse miettiä, mitä harjoitella.
-
-Esimerkkejä:
-
-- 15 min D16 Finishing
-- 10 min Checkout Pressure
-- 41-60 Checkout Speedrun
-- 61-80 Checkout Speedrun
-- Around the Clock Doubles
-- Full Sector Around the Clock
-- D16 Ladder
-- Favourite Double Pressure
-
-Esimerkki 15 minuutin treenistä:
-
-```text
-15 min D16 Finishing
-
-3 min: D16 / D8 / D4 ladder
-5 min: 41-60 checkouts
-5 min: 61-80 D16 routes
-2 min: favourite double pressure
-```
 
 ### 6. Stats
 
@@ -236,6 +247,7 @@ MVP-tilastot:
 - Bust rate
 - Average attempt time
 - Personal bests
+- Checkout range timer results
 - Around the Clock total times
 - Sector breakdowns
 - Fastest and slowest sectors
@@ -248,8 +260,7 @@ MVP-tilastot:
 Kortit:
 
 - Quick Checkout Practice
-- 15 Min Training
-- Speedrun
+- Checkout Speedrun
 - Around the Clock
 - Checkout Library
 - Stats
@@ -267,6 +278,16 @@ Kortit:
   - FAILED
   - BUST
   - SHOW ROUTE
+
+### Checkout Speedrun / Range Timer
+
+- Alueen valinta, esimerkiksi 60-70, 41-60, 61-80 tai custom range
+- Järjestys: sequential / random
+- Nykyinen checkout
+- Kokonaisaika
+- Nykyisen checkoutin aika
+- Low-input-tulosnapit
+- Lopuksi yhteenveto ja oma ennätys
 
 ### Around the Clock
 
@@ -286,13 +307,14 @@ Kortit:
 - Success rate, jos relevantti
 - Estimated darts, jos heittotahti on asetettu
 - Personal best comparison
-- Fastest/slowest sector
-- Full sector breakdown
+- Fastest/slowest sector tai checkout
+- Full breakdown
 
 ### Settings
 
 - Preferred double
 - Throw pace
+- 5 Minute Throw Pace Test
 - Timer defaults
 - Theme: Dark / Light / Dim / System
 - Vibration feedback
@@ -313,6 +335,8 @@ Näitä ei rakenneta vielä:
 - Suora DartZone-UI-kopio
 - Pixel-font/retro-kopio
 - Pakollinen heitto heitolta -kirjaus
+- Raskaat valmiit treeniohjelmat tai ohjeistetut 10/15 minuutin harjoituspaketit
+- Heittotahdin kysyminen onboardingissa
 
 ## Visuaalinen suunta
 
