@@ -1,21 +1,36 @@
 # Darts Practice (MVP)
 
-Tama repositorio sisaltaa ensimmaisen toimivan MVP-version matalan syoton darts-harjoittelusovelluksesta.
-UI on englanniksi, mutta dokumentaatio saa olla suomeksi.
+Darts Practice on mobiili-ensin dartsin harjoitussovellus. Se ei ole X01-scoreri eika otteluiden pistelaskuri.
+
+Paaidea:
+- low-input treeni (ei dartti kerrallaan pakkoa)
+- checkout-harjoittelu
+- checkout speedrun / range timer
+- around the clock (myos full sector)
+- paikallinen stats-seuranta
+
+UI on englanniksi. README voi olla suomeksi.
+
+## Tuotesuunnan lahteet
+
+Nama tiedostot ohjaavat MVP-suuntaa:
+- `.codex/TASK.md`
+- `docs/monetization-and-naming.md`
 
 ## Stack
 
-- React 18 + TypeScript
+- React 18
+- TypeScript
 - Vite 5
-- LocalStorage (ei backendia, ei kirjautumista)
+- LocalStorage (ei backendia, ei loginia)
 
-## Ominaisuudet (MVP)
+## Implementoitu MVP
 
 - Home / Training
   - Quick Checkout Practice
   - Checkout Speedrun
   - Around the Clock
-  - Checkout Library (kevyt placeholder)
+  - Checkout Library (kevyt MVP-versio)
   - Stats
   - Settings
 
@@ -30,10 +45,10 @@ UI on englanniksi, mutta dokumentaatio saa olla suomeksi.
 
 - Quick Checkout Practice
   - Range presetit 41-170
-  - Timer Off/10/20/30
-  - Vain yhden napin syotto per yritys:
+  - Timer Off / 10 / 20 / 30
+  - Yksi painallus per yritys:
     - FINISHED / GOOD LEAVE / FAILED / BUST
-  - SHOW ROUTE avaa reittivihjeen erikseen
+  - SHOW ROUTE avaa reittivihjeen
 
 - Checkout Speedrun
   - Preset range tai custom range
@@ -50,13 +65,13 @@ UI on englanniksi, mutta dokumentaatio saa olla suomeksi.
     - Sx + Tx + Dx (+ toinen Dx valinnan mukaan)
   - TARGET DONE / SECTOR DONE
   - Pause + Undo
-  - Tulokset + estimated darts (jos throw pace asetettu)
+  - Tulokset + estimated darts (kun throw pace asetettu)
 
 - Stats
   - Filter: 7 Days / 30 Days / Total
-  - Checkout, Speedrun ja Around the Clock -nakyma paikallisesta datasta
+  - Checkout-, Speedrun- ja Around the Clock -nakyma paikallisesta datasta
 
-## Projektin kansiorakenne
+## Projektin rakenne
 
 - `src/screens`
 - `src/components`
@@ -71,31 +86,30 @@ UI on englanniksi, mutta dokumentaatio saa olla suomeksi.
 npm install
 ```
 
-Jos PowerShell estaa `npm`-komennon policy-syista, kayta:
+Jos PowerShell estaa `npm`-komennon policy-syista:
 
 ```powershell
 & 'C:\Program Files\nodejs\npm.cmd' install
 ```
 
-## Kehityspalvelin
+## Kehitys
 
 ```bash
 npm run dev
 ```
 
-## Build ja tarkistus
+## Tarkistus ja build
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-Build ajaa ensin typecheckin ja sitten Vite-production buildin.
+`build` ajaa ensin typecheckin ja sitten Vite production buildin.
 
-## Tallennus (LocalStorage)
+## Local storage
 
 Sovellus tallentaa paikallisesti:
-
 - user settings
 - checkout attempts
 - checkout speedrun sessions
