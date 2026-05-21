@@ -25,7 +25,7 @@ import { formatClock, toRoundedSeconds } from "../utils/time";
 type Stage = "setup" | "playing";
 
 interface FeedbackState {
-  tone: "correct" | "wrong" | "single" | "complete" | "info";
+  tone: "correct" | "wrong" | "complete" | "info";
   title: string;
   body: string;
 }
@@ -206,6 +206,9 @@ export function QuickCheckoutPracticeScreen({
     () => getCheckoutRouteDetails(finish, settings.preferredDouble),
     [finish, settings.preferredDouble]
   );
+  const maxPicks = Math.max(activeRoute.length, 1);
+  const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
+  const currentRouteLabel = missScenario ? "Correct continuation" : "Correct route";
 
   const expectedTarget = activeRoute[stepIndex] ?? null;
   useEffect(() => {
@@ -233,8 +236,8 @@ export function QuickCheckoutPracticeScreen({
           setCompleted(true);
           setFeedback({
             tone: "wrong",
-            title: "Timer ended",
-            body: `Time is up. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : "No valid route yet."}`
+            title: "Time up",
+            body: "The timer ended before checkout completion."
           });
           return 0;
         }
@@ -419,13 +422,12 @@ export function QuickCheckoutPracticeScreen({
     if (chosenTarget !== expected) {
       saveAttempt("failed");
       setCompleted(true);
-      const correct = activeRoute.length > 0 ? formatRoute(activeRoute) : "No valid continuation yet.";
       setFeedback({
         tone: "wrong",
         title: "Wrong",
         body: missScenario
-          ? `Your picks: ${nextPicks.join(" -> ")}. Correct continuation from ${missScenario.remaining}: ${correct}.`
-          : `Your picks: ${nextPicks.join(" -> ")}. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : "No valid route yet."}`
+          ? `Wrong continuation for ${missScenario.remaining} left.`
+          : "That pick does not match the hidden route."
       });
       return;
     }
@@ -443,8 +445,8 @@ export function QuickCheckoutPracticeScreen({
         tone: "complete",
         title: "Correct",
         body: missScenario
-          ? `Correct! ${formatRoute(activeRoute)} finishes ${missScenario.remaining}.`
-          : `Correct! Good route. Main route: ${currentRouteData ? formatRoute(currentRouteData.route) : formatRoute(activeRoute)}`
+          ? `Correct continuation for ${missScenario.remaining} left.`
+          : "Correct hidden route."
       });
       return;
     }
@@ -549,11 +551,16 @@ export function QuickCheckoutPracticeScreen({
           <p>
             <span className="muted">Current remaining:</span> {remaining}
           </p>
-          {pickedTargets.length > 0 ? (
-            <p>
-              <span className="muted">Your picks:</span> {pickedTargets.join(" -> ")}
-            </p>
-          ) : null}
+          <div className="pick-row">
+            <span className="muted">Your picks:</span>
+            <div className="pick-chips">
+              {shownPicks.map((pick, index) => (
+                <span key={`pick-${index}`} className="pick-chip">
+                  {pick}
+                </span>
+              ))}
+            </div>
+          </div>
           {!completed ? <p className="muted">Tap your target choice on the board.</p> : null}
 
           {timerSeconds > 0 ? (
@@ -601,9 +608,14 @@ export function QuickCheckoutPracticeScreen({
                     <span className="muted">Your picks:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
                   </p>
                   <p>
-                    <span className="muted">Route:</span>{" "}
-                    {activeRoute.length > 0 ? `${activeRouteLabel}: ${formatRoute(activeRoute)}` : "No valid route yet."}
+                    <span className="muted">{currentRouteLabel}:</span>{" "}
+                    {activeRoute.length > 0 ? formatRoute(activeRoute) : "No valid route yet."}
                   </p>
+                  {feedback.tone === "wrong" && currentRouteData && !missScenario ? (
+                    <p>
+                      <span className="muted">Correct route:</span> {formatRoute(currentRouteData.route)}
+                    </p>
+                  ) : null}
                   <div className="row top-gap">
                     <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
                       {routeVisible ? "HIDE DETAILS" : "SHOW DETAILS"}

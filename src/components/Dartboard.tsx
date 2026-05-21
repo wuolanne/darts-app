@@ -109,7 +109,7 @@ export function Dartboard({
     <div className="dartboard-wrap">
       <svg viewBox="0 0 400 400" className="dartboard-svg" aria-label="Dartboard route helper">
         <circle cx={cx} cy={cy} r={195} fill="#ecefe8" />
-        <circle cx={cx} cy={cy} r={190} fill="#1d1f1f" />
+        <circle cx={cx} cy={cy} r={190} fill="#1b1f22" />
 
         {BOARD_ORDER.map((sector, idx) => {
           const start = -Math.PI / 2 - segmentSize / 2 + idx * segmentSize;
@@ -120,7 +120,7 @@ export function Dartboard({
             <g key={sector}>
               <path
                 d={annularSectorPath(cx, cy, 170, 190, start, end)}
-                fill={isDark ? "#e42d2a" : "#22a33a"}
+                fill={isDark ? "#b73630" : "#2b7d41"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "double")) : undefined
@@ -136,7 +136,7 @@ export function Dartboard({
               />
               <path
                 d={annularSectorPath(cx, cy, 90, 110, start, end)}
-                fill={isDark ? "#e42d2a" : "#22a33a"}
+                fill={isDark ? "#b73630" : "#2b7d41"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "treble")) : undefined
@@ -216,7 +216,7 @@ export function Dartboard({
           cx={cx}
           cy={cy}
           r={40}
-          fill="#22a33a"
+          fill="#2b7d41"
           className={onTargetSelect && !disabled ? "dart-clickable" : ""}
           onClick={() =>
             onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "outer-bull")) : undefined
@@ -226,7 +226,7 @@ export function Dartboard({
           cx={cx}
           cy={cy}
           r={18}
-          fill="#e42d2a"
+          fill="#b73630"
           className={onTargetSelect && !disabled ? "dart-clickable" : ""}
           onClick={() =>
             onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "bull")) : undefined

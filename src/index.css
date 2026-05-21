@@ -308,6 +308,30 @@ body {
   margin: 0 0 8px;
 }
 
+.pick-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pick-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pick-chip {
+  min-width: 44px;
+  text-align: center;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: color-mix(in oklab, var(--surface-alt) 82%, transparent);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
 .dartboard-wrap {
   margin-top: 8px;
   border: 1px solid var(--card-border);
