@@ -6,11 +6,29 @@
 
 ## Goal
 
-Build a mobile-first darts practice app called **FinishLab**.
+Build a mobile-first darts practice app. The working product name can change, but the public app name should start with the word **Darts** for app store search visibility.
 
 This is **not** a DartCounter replacement and **not** a full match scorer. The product is focused on practice: checkout training, timed routines, sector-by-sector Around the Clock, personal bests, and low-input training.
 
 The app must be in **English**.
+
+## Naming direction
+
+The final app name should start with **Darts** because users search app stores with that keyword.
+
+Possible name directions:
+
+- Darts FinishLab
+- Darts CheckoutLab
+- Darts Practice Timer
+- Darts Training Timer
+- Darts Checkout Trainer
+- Darts Speedrun
+- Darts Practice Lab
+- Darts Finish Trainer
+- Darts OcheTimer
+
+Current preferred working direction: **Darts FinishLab** or **Darts CheckoutLab**.
 
 ## Core product principles
 
@@ -24,6 +42,8 @@ The app must be in **English**.
 8. No login, no payments, no backend in MVP unless the existing project already has a simple local-only setup.
 9. Do not copy DartZone’s UI. Similar product category is OK, but create our own layout and visual style.
 10. The app must support switchable visual themes: Dark, Light, Dim and System.
+11. Do not ask throw pace during onboarding. Throw pace is configured or calibrated later in Settings.
+12. Do not build heavy guided 10/15 minute training programmes in MVP.
 
 ## MVP features to implement
 
@@ -32,8 +52,7 @@ The app must be in **English**.
 Create a home/training screen with cards for:
 
 - Quick Checkout Practice
-- 15 Min Training
-- Speedrun
+- Checkout Speedrun
 - Around the Clock
 - Checkout Library
 - Stats
@@ -42,6 +61,7 @@ Create a home/training screen with cards for:
 The first functional paths should be:
 
 - Quick Checkout Practice
+- Checkout Speedrun
 - Around the Clock
 - Stats
 - Settings
@@ -66,15 +86,25 @@ Default: D16.
 
 #### Throw pace
 
-Used for estimated darts in timed sessions.
+Throw pace is used for estimated darts in timed sessions.
 
-Options:
+Do not ask this during onboarding.
 
-- Fast: 7 sec / 3 darts
-- Normal: 10 sec / 3 darts
-- Relaxed: 13 sec / 3 darts
-- Custom seconds per 3 darts
-- Not set
+Settings must support two ways to set throw pace:
+
+1. Manual options:
+   - Fast: 7 sec / 3 darts
+   - Normal: 10 sec / 3 darts
+   - Relaxed: 13 sec / 3 darts
+   - Custom seconds per 3 darts
+   - Not set
+
+2. 5 Minute Throw Pace Test:
+   - User starts a 5 minute timer.
+   - User throws normally for 5 minutes.
+   - At the end, user enters how many darts they threw.
+   - App calculates seconds per 3 darts with: `300 / (dartsThrown / 3)`.
+   - App saves the calculated value as the user’s throw pace.
 
 Display estimated darts only as an estimate:
 
@@ -198,7 +228,57 @@ Store attempt data locally:
 - preferred double
 - elapsed time if timer was active
 
-### 4. Around the Clock
+### 4. Checkout Speedrun / Range Timer
+
+Implement a checkout range timer mode.
+
+This is not a guided training programme. It is a measurement mode.
+
+Examples:
+
+- How long does it take to complete all checkouts from 60 to 70?
+- How many checkouts from 41 to 60 can the user finish in 10 minutes?
+- What is the user’s personal best for 61-80?
+
+Setup:
+
+- Range presets:
+  - 41-60
+  - 61-80
+  - 81-100
+  - 101-130
+  - 131-170
+  - Custom range, for example 60-70
+- Order:
+  - Sequential
+  - Random
+- Mode:
+  - Complete all selected checkouts as fast as possible
+  - Time box, for example 5 or 10 minutes, later if easy
+
+Practice screen:
+
+- Current checkout
+- Total time
+- Current checkout time
+- Low-input result buttons:
+  - FINISHED
+  - FAILED
+  - BUST
+  - SHOW ROUTE
+
+Result screen:
+
+- Total time
+- Finished count
+- Failed count
+- Success rate
+- Fastest checkout
+- Slowest checkout
+- Full checkout breakdown
+- Personal best comparison if possible
+
+### 5. Around the Clock
 
 Implement low-input timed Around the Clock.
 
@@ -240,7 +320,7 @@ At the end, save the session locally and show results:
 - Full breakdown
 - Personal best comparison if possible
 
-### 5. Full Sector Around the Clock
+### 6. Full Sector Around the Clock
 
 This is a key custom feature.
 
@@ -282,7 +362,7 @@ Default: 1 double hit.
 
 The user taps SECTOR DONE only after the whole sector is complete.
 
-### 6. Stats
+### 7. Stats
 
 Implement simple stats from local data.
 
@@ -299,6 +379,14 @@ Checkout stats:
 - Good leave rate
 - Bust rate
 - Average attempt time when timer is enabled
+
+Checkout speedrun stats:
+
+- Number of sessions
+- Best time per range
+- Latest result per range
+- Success rate per range
+- Fastest/slowest checkout in range sessions
 
 Timed practice stats:
 
@@ -321,8 +409,10 @@ Suggested objects:
 type PreferredDouble = 'D16' | 'D20' | 'D18' | 'D12' | 'NOT_SURE';
 
 type ThrowPace = {
-  mode: 'FAST' | 'NORMAL' | 'RELAXED' | 'CUSTOM' | 'NOT_SET';
+  mode: 'FAST' | 'NORMAL' | 'RELAXED' | 'CUSTOM' | 'CALIBRATED' | 'NOT_SET';
   secondsPerVisit?: number; // one visit = 3 darts
+  calibratedDartsThrown?: number;
+  calibratedAt?: string;
 };
 
 type ThemeMode = 'DARK' | 'LIGHT' | 'DIM' | 'SYSTEM';
@@ -343,6 +433,26 @@ type CheckoutAttempt = {
   preferredDouble: PreferredDouble;
   result: 'FINISHED' | 'GOOD_LEAVE' | 'FAILED' | 'BUST';
   elapsedSeconds?: number;
+};
+
+type CheckoutSpeedrunResult = {
+  finish: number;
+  result: 'FINISHED' | 'FAILED' | 'BUST';
+  elapsedSeconds: number;
+};
+
+type CheckoutSpeedrunSession = {
+  id: string;
+  createdAt: string;
+  rangeStart: number;
+  rangeEnd: number;
+  order: 'SEQUENTIAL' | 'RANDOM';
+  mode: 'COMPLETE_ALL' | 'TIME_BOX';
+  timeBoxSeconds?: number;
+  totalSeconds: number;
+  activeSeconds: number;
+  pausedSeconds: number;
+  results: CheckoutSpeedrunResult[];
 };
 
 type TimedTargetResult = {
@@ -399,17 +509,21 @@ Create our own look:
 The MVP is acceptable when:
 
 1. App starts and shows English Home / Training screen.
-2. User can change preferred double and throw pace in Settings.
-3. User can switch the app theme between Dark, Light, Dim and System.
-4. Theme selection affects the whole app and persists locally.
-5. User can run a Checkout Practice session without logging every dart.
-6. Checkout attempts are stored locally.
-7. User can run Around the Clock Singles/Doubles/Trebles.
-8. User can run Full Sector Around the Clock with 1 or 2 required double hits.
-9. Timed sessions record per-target/per-sector time.
-10. Session result shows total time, active time, fastest/slowest target or sector, and estimated darts when throw pace is set.
-11. Stats screen shows basic 7 day / 30 day / total stats.
-12. No login, backend, payment, online play, camera scoring, or full X01 scorer is added.
+2. Public-facing app name starts with “Darts”.
+3. User can change preferred double and throw pace in Settings.
+4. User can run a 5 Minute Throw Pace Test from Settings and save calculated throw pace.
+5. User can switch the app theme between Dark, Light, Dim and System.
+6. Theme selection affects the whole app and persists locally.
+7. User can run a Checkout Practice session without logging every dart.
+8. Checkout attempts are stored locally.
+9. User can run Checkout Speedrun / Range Timer for a selected range such as 60-70.
+10. Checkout speedrun sessions are stored locally and show total time and per-checkout breakdown.
+11. User can run Around the Clock Singles/Doubles/Trebles.
+12. User can run Full Sector Around the Clock with 1 or 2 required double hits.
+13. Timed sessions record per-target/per-sector time.
+14. Session result shows total time, active time, fastest/slowest target or sector, and estimated darts when throw pace is set.
+15. Stats screen shows basic 7 day / 30 day / total stats.
+16. No login, backend, payment, online play, camera scoring, full X01 scorer, heavy guided training programmes, or throw-pace onboarding is added.
 
 ## Build and quality
 
