@@ -120,6 +120,7 @@ export const en = {
     attempts: "Attempts",
     successRate: "Success rate",
     sessions: "Sessions",
+    avgCheckoutTime: "Avg checkout time",
     best: "Best",
     latest: "Latest",
     average: "Average",

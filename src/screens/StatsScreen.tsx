@@ -152,7 +152,7 @@ export function StatsScreen({
                 right={speedrun.averageTotalTime !== null ? formatClock(speedrun.averageTotalTime) : "Not enough data yet"}
               />
               <CompactRow
-                left="Avg checkout time"
+                left={t.stats.avgCheckoutTime}
                 right={speedrun.averageCheckoutTime !== null ? formatSeconds(speedrun.averageCheckoutTime) : "Not enough data yet"}
               />
             </details>
@@ -170,7 +170,7 @@ export function StatsScreen({
             </details>
 
             <details className="stats-subsection">
-              <summary>Best runs</summary>
+              <summary>{t.stats.bestRuns}</summary>
               {speedrun.bestRuns.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
               {speedrun.bestRuns.map((run) => (
                 <CompactRow

@@ -57,7 +57,7 @@ export const fi: TranslationDict = {
     noSavedSingleHit: "Tallennettua single-osuman jatkoa ei vielä ole."
   },
   checkoutTimedRun: {
-    title: "Checkout-aikajuoksu",
+    title: "Checkout-harjoitus aikaa vastaan",
     subtitle: "Suorita valitut checkoutit mahdollisimman nopeasti.",
     setup: "Asetukset",
     order: "Järjestys",
@@ -66,8 +66,8 @@ export const fi: TranslationDict = {
     route: "Reitti",
     showRoute: "Näytä reitti",
     hideRoute: "Piilota reitti",
-    endRun: "Lopeta juoksu",
-    startTimedRun: "Aloita aikajuoksu",
+    endRun: "Lopeta harjoitus",
+    startTimedRun: "Aloita",
     totalTime: "Kokonaisaika",
     currentCheckout: "Nykyinen checkout",
     result: "Tulos",
@@ -76,7 +76,7 @@ export const fi: TranslationDict = {
     fastestCheckout: "Nopein checkout",
     slowestCheckout: "Hitain checkout",
     completed: "Valmiina",
-    newTimedRun: "Uusi aikajuoksu"
+    newTimedRun: "Uusi harjoitus"
   },
   aroundClock: {
     title: "Kellon ympäri",
@@ -117,11 +117,12 @@ export const fi: TranslationDict = {
     title: "Tilastot",
     subtitle: "Tiiviit paikalliset treeni-insightit harjoitustiloittain.",
     quickCheckoutPractice: "Nopea checkout-harjoitus",
-    checkoutTimedRun: "Checkout-aikajuoksu",
+    checkoutTimedRun: "Checkout-harjoitus aikaa vastaan",
     aroundTheClock: "Kellon ympäri",
     attempts: "Yritykset",
     successRate: "Onnistumisprosentti",
     sessions: "Sessiot",
+    avgCheckoutTime: "Checkoutin keskiaika",
     best: "Paras",
     latest: "Viimeisin",
     average: "Keskiarvo",
@@ -133,7 +134,7 @@ export const fi: TranslationDict = {
     problemFinishes: "Haastavat checkoutit",
     bestFinishes: "Parhaat checkoutit",
     fastestSlowest: "Nopein & hitain",
-    bestRuns: "Parhaat juoksut",
+    bestRuns: "Parhaat suoritukset",
     noAttempts: "Ei vielä yrityksiä.",
     noSessions: "Ei vielä sessioita."
   },
