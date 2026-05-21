@@ -20,9 +20,9 @@ export const fi: TranslationDict = {
     title: "Darts Practice",
     subtitle: "Vähän syöttöä vaativat harjoitustilat päivittäiseen treeniin.",
     quickCheckoutDescription: "Vähän syöttöä vaativa checkout-harjoittelu nopealla palautteella.",
-    timedRunDescription: "Suorita checkout-alue mahdollisimman nopeasti.",
+    timedRunDescription: "Suorita valitut checkoutit mahdollisimman nopeasti.",
     aroundDescription: "Ajoitetut sektorit ja kohteet minimaalisilla painalluksilla.",
-    libraryDescription: "Reittiviitetaulukko (kevyt MVP-versio).",
+    libraryDescription: "Checkout-reitit ja vaihtoehtoiset jatkot.",
     statsDescription: "7 pv / 30 pv / kaikki harjoitustilastot.",
     settingsDescription: "Suosikkitupla, ajastin, teema, heittotahti."
   },
