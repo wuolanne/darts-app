@@ -24,8 +24,7 @@ function CompactRow({
 }
 
 function dateLabel(value: string): string {
-  const date = new Date(value);
-  return date.toLocaleDateString("en-GB");
+  return new Date(value).toLocaleDateString("en-GB");
 }
 
 export function StatsScreen({
@@ -74,17 +73,15 @@ export function StatsScreen({
               <CompactRow left="Bust rate" right={`${checkout.bustRate.toFixed(1)}%`} />
               <CompactRow
                 left="Avg attempt time"
-                right={checkout.averageAttemptTime !== null ? formatSeconds(checkout.averageAttemptTime) : "Not enough data yet"}
+                right={checkout.averageAttemptTime !== null ? formatSeconds(checkout.averageAttemptTime) : t.common.noDataYet}
               />
               <CompactRow
                 left="Best attempt time"
-                right={checkout.bestAttemptTime !== null ? formatSeconds(checkout.bestAttemptTime) : "Not enough data yet"}
+                right={checkout.bestAttemptTime !== null ? formatSeconds(checkout.bestAttemptTime) : t.common.noDataYet}
               />
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.byRange}</summary>
-              {checkout.byRange.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
               {checkout.byRange.map((row) => (
                 <CompactRow
                   key={row.rangeLabel}
@@ -94,7 +91,6 @@ export function StatsScreen({
                 />
               ))}
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.bestFinishes}</summary>
               {checkout.bestFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
@@ -107,7 +103,6 @@ export function StatsScreen({
                 />
               ))}
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.problemFinishes}</summary>
               {checkout.problemFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
@@ -120,13 +115,6 @@ export function StatsScreen({
                 />
               ))}
             </details>
-
-            {!checkout.hasFirstTargetData ? (
-              <details className="stats-subsection">
-                <summary>By first target / route</summary>
-                <p className="muted">{t.common.noDataYet}</p>
-              </details>
-            ) : null}
           </>
         ) : null}
       </Card>
@@ -141,22 +129,17 @@ export function StatsScreen({
               <CompactRow left={t.stats.sessions} right={speedrun.sessions} />
               <CompactRow
                 left="Best total time"
-                right={speedrun.overallBestTime !== null ? formatClock(speedrun.overallBestTime) : "Not enough data yet"}
+                right={speedrun.overallBestTime !== null ? formatClock(speedrun.overallBestTime) : t.common.noDataYet}
               />
               <CompactRow
                 left="Latest total time"
-                right={speedrun.latestTotalTime !== null ? formatClock(speedrun.latestTotalTime) : "Not enough data yet"}
+                right={speedrun.latestTotalTime !== null ? formatClock(speedrun.latestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
                 left="Avg total time"
-                right={speedrun.averageTotalTime !== null ? formatClock(speedrun.averageTotalTime) : "Not enough data yet"}
-              />
-              <CompactRow
-                left={t.stats.avgCheckoutTime}
-                right={speedrun.averageCheckoutTime !== null ? formatSeconds(speedrun.averageCheckoutTime) : "Not enough data yet"}
+                right={speedrun.averageTotalTime !== null ? formatClock(speedrun.averageTotalTime) : t.common.noDataYet}
               />
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.byRange}</summary>
               {speedrun.byRange.map((row) => (
@@ -168,7 +151,6 @@ export function StatsScreen({
                 />
               ))}
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.bestRuns}</summary>
               {speedrun.bestRuns.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
@@ -195,22 +177,17 @@ export function StatsScreen({
               <CompactRow left={t.stats.sessions} right={around.sessions} />
               <CompactRow
                 left="Best total time"
-                right={around.bestTotalTime !== null ? formatClock(around.bestTotalTime) : "Not enough data yet"}
+                right={around.bestTotalTime !== null ? formatClock(around.bestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
                 left="Latest total time"
-                right={around.latestTotalTime !== null ? formatClock(around.latestTotalTime) : "Not enough data yet"}
+                right={around.latestTotalTime !== null ? formatClock(around.latestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
                 left="Avg total time"
-                right={around.averageTotalTime !== null ? formatClock(around.averageTotalTime) : "Not enough data yet"}
-              />
-              <CompactRow
-                left="Estimated darts"
-                right={around.latestEstimatedDarts !== null ? `~${around.latestEstimatedDarts}` : "Not enough data yet"}
+                right={around.averageTotalTime !== null ? formatClock(around.averageTotalTime) : t.common.noDataYet}
               />
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.byMode}</summary>
               {around.byMode.map((row) => (
@@ -222,62 +199,59 @@ export function StatsScreen({
                 />
               ))}
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.byTargetSector}</summary>
-              {around.byTarget.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {around.byTarget.length > 0 ? (
+              {around.byTargetGrouped.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
+              {around.byTargetGrouped.length > 0 ? (
                 <>
                   <p className="muted">Fastest 5 targets/sectors</p>
-                  {[...around.byTarget]
-                    .sort((a, b) => a.best - b.best)
-                    .slice(0, 5)
-                    .map((row) => (
-                      <CompactRow
-                        key={`fast-target-${row.key}`}
-                        left={row.key}
-                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                        right={`Avg ${formatSeconds(row.average)}`}
-                      />
-                    ))}
+                  {[...around.byTarget].sort((a, b) => a.best - b.best).slice(0, 5).map((row) => (
+                    <CompactRow
+                      key={`fast-${row.mode}-${row.key}`}
+                      left={`${row.mode} · ${row.key}`}
+                      middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                      right={`Avg ${formatSeconds(row.average)}`}
+                    />
+                  ))}
                   <p className="muted top-gap">Slowest 5 targets/sectors</p>
-                  {[...around.byTarget]
-                    .sort((a, b) => b.average - a.average)
-                    .slice(0, 5)
-                    .map((row) => (
-                      <CompactRow
-                        key={`slow-target-${row.key}`}
-                        left={row.key}
-                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                        right={`Avg ${formatSeconds(row.average)}`}
-                      />
-                    ))}
+                  {[...around.byTarget].sort((a, b) => b.average - a.average).slice(0, 5).map((row) => (
+                    <CompactRow
+                      key={`slow-${row.mode}-${row.key}`}
+                      left={`${row.mode} · ${row.key}`}
+                      middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                      right={`Avg ${formatSeconds(row.average)}`}
+                    />
+                  ))}
                   <details className="stats-subsection top-gap">
                     <summary>Show all targets/sectors</summary>
-                    {around.byTarget.map((row) => (
-                      <CompactRow
-                        key={`target-${row.key}`}
-                        left={row.key}
-                        middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
-                        right={`Avg ${formatSeconds(row.average)}`}
-                      />
+                    {around.byTargetGrouped.map((group) => (
+                      <div key={group.mode} className="top-gap">
+                        <p className="muted">{group.mode}</p>
+                        {group.rows.map((row) => (
+                          <CompactRow
+                            key={`${group.mode}-${row.key}`}
+                            left={row.key}
+                            middle={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)}`}
+                            right={`Avg ${formatSeconds(row.average)}`}
+                          />
+                        ))}
+                      </div>
                     ))}
                   </details>
                 </>
               ) : null}
             </details>
-
             <details className="stats-subsection">
               <summary>{t.stats.fastestSlowest}</summary>
               <CompactRow
                 left="Fastest target/sector"
-                middle={around.fastest?.key ?? "-"}
-                right={around.fastest ? formatSeconds(around.fastest.best) : "-"}
+                middle={around.fastest ? `${around.fastest.mode} · ${around.fastest.key}` : "-"}
+                right={around.fastest ? `Best ${formatSeconds(around.fastest.best)}` : "-"}
               />
               <CompactRow
                 left="Slowest target/sector"
-                middle={around.slowest?.key ?? "-"}
-                right={around.slowest ? formatSeconds(around.slowest.average) : "-"}
+                middle={around.slowest ? `${around.slowest.mode} · ${around.slowest.key}` : "-"}
+                right={around.slowest ? `Avg ${formatSeconds(around.slowest.average)}` : "-"}
               />
             </details>
           </>

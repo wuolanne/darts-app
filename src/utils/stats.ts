@@ -59,10 +59,16 @@ type AroundModeRow = {
 };
 
 type AroundTargetRow = {
+  mode: string;
   key: string;
   best: number;
   latest: number;
   average: number;
+};
+
+type AroundTargetGroup = {
+  mode: string;
+  rows: AroundTargetRow[];
 };
 
 function cutoff(range: StatsRange): number {
@@ -96,7 +102,20 @@ function toModeLabel(mode: AroundClockMode, doubleRequirement: 1 | 2 | null): st
 function normalizeAroundTarget(mode: AroundClockMode, target: string): string {
   if (mode !== "full_sector") return target;
   if (target === "Bull/25" || target === "25/Bull") return "Bull/25";
-  return target;
+  const sectorMatch = target.match(/^S(\d{1,2})\s\+\sT\1\s\+\sD\1(?:\s\+\sD\1)?$/);
+  if (sectorMatch) {
+    return `Sector ${Number(sectorMatch[1])}`;
+  }
+  return target.startsWith("Sector ") ? target : target;
+}
+
+function aroundTargetGroupLabel(mode: AroundClockMode): string {
+  if (mode === "singles") return "Singles";
+  if (mode === "doubles") return "Doubles";
+  if (mode === "trebles") return "Trebles";
+  if (mode === "common_doubles") return "Common Doubles";
+  if (mode === "custom") return "Custom";
+  return "Full Sector";
 }
 
 function rangeOrder(label: string): number {
@@ -306,28 +325,44 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
     })
     .sort((a, b) => a.mode.localeCompare(b.mode));
 
-  const entryMap = new Map<string, { seconds: number; timestamp: string }[]>();
+  const entryMap = new Map<string, { mode: string; key: string; seconds: number; timestamp: string }[]>();
   for (const session of filtered) {
     for (const entry of session.entries) {
+      const mode = aroundTargetGroupLabel(session.mode);
       const key = normalizeAroundTarget(session.mode, entry.target);
-      const list = entryMap.get(key) ?? [];
-      list.push({ seconds: entry.seconds, timestamp: session.timestamp });
-      entryMap.set(key, list);
+      const aggregateKey = `${mode}::${key}`;
+      const list = entryMap.get(aggregateKey) ?? [];
+      list.push({ mode, key, seconds: entry.seconds, timestamp: session.timestamp });
+      entryMap.set(aggregateKey, list);
     }
   }
 
   const byTarget: AroundTargetRow[] = Array.from(entryMap.entries())
-    .map(([key, rows]) => {
+    .map(([, rows]) => {
       const sorted = [...rows].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       const values = rows.map((row) => row.seconds);
       return {
-        key,
+        mode: rows[0].mode,
+        key: rows[0].key,
         best: Math.min(...values),
         latest: sorted[0].seconds,
         average: values.reduce((sum, value) => sum + value, 0) / values.length
       };
-    })
-    .sort((a, b) => a.key.localeCompare(b.key));
+    });
+
+  const modeOrder = ["Singles", "Doubles", "Trebles", "Common Doubles", "Custom", "Full Sector"];
+  const byTargetGroupedMap = new Map<string, AroundTargetRow[]>();
+  for (const row of byTarget) {
+    const list = byTargetGroupedMap.get(row.mode) ?? [];
+    list.push(row);
+    byTargetGroupedMap.set(row.mode, list);
+  }
+  const byTargetGrouped: AroundTargetGroup[] = Array.from(byTargetGroupedMap.entries())
+    .map(([mode, rows]) => ({
+      mode,
+      rows: [...rows].sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }))
+    }))
+    .sort((a, b) => modeOrder.indexOf(a.mode) - modeOrder.indexOf(b.mode));
 
   const fastest = byTarget.length > 0 ? [...byTarget].sort((a, b) => a.best - b.best)[0] : null;
   const slowest = byTarget.length > 0 ? [...byTarget].sort((a, b) => b.average - a.average)[0] : null;
@@ -343,6 +378,7 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
     latestEstimatedDarts: latestSession?.estimatedDarts ?? null,
     byMode,
     byTarget,
+    byTargetGrouped,
     fastest,
     slowest
   };
