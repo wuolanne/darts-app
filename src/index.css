@@ -422,11 +422,20 @@ body {
   margin-top: 8px;
 }
 
+.route-teach-card p {
+  margin: 4px 0;
+}
+
 .route-teach-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-bottom: 4px;
+}
+
+.route-compact-line {
+  line-height: 1.25;
 }
 
 .route-section {

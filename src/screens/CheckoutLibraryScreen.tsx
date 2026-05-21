@@ -20,36 +20,30 @@ function formatRoute(route: string[]): string {
 }
 
 function RouteDetail({ option }: { option: CheckoutRouteOption }) {
+  const mainLine = formatRoute(option.route);
+  const continuationLine =
+    option.singleHitTarget && option.followUpRoute && option.followUpRoute.length > 0
+      ? `If ${option.singleHitTarget}: ${option.remainingAfterSingle} left \u2192 ${formatRoute(option.followUpRoute)}`
+      : option.singleHitTarget
+        ? `If ${option.singleHitTarget}: ${option.remainingAfterSingle} left`
+        : null;
+
   return (
     <div className="route-teach-card">
       <div className="route-teach-head">
         <strong>{option.label}</strong>
         {option.preferredDouble ? <Pill tone="success">Preferred double route</Pill> : null}
       </div>
-      <p>
-        <span className="muted">Route:</span> {formatRoute(option.route)}
+      <p className="route-compact-line">
+        <span className="muted">Main:</span> <strong>{mainLine}</strong>
       </p>
-      {option.singleHitTarget ? (
-        <p>
-          <span className="muted">If single hit:</span> If {option.firstTarget} becomes{" "}
-          {option.singleHitTarget}
-        </p>
-      ) : null}
-      {option.singleHitTarget ? (
-        <p>
-          <span className="muted">Remaining:</span> {option.remainingAfterSingle} left
-        </p>
-      ) : null}
-      {option.singleHitTarget ? (
-        <p>
-          <span className="muted">Follow-up:</span>{" "}
-          {option.followUpRoute && option.followUpRoute.length > 0
-            ? formatRoute(option.followUpRoute)
-            : "No detailed follow-up yet."}
+      {continuationLine ? (
+        <p className="route-compact-line">
+          <span className="muted">If:</span> <strong>{continuationLine}</strong>
         </p>
       ) : null}
       {option.note ? (
-        <p>
+        <p className="route-compact-line">
           <span className="muted">Note:</span> {option.note}
         </p>
       ) : null}
