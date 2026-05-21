@@ -7,8 +7,7 @@ import {
 } from "../utils/checkoutLibrary";
 
 const RANGES = [
-  { label: "41-60", min: 41, max: 60 },
-  { label: "61-80", min: 61, max: 80 },
+  { label: "60-80", min: 60, max: 80 },
   { label: "81-100", min: 81, max: 100 },
   { label: "101-120", min: 101, max: 120 },
   { label: "121-140", min: 121, max: 140 },
@@ -70,7 +69,7 @@ export function CheckoutLibraryScreen({
     <div className="screen">
       <ScreenTitle
         title="Checkout Library"
-        subtitle={`All finishes 2-170. Preferred double: ${preferredDouble}`}
+        subtitle={`All finishes 60-170. Preferred double: ${preferredDouble}`}
         onBack={onBack}
       />
 
