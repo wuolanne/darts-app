@@ -75,7 +75,18 @@ export const en = {
     noSavedSingleHit: "No saved single-hit continuation yet.",
     youHitNoFollowUp: "You hit {hit}. {remaining} left, but no detailed follow-up exists yet.",
     wrongContinuation: "Wrong continuation for {remaining} left.",
-    correctContinuationFor: "Correct continuation for {remaining} left."
+    correctContinuationFor: "Correct continuation for {remaining} left.",
+    routeQuality: "Route quality",
+    yourRoute: "Your route",
+    validRoutes: "Valid routes",
+    noValidRouteYet: "No valid route yet.",
+    none: "None",
+    perfectCheckout: "Perfect checkout!",
+    checkoutComplete: "Checkout complete!",
+    bust: "Bust",
+    noCheckoutAvailable: "No checkout available",
+    noCheckout: "No checkout",
+    noScenarioDataTitle: "No scenario data"
   },
   checkoutTimedRun: {
     title: "Checkout Timed Run",

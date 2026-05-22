@@ -291,7 +291,7 @@ export function QuickCheckoutPracticeScreen({
       if (!scenario) {
         setFeedback({
           tone: "info",
-          title: "No scenario data",
+          title: t.quickCheckout.noScenarioDataTitle,
           body: t.quickCheckout.noScenarioInRange
         });
         return;
@@ -395,7 +395,7 @@ export function QuickCheckoutPracticeScreen({
       setEvaluation(evalResult);
       setFeedback({
         tone: "complete",
-        title: evalResult.xp === 3 ? "Perfect checkout!" : "Checkout complete!",
+        title: evalResult.xp === 3 ? t.quickCheckout.perfectCheckout : t.quickCheckout.checkoutComplete,
         body: evalResult.explanation
       });
       triggerHaptic(settings.vibrationFeedback);
@@ -408,7 +408,7 @@ export function QuickCheckoutPracticeScreen({
       setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
-        title: "Bust",
+        title: t.quickCheckout.bust,
         body: evalResult.explanation
       });
       return;
@@ -420,7 +420,7 @@ export function QuickCheckoutPracticeScreen({
       setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
-        title: evalResult.status === "impossible" ? "No checkout available" : "No checkout",
+        title: evalResult.status === "impossible" ? t.quickCheckout.noCheckoutAvailable : t.quickCheckout.noCheckout,
         body: evalResult.explanation
       });
     }
@@ -572,27 +572,27 @@ export function QuickCheckoutPracticeScreen({
               {completed ? (
                 <>
                   <p>
-                    <span className="muted">{t.quickCheckout.yourPicks}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None"}
+                    <span className="muted">{t.quickCheckout.yourPicks}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : t.quickCheckout.none}
                   </p>
                   {evaluation ? (
                     <div className="route-box top-gap">
                       <p className="route-compact-line">
-                        <span className="muted">Route quality:</span> <strong>{evaluation.routeQuality}%</strong>
+                        <span className="muted">{t.quickCheckout.routeQuality}:</span> <strong>{evaluation.routeQuality}%</strong>
                       </p>
                       <p className="route-compact-line">
-                        <span className="muted">Your route:</span>{" "}
-                        <strong>{evaluation.userRoute.length > 0 ? formatRoute(evaluation.userRoute) : "None"}</strong>
+                        <span className="muted">{t.quickCheckout.yourRoute}:</span>{" "}
+                        <strong>{evaluation.userRoute.length > 0 ? formatRoute(evaluation.userRoute) : t.quickCheckout.none}</strong>
                       </p>
                       <p className="route-compact-line">
-                        <span className="muted">Optimal route:</span>{" "}
-                        <strong>{evaluation.optimalRoute.length > 0 ? formatRoute(evaluation.optimalRoute) : "No valid route yet."}</strong>
+                        <span className="muted">{t.checkoutLibrary.optimalRoute}:</span>{" "}
+                        <strong>{evaluation.optimalRoute.length > 0 ? formatRoute(evaluation.optimalRoute) : t.quickCheckout.noValidRouteYet}</strong>
                       </p>
                       <p className="route-compact-line">
                         <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {evaluation.explanation}
                       </p>
                       {goodAlternativeRoutes.length > 0 ? (
                         <div className="route-compact-line">
-                          <span className="muted">Good alternatives:</span>{" "}
+                          <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>{" "}
                           {goodAlternativeRoutes.map((route) => (
                             <p key={formatRoute(route.path)} className="route-compact-line">
                               <strong>{formatRoute(route.path)}</strong>{" "}
@@ -602,7 +602,7 @@ export function QuickCheckoutPracticeScreen({
                         </div>
                       ) : null}
                       <p className="route-compact-line">
-                        <span className="muted">Valid routes:</span> {validRoutesForAttempt.length}
+                        <span className="muted">{t.quickCheckout.validRoutes}:</span> {validRoutesForAttempt.length}
                       </p>
                     </div>
                   ) : null}

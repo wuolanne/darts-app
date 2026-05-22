@@ -75,25 +75,6 @@ function createTargets(
   return [FULL_SECTOR_CENTER_START, ...sectorTargets];
 }
 
-function modeLabel(mode: AroundClockMode): string {
-  if (mode === "singles") {
-    return "Singles";
-  }
-  if (mode === "doubles") {
-    return "Doubles";
-  }
-  if (mode === "trebles") {
-    return "Trebles";
-  }
-  if (mode === "common_doubles") {
-    return "Common Doubles";
-  }
-  if (mode === "custom") {
-    return "Custom";
-  }
-  return "Full Sector";
-}
-
 export function AroundTheClockScreen({
   onBack,
   onSaveSession,
@@ -152,6 +133,14 @@ export function AroundTheClockScreen({
 
   const currentTarget = running ? running.targets[running.index] : "";
   const canStart = mode !== "custom" || customTargets.length > 0;
+  const modeLabels: Record<AroundClockMode, string> = {
+    singles: t.aroundClock.singles,
+    doubles: t.aroundClock.doubles,
+    trebles: t.aroundClock.trebles,
+    common_doubles: t.aroundClock.commonDoubles,
+    custom: t.aroundClock.custom,
+    full_sector: t.aroundClock.fullSector
+  };
 
   const start = () => {
     if (!canStart) {
@@ -439,7 +428,7 @@ export function AroundTheClockScreen({
       {running ? (
         <Card className="practice-card">
           <div className="practice-header">
-            <Pill tone="neutral">{modeLabel(running.mode)}</Pill>
+            <Pill tone="neutral">{modeLabels[running.mode]}</Pill>
             <Pill tone="neutral">
               {running.index + 1}/{running.targets.length}
             </Pill>

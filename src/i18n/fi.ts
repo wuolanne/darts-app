@@ -77,7 +77,18 @@ export const fi: TranslationDict = {
     noSavedSingleHit: "Tallennettua single-osuman jatkoa ei vielä ole.",
     youHitNoFollowUp: "Osui {hit}. {remaining} jäljellä, mutta jatkoa ei ole vielä tallennettu.",
     wrongContinuation: "Väärä jatko tilanteessa {remaining} jäljellä.",
-    correctContinuationFor: "Oikea jatko tilanteessa {remaining} jäljellä."
+    correctContinuationFor: "Oikea jatko tilanteessa {remaining} jäljellä.",
+    routeQuality: "Reitin laatu",
+    yourRoute: "Reittisi",
+    validRoutes: "Kelvolliset reitit",
+    noValidRouteYet: "Kelvollista reittiä ei vielä ole.",
+    none: "Ei valintaa",
+    perfectCheckout: "Täydellinen checkout!",
+    checkoutComplete: "Checkout valmis!",
+    bust: "Yliheitto",
+    noCheckoutAvailable: "Checkoutia ei ole tarjolla",
+    noCheckout: "Ei checkoutia",
+    noScenarioDataTitle: "Ei skenaariodataa"
   },
   checkoutTimedRun: {
     title: "Checkout-harjoitus aikaa vastaan",
