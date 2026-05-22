@@ -182,6 +182,21 @@ export function QuickCheckoutPracticeScreen({
     [attemptStartScore, validRoutesForAttempt, settings.preferredDouble]
   );
   const goodAlternativeRoutes = rankedRoutesForAttempt.slice(1, 5);
+  const getEvaluationExplanation = (result: CheckoutEvaluationResult): string => {
+    if (!result.isValidCheckout) {
+      if (result.status === "bust") return t.quickCheckout.bustExplanation;
+      if (result.status === "impossible") return t.quickCheckout.impossibleExplanation;
+      return t.quickCheckout.noFinishExplanation;
+    }
+    if (result.routeQuality >= 96) return t.quickCheckout.perfectRouteExplanation;
+    if (result.routeQuality >= 80) {
+      return result.routeClass === "proAlternative"
+        ? t.quickCheckout.proAlternativeExplanation
+        : t.quickCheckout.cleanFinishExplanation;
+    }
+    if (result.routeQuality >= 60) return t.quickCheckout.cleanerRouteAvailable;
+    return t.quickCheckout.avoidableRisk;
+  };
 
   useEffect(() => {
     if (stage !== "playing" || timerSeconds === 0 || completed) {
@@ -396,7 +411,7 @@ export function QuickCheckoutPracticeScreen({
       setFeedback({
         tone: "complete",
         title: evalResult.xp === 3 ? t.quickCheckout.perfectCheckout : t.quickCheckout.checkoutComplete,
-        body: evalResult.explanation
+        body: getEvaluationExplanation(evalResult)
       });
       triggerHaptic(settings.vibrationFeedback);
       return;
@@ -409,7 +424,7 @@ export function QuickCheckoutPracticeScreen({
       setFeedback({
         tone: "wrong",
         title: t.quickCheckout.bust,
-        body: evalResult.explanation
+        body: getEvaluationExplanation(evalResult)
       });
       return;
     }
@@ -421,7 +436,7 @@ export function QuickCheckoutPracticeScreen({
       setFeedback({
         tone: "wrong",
         title: evalResult.status === "impossible" ? t.quickCheckout.noCheckoutAvailable : t.quickCheckout.noCheckout,
-        body: evalResult.explanation
+        body: getEvaluationExplanation(evalResult)
       });
     }
   }
@@ -588,7 +603,7 @@ export function QuickCheckoutPracticeScreen({
                         <strong>{evaluation.optimalRoute.length > 0 ? formatRoute(evaluation.optimalRoute) : t.quickCheckout.noValidRouteYet}</strong>
                       </p>
                       <p className="route-compact-line">
-                        <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {evaluation.explanation}
+                        <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {getEvaluationExplanation(evaluation)}
                       </p>
                       {goodAlternativeRoutes.length > 0 ? (
                         <div className="route-compact-line">

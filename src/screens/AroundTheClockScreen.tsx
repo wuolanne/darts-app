@@ -5,7 +5,7 @@ import { estimateDartsFromActiveTime } from "../utils/pace";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, formatSeconds, toRoundedSeconds } from "../utils/time";
 import { readJson, writeJson } from "../storage/localStorage";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 interface RunningState {
   mode: AroundClockMode;
@@ -286,32 +286,32 @@ export function AroundTheClockScreen({
           />
           {mode === "custom" ? (
             <div className="top-gap">
-              <p className="muted">Pick custom targets (order is preserved).</p>
+              <p className="muted">{t.aroundClock.customTargetsHelp}</p>
               <div className="custom-target-actions">
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_SINGLES)}>
-                  Select all singles
+                  {t.aroundClock.selectAllSingles}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_DOUBLES)}>
-                  Select all doubles
+                  {t.aroundClock.selectAllDoubles}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets(ALL_TREBLES)}>
-                  Select all trebles
+                  {t.aroundClock.selectAllTrebles}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets([...CENTER_TARGETS])}>
-                  Select center
+                  {t.aroundClock.selectCenter}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets([...COMMON_DOUBLES_TARGETS])}>
-                  Common doubles
+                  {t.aroundClock.commonDoublesQuick}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets([...D16_PATH_TARGETS])}>
-                  D16 path
+                  {t.aroundClock.d16Path}
                 </button>
                 <button type="button" className="finish-chip" onClick={() => setCustomTargets([])}>
-                  Clear all
+                  {t.aroundClock.clearAll}
                 </button>
               </div>
 
-              <p className="muted top-gap">Singles</p>
+              <p className="muted top-gap">{t.aroundClock.singles}</p>
               <div className="custom-target-grid">
                 {ALL_SINGLES.map((target) => (
                   <button
@@ -328,7 +328,7 @@ export function AroundTheClockScreen({
                   </button>
                 ))}
               </div>
-              <p className="muted top-gap">Doubles</p>
+              <p className="muted top-gap">{t.aroundClock.doubles}</p>
               <div className="custom-target-grid">
                 {ALL_DOUBLES.map((target) => (
                   <button
@@ -345,7 +345,7 @@ export function AroundTheClockScreen({
                   </button>
                 ))}
               </div>
-              <p className="muted top-gap">Trebles</p>
+              <p className="muted top-gap">{t.aroundClock.trebles}</p>
               <div className="custom-target-grid">
                 {ALL_TREBLES.map((target) => (
                   <button
@@ -362,7 +362,7 @@ export function AroundTheClockScreen({
                   </button>
                 ))}
               </div>
-              <p className="muted top-gap">Center</p>
+              <p className="muted top-gap">{t.aroundClock.center}</p>
               <div className="custom-target-grid">
                 {CENTER_TARGETS.map((target) => (
                   <button
@@ -380,9 +380,9 @@ export function AroundTheClockScreen({
                 ))}
               </div>
               {customTargets.length === 0 ? (
-                <p className="warn-text top-gap">Select at least one target.</p>
+                <p className="warn-text top-gap">{t.aroundClock.selectAtLeastOne}</p>
               ) : (
-                <p className="muted top-gap">Selected: {customTargets.length}</p>
+                <p className="muted top-gap">{formatI18n(t.aroundClock.selectedCount, { count: String(customTargets.length) })}</p>
               )}
             </div>
           ) : null}
@@ -443,7 +443,7 @@ export function AroundTheClockScreen({
           ) : null}
           <div className="metric-grid">
             <div>
-              <p className="muted">Total time</p>
+              <p className="muted">{t.aroundClock.totalTime}</p>
               <strong>{formatClock(activeTotalSeconds)}</strong>
             </div>
             <div>
@@ -470,7 +470,7 @@ export function AroundTheClockScreen({
           <h3>{t.aroundClock.result}</h3>
           <p className="big-number">{formatClock(result.totalActiveSeconds)}</p>
           <p className="muted">{t.aroundClock.activeTime}: {formatClock(result.totalActiveSeconds)}</p>
-          <p className="muted">Pause time: {formatClock(result.pauseSeconds)}</p>
+          <p className="muted">{t.aroundClock.pauseTime}: {formatClock(result.pauseSeconds)}</p>
           {resultFastest ? (
             <p className="muted">
               {t.aroundClock.fastest}: {resultFastest.target} ({formatSeconds(resultFastest.seconds)})
@@ -486,14 +486,18 @@ export function AroundTheClockScreen({
           ) : null}
           {estimated !== null ? (
             <p className="muted">
-              Estimated darts: ~{estimated}
+              {t.aroundClock.estimatedDarts}: ~{estimated}
               <br />
-              Based on {result.throwPaceSecondsPerThree?.toFixed(2)} sec / 3 darts
+              {formatI18n(t.aroundClock.basedOnPace, {
+                pace: result.throwPaceSecondsPerThree?.toFixed(2) ?? "-"
+              })}
             </p>
           ) : null}
           {pbDelta !== null ? (
             <p className={pbDelta <= 0 ? "good-text" : "warn-text"}>
-              {pbDelta <= 0 ? "New personal best!" : `PB diff: +${formatPracticeDuration(pbDelta)}`}
+              {pbDelta <= 0
+                ? t.aroundClock.newPersonalBest
+                : formatI18n(t.aroundClock.pbDiff, { time: formatPracticeDuration(pbDelta) })}
             </p>
           ) : null}
           <div className="breakdown-list">

@@ -3,7 +3,7 @@ import { Button, Card, ScreenTitle, Segmented } from "../components/ui";
 import { AppLanguageMode, ThemeMode, TimerOption, UserSettings } from "../types/models";
 import { calculateSecondsPerThreeFromFiveMinuteTest } from "../utils/pace";
 import { formatClock } from "../utils/time";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 const PREFERRED_DOUBLES = ["D16", "D20", "D18", "D12", "Not sure"] as const;
 const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim", "system"];
@@ -17,16 +17,6 @@ function isReasonableSecondsPerThree(value: number): boolean {
     value >= MIN_REASONABLE_SECONDS_PER_THREE &&
     value <= MAX_REASONABLE_SECONDS_PER_THREE
   );
-}
-
-function formatCurrentPace(settings: UserSettings): string {
-  if (!settings.throwPace.secondsPerThree) {
-    return "Current: Not set";
-  }
-  if (settings.throwPace.mode === "calibrated") {
-    return `Current: Measured pace — ${settings.throwPace.secondsPerThree.toFixed(1)} sec / 3 darts`;
-  }
-  return `Current: Manual pace — ${settings.throwPace.secondsPerThree.toFixed(1)} sec / 3 darts`;
 }
 
 export function SettingsScreen({
@@ -74,6 +64,21 @@ export function SettingsScreen({
         updatedAt: new Date().toISOString()
       }
     });
+  const currentPace = !settings.throwPace.secondsPerThree
+    ? t.settings.currentNotSet
+    : formatI18n(
+        settings.throwPace.mode === "calibrated"
+          ? t.settings.currentMeasuredPace
+          : t.settings.currentManualPace,
+        { pace: settings.throwPace.secondsPerThree.toFixed(1) }
+      );
+  const formatPaceMessage = (template: string, pace: number) =>
+    formatI18n(template, { pace: pace.toFixed(1) });
+  const formatRangeMessage = (template: string) =>
+    formatI18n(template, {
+      min: String(MIN_REASONABLE_SECONDS_PER_THREE),
+      max: String(MAX_REASONABLE_SECONDS_PER_THREE)
+    });
 
   return (
     <div className="screen screen-settings">
@@ -93,7 +98,7 @@ export function SettingsScreen({
         <Segmented
           value={settings.defaultTimer}
           options={TIMER_OPTIONS.map((value) => ({
-            label: value === 0 ? "Off" : `${value}s`,
+            label: value === 0 ? t.common.off : `${value}s`,
             value
           }))}
           onChange={(defaultTimer) => onUpdateSettings({ ...settings, defaultTimer })}
@@ -114,8 +119,8 @@ export function SettingsScreen({
         <Segmented
           value={settings.vibrationFeedback ? "on" : "off"}
           options={[
-            { label: "On", value: "on" },
-            { label: "Off", value: "off" }
+            { label: t.common.on, value: "on" },
+            { label: t.common.off, value: "off" }
           ]}
           onChange={(value) =>
             onUpdateSettings({
@@ -124,7 +129,7 @@ export function SettingsScreen({
             })
           }
         />
-        <p className="muted">Uses device vibration when available.</p>
+        <p className="muted">{t.settings.vibrationHelp}</p>
       </Card>
 
       <Card>
@@ -142,7 +147,7 @@ export function SettingsScreen({
 
       <Card>
         <h3>{t.settings.throwPace}</h3>
-        <p className="muted">{formatCurrentPace(settings)}</p>
+        <p className="muted">{currentPace}</p>
         {paceSuccess ? <p className="good-text">{paceSuccess}</p> : null}
         {paceError ? <p className="warn-text">{paceError}</p> : null}
 
@@ -151,31 +156,31 @@ export function SettingsScreen({
             onClick={() => {
               setThrowPace(7, "manual");
               setPaceError(null);
-              setPaceSuccess("Manual pace saved: 7.0 sec / 3 darts");
+              setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 7));
             }}
             variant="secondary"
           >
-            Fast: 7 sec / 3 darts
+            {t.settings.fastPace}
           </Button>
           <Button
             onClick={() => {
               setThrowPace(10, "manual");
               setPaceError(null);
-              setPaceSuccess("Manual pace saved: 10.0 sec / 3 darts");
+              setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 10));
             }}
             variant="secondary"
           >
-            Normal: 10 sec / 3 darts
+            {t.settings.normalPace}
           </Button>
           <Button
             onClick={() => {
               setThrowPace(13, "manual");
               setPaceError(null);
-              setPaceSuccess("Manual pace saved: 13.0 sec / 3 darts");
+              setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 13));
             }}
             variant="secondary"
           >
-            Relaxed: 13 sec / 3 darts
+            {t.settings.relaxedPace}
           </Button>
           <Button
             onClick={() => {
@@ -185,12 +190,12 @@ export function SettingsScreen({
             }}
             variant="ghost"
           >
-            Not set
+            {t.settings.notSet}
           </Button>
         </div>
 
         <div className="field-group">
-          <label htmlFor="custom-pace">Custom seconds per 3 darts</label>
+          <label htmlFor="custom-pace">{t.settings.customSecondsPerThree}</label>
           <div className="row">
             <input
               id="custom-pace"
@@ -205,29 +210,25 @@ export function SettingsScreen({
               onClick={() => {
                 const parsed = Number(customPaceDraft);
                 if (!isReasonableSecondsPerThree(parsed)) {
-                  setPaceError(
-                    `Pace must be between ${MIN_REASONABLE_SECONDS_PER_THREE} and ${MAX_REASONABLE_SECONDS_PER_THREE} sec / 3 darts.`
-                  );
+                  setPaceError(formatRangeMessage(t.settings.paceRangeError));
                   setPaceSuccess(null);
                   return;
                 }
                 setThrowPace(parsed, "manual");
                 setPaceError(null);
-                setPaceSuccess(`Manual pace saved: ${parsed.toFixed(1)} sec / 3 darts`);
+                setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, parsed));
                 setCustomPaceDraft("");
               }}
             >
-              Save custom
+              {t.settings.saveCustom}
             </Button>
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3>5 Minute Throw Pace Test</h3>
-        <p className="muted">
-          Throw for 5 minutes, then enter the number of darts thrown. App calculates seconds per 3 darts.
-        </p>
+        <h3>{t.settings.fiveMinuteTest}</h3>
+        <p className="muted">{t.settings.fiveMinuteTestHelp}</p>
         {!paceTestRunning && !paceTestReady ? (
           <Button
             onClick={() => {
@@ -237,7 +238,7 @@ export function SettingsScreen({
               setPaceTestRunning(true);
             }}
           >
-            Start 5 minute test
+            {t.settings.startFiveMinuteTest}
           </Button>
         ) : null}
 
@@ -245,14 +246,14 @@ export function SettingsScreen({
           <div className="timer-banner">
             <strong>{formatClock(paceTestSecondsLeft)}</strong>
             <Button variant="ghost" onClick={() => setPaceTestRunning(false)}>
-              Stop
+              {t.common.stop}
             </Button>
           </div>
         ) : null}
 
         {paceTestReady ? (
           <div className="field-group">
-            <label htmlFor="test-darts">Darts thrown in 5 minutes</label>
+            <label htmlFor="test-darts">{t.settings.dartsThrownInFive}</label>
             <div className="row">
               <input
                 id="test-darts"
@@ -263,30 +264,28 @@ export function SettingsScreen({
                 placeholder="e.g. 97"
               />
               <Button
-              onClick={() => {
-                const darts = Number(paceTestDarts);
-                if (!Number.isFinite(darts) || darts <= 0) {
-                  setPaceError("Darts thrown must be a positive number.");
-                  setPaceSuccess(null);
-                  return;
-                }
-                const calculated = calculateSecondsPerThreeFromFiveMinuteTest(darts);
-                if (!calculated || !isReasonableSecondsPerThree(calculated)) {
-                  setPaceError(
-                    `Calculated pace must be between ${MIN_REASONABLE_SECONDS_PER_THREE} and ${MAX_REASONABLE_SECONDS_PER_THREE} sec / 3 darts.`
-                  );
-                  setPaceSuccess(null);
-                  return;
-                }
-                setThrowPace(calculated, "calibrated");
-                setCustomPaceDraft(calculated.toFixed(1));
-                setPaceError(null);
-                setPaceSuccess(`Measured pace saved: ${calculated.toFixed(1)} sec / 3 darts`);
-                setPaceTestReady(false);
-                setPaceTestDarts("");
-              }}
+                onClick={() => {
+                  const darts = Number(paceTestDarts);
+                  if (!Number.isFinite(darts) || darts <= 0) {
+                    setPaceError(t.settings.dartsThrownPositive);
+                    setPaceSuccess(null);
+                    return;
+                  }
+                  const calculated = calculateSecondsPerThreeFromFiveMinuteTest(darts);
+                  if (!calculated || !isReasonableSecondsPerThree(calculated)) {
+                    setPaceError(formatRangeMessage(t.settings.calculatedPaceRangeError));
+                    setPaceSuccess(null);
+                    return;
+                  }
+                  setThrowPace(calculated, "calibrated");
+                  setCustomPaceDraft(calculated.toFixed(1));
+                  setPaceError(null);
+                  setPaceSuccess(formatPaceMessage(t.settings.measuredPaceSaved, calculated));
+                  setPaceTestReady(false);
+                  setPaceTestDarts("");
+                }}
               >
-                Save calibrated pace
+                {t.settings.saveCalibratedPace}
               </Button>
             </div>
           </div>

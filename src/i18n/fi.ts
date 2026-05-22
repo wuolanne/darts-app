@@ -17,7 +17,10 @@ export const fi: TranslationDict = {
     showDetails: "Näytä tiedot",
     hideDetails: "Piilota tiedot",
     noDataYet: "Ei vielä riittävästi dataa.",
-    left: "jäljellä"
+    left: "jäljellä",
+    off: "Off",
+    on: "On",
+    stop: "Lopeta"
   },
   home: {
     title: "Darts Practice",
@@ -88,7 +91,15 @@ export const fi: TranslationDict = {
     bust: "Yliheitto",
     noCheckoutAvailable: "Checkoutia ei ole tarjolla",
     noCheckout: "Ei checkoutia",
-    noScenarioDataTitle: "Ei skenaariodataa"
+    noScenarioDataTitle: "Ei skenaariodataa",
+    perfectRouteExplanation: "Täydellinen reitti. Tämä vastaa vahvinta tunnettua checkout-linjaa.",
+    proAlternativeExplanation: "Hyvä checkout. Tämä on vahva tunnettu vaihtoehto.",
+    cleanFinishExplanation: "Hyvä checkout. Reitti oli siisti ja viimeisteltävissä.",
+    cleanerRouteAvailable: "Checkout valmis, mutta tarjolla oli siistimpi reitti.",
+    avoidableRisk: "Checkout valmis, mutta reitissä oli vältettävää riskiä.",
+    bustExplanation: "Yliheitto. Vuoro menetettiin double-out-säännöillä.",
+    impossibleExplanation: "Tätä reittiä ei voinut enää viimeistellä jäljellä olevilla tikoilla.",
+    noFinishExplanation: "Checkout ei valmistunut tikkarajan sisällä."
   },
   checkoutTimedRun: {
     title: "Checkout-harjoitus aikaa vastaan",
@@ -143,7 +154,23 @@ export const fi: TranslationDict = {
     fastest: "Nopein",
     slowest: "Hitain",
     averageTargetTime: "Keskimääräinen kohde-/sektoriaika",
-    newSession: "Uusi sessio"
+    newSession: "Uusi sessio",
+    customTargetsHelp: "Valitse mukautetut kohteet (järjestys säilyy).",
+    selectAllSingles: "Valitse kaikki singlet",
+    selectAllDoubles: "Valitse kaikki tuplat",
+    selectAllTrebles: "Valitse kaikki triplat",
+    selectCenter: "Valitse keskiö",
+    commonDoublesQuick: "Yleiset tuplat",
+    d16Path: "D16-polku",
+    clearAll: "Tyhjennä",
+    center: "Keskiö",
+    selectedCount: "Valittu: {count}",
+    selectAtLeastOne: "Valitse vähintään yksi kohde.",
+    estimatedDarts: "Arvioidut tikat",
+    basedOnPace: "Perustuu tahtiin {pace} s / 3 tikkaa",
+    pauseTime: "Taukoaika",
+    newPersonalBest: "Uusi ennätys!",
+    pbDiff: "Ero ennätykseen: +{time}"
   },
   checkoutLibrary: {
     title: "Checkout-kirjasto",
@@ -172,7 +199,7 @@ export const fi: TranslationDict = {
     avgCheckoutTime: "Checkoutin keskiaika",
     best: "Paras",
     latest: "Viimeisin",
-    average: "Keskiarvo",
+    average: "Ka.",
     overall: "Yhteensä",
     byRange: "Alueittain",
     byFinish: "Checkouteittain",
@@ -184,7 +211,19 @@ export const fi: TranslationDict = {
     fastestSlowest: "Nopein & hitain",
     bestRuns: "Parhaat suoritukset",
     noAttempts: "Ei vielä yrityksiä.",
-    noSessions: "Ei vielä sessioita."
+    noSessions: "Ei vielä sessioita.",
+    sevenDays: "7 päivää",
+    thirtyDays: "30 päivää",
+    total: "Kaikki",
+    wrongRate: "Väärien osuus",
+    bustRate: "Yliheittojen osuus",
+    avgAttemptTime: "Yrityksen keskiaika",
+    bestAttemptTime: "Paras yritysaika",
+    attemptsShort: "yr.",
+    bestTotalTime: "Paras kokonaisaika",
+    latestTotalTime: "Viimeisin kokonaisaika",
+    avgTotalTime: "Keskimääräinen kokonaisaika",
+    bestLatestAvg: "Paras {best} · Viimeisin {latest} · Ka. {avg}"
   },
   settings: {
     title: "Asetukset",
@@ -199,6 +238,26 @@ export const fi: TranslationDict = {
     vibrationFeedback: "Värinäpalaute",
     throwPace: "Heittotahti",
     measuredPace: "Mitattu tahti",
-    manualPace: "Manuaalinen tahti"
+    manualPace: "Manuaalinen tahti",
+    currentNotSet: "Nykyinen: ei asetettu",
+    currentMeasuredPace: "Nykyinen: mitattu tahti - {pace} s / 3 tikkaa",
+    currentManualPace: "Nykyinen: manuaalinen tahti - {pace} s / 3 tikkaa",
+    vibrationHelp: "Käyttää laitteen värinää, jos se on saatavilla.",
+    fastPace: "Nopea: 7 s / 3 tikkaa",
+    normalPace: "Normaali: 10 s / 3 tikkaa",
+    relaxedPace: "Rento: 13 s / 3 tikkaa",
+    notSet: "Ei asetettu",
+    customSecondsPerThree: "Mukautetut sekunnit / 3 tikkaa",
+    saveCustom: "Tallenna",
+    manualPaceSaved: "Manuaalinen tahti tallennettu: {pace} s / 3 tikkaa",
+    measuredPaceSaved: "Mitattu tahti tallennettu: {pace} s / 3 tikkaa",
+    paceRangeError: "Tahdin pitää olla {min}-{max} s / 3 tikkaa.",
+    calculatedPaceRangeError: "Lasketun tahdin pitää olla {min}-{max} s / 3 tikkaa.",
+    fiveMinuteTest: "5 minuutin heittotahtitesti",
+    fiveMinuteTestHelp: "Heitä 5 minuuttia ja syötä lopuksi heitettyjen tikkojen määrä. Sovellus laskee sekunnit / 3 tikkaa.",
+    startFiveMinuteTest: "Aloita 5 minuutin testi",
+    dartsThrownInFive: "Heitetyt tikat 5 minuutissa",
+    dartsThrownPositive: "Heitettyjen tikkojen pitää olla positiivinen luku.",
+    saveCalibratedPace: "Tallenna mitattu tahti"
   }
 };

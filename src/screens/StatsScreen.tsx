@@ -3,7 +3,7 @@ import { AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, StatsRang
 import { Card, ScreenTitle, Segmented } from "../components/ui";
 import { getAroundClockStats, getCheckoutStats, getSpeedrunStats } from "../utils/stats";
 import { formatClock, formatSeconds } from "../utils/time";
-import { useI18n } from "../i18n";
+import { formatI18n, useI18n } from "../i18n";
 
 function CompactRow({
   left,
@@ -46,6 +46,8 @@ export function StatsScreen({
   const checkout = getCheckoutStats(checkoutAttempts, range);
   const speedrun = getSpeedrunStats(speedruns, range);
   const around = getAroundClockStats(aroundSessions, range);
+  const bestLatestAvg = (best: string, latest: string, avg: string) =>
+    formatI18n(t.stats.bestLatestAvg, { best, latest, avg });
 
   return (
     <div className="screen screen-stats">
@@ -54,9 +56,9 @@ export function StatsScreen({
         <Segmented
           value={range}
           options={[
-            { label: "7 Days", value: "7d" },
-            { label: "30 Days", value: "30d" },
-            { label: "Total", value: "total" }
+            { label: t.stats.sevenDays, value: "7d" },
+            { label: t.stats.thirtyDays, value: "30d" },
+            { label: t.stats.total, value: "total" }
           ]}
           onChange={setRange}
         />
@@ -71,14 +73,14 @@ export function StatsScreen({
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.attempts} right={checkout.attemptsCount} />
               <CompactRow left={t.stats.successRate} right={`${checkout.successRate.toFixed(1)}%`} />
-              <CompactRow left="Wrong rate" right={`${checkout.wrongRate.toFixed(1)}%`} />
-              <CompactRow left="Bust rate" right={`${checkout.bustRate.toFixed(1)}%`} />
+              <CompactRow left={t.stats.wrongRate} right={`${checkout.wrongRate.toFixed(1)}%`} />
+              <CompactRow left={t.stats.bustRate} right={`${checkout.bustRate.toFixed(1)}%`} />
               <CompactRow
-                left="Avg attempt time"
+                left={t.stats.avgAttemptTime}
                 right={checkout.averageAttemptTime !== null ? formatSeconds(checkout.averageAttemptTime) : t.common.noDataYet}
               />
               <CompactRow
-                left="Best attempt time"
+                left={t.stats.bestAttemptTime}
                 right={checkout.bestAttemptTime !== null ? formatSeconds(checkout.bestAttemptTime) : t.common.noDataYet}
               />
             </details>
@@ -88,7 +90,7 @@ export function StatsScreen({
                 <CompactRow
                   key={row.rangeLabel}
                   left={row.rangeLabel}
-                  middle={`${row.attempts} att / ${row.successRate.toFixed(0)}%`}
+                  middle={`${row.attempts} ${t.stats.attemptsShort} / ${row.successRate.toFixed(0)}%`}
                   right={row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}
                 />
               ))}
@@ -100,7 +102,7 @@ export function StatsScreen({
                 <CompactRow
                   key={`best-${row.finish}`}
                   left={row.finish}
-                  middle={`${row.attempts} attempts`}
+                  middle={`${row.attempts} ${t.stats.attemptsShort}`}
                   right={`${row.successRate.toFixed(0)}% / ${row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}`}
                 />
               ))}
@@ -112,7 +114,7 @@ export function StatsScreen({
                 <CompactRow
                   key={`problem-${row.finish}`}
                   left={row.finish}
-                  middle={`${row.attempts} attempts`}
+                  middle={`${row.attempts} ${t.stats.attemptsShort}`}
                   right={`${row.successRate.toFixed(0)}% / ${row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}`}
                 />
               ))}
@@ -130,15 +132,15 @@ export function StatsScreen({
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.sessions} right={speedrun.sessions} />
               <CompactRow
-                left="Best total time"
+                left={t.stats.bestTotalTime}
                 right={speedrun.overallBestTime !== null ? formatClock(speedrun.overallBestTime) : t.common.noDataYet}
               />
               <CompactRow
-                left="Latest total time"
+                left={t.stats.latestTotalTime}
                 right={speedrun.latestTotalTime !== null ? formatClock(speedrun.latestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
-                left="Avg total time"
+                left={t.stats.avgTotalTime}
                 right={speedrun.averageTotalTime !== null ? formatClock(speedrun.averageTotalTime) : t.common.noDataYet}
               />
             </details>
@@ -148,8 +150,8 @@ export function StatsScreen({
                 <CompactRow
                   key={row.rangeLabel}
                   left={row.rangeLabel}
-                  middle={`${row.sessions} sessions`}
-                  right={`Best ${formatClock(row.bestTime)} · Latest ${formatClock(row.latestTime)} · Avg ${formatClock(row.averageTime)}`}
+                  middle={`${row.sessions} ${t.stats.sessions.toLowerCase()}`}
+                  right={bestLatestAvg(formatClock(row.bestTime), formatClock(row.latestTime), formatClock(row.averageTime))}
                 />
               ))}
             </details>
@@ -178,15 +180,15 @@ export function StatsScreen({
               <summary>{t.stats.overall}</summary>
               <CompactRow left={t.stats.sessions} right={around.sessions} />
               <CompactRow
-                left="Best total time"
+                left={t.stats.bestTotalTime}
                 right={around.bestTotalTime !== null ? formatClock(around.bestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
-                left="Latest total time"
+                left={t.stats.latestTotalTime}
                 right={around.latestTotalTime !== null ? formatClock(around.latestTotalTime) : t.common.noDataYet}
               />
               <CompactRow
-                left="Avg total time"
+                left={t.stats.avgTotalTime}
                 right={around.averageTotalTime !== null ? formatClock(around.averageTotalTime) : t.common.noDataYet}
               />
             </details>
@@ -196,8 +198,8 @@ export function StatsScreen({
                 <CompactRow
                   key={row.mode}
                   left={row.mode}
-                  middle={`${row.sessions} sessions`}
-                  right={`Best ${formatClock(row.best)} · Latest ${formatClock(row.latest)} · Avg ${formatClock(row.average)}`}
+                  middle={`${row.sessions} ${t.stats.sessions.toLowerCase()}`}
+                  right={bestLatestAvg(formatClock(row.best), formatClock(row.latest), formatClock(row.average))}
                 />
               ))}
             </details>
@@ -232,7 +234,7 @@ export function StatsScreen({
                         <CompactRow
                           key={`${group.mode}-${row.key}`}
                           left={row.key}
-                          right={`Best ${formatSeconds(row.best)} · Latest ${formatSeconds(row.latest)} · Avg ${formatSeconds(row.average)}`}
+                          right={bestLatestAvg(formatSeconds(row.best), formatSeconds(row.latest), formatSeconds(row.average))}
                         />
                       ))}
                     </details>

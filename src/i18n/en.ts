@@ -15,7 +15,10 @@ export const en = {
     showDetails: "Show details",
     hideDetails: "Hide details",
     noDataYet: "Not enough data yet.",
-    left: "left"
+    left: "left",
+    off: "Off",
+    on: "On",
+    stop: "Stop"
   },
   home: {
     title: "Darts Practice",
@@ -86,7 +89,15 @@ export const en = {
     bust: "Bust",
     noCheckoutAvailable: "No checkout available",
     noCheckout: "No checkout",
-    noScenarioDataTitle: "No scenario data"
+    noScenarioDataTitle: "No scenario data",
+    perfectRouteExplanation: "Perfect route. This matches the strongest known checkout line.",
+    proAlternativeExplanation: "Great checkout. This is a strong known alternative.",
+    cleanFinishExplanation: "Great checkout. The route was clean and finishable.",
+    cleanerRouteAvailable: "Checkout complete, but a cleaner route was available.",
+    avoidableRisk: "Checkout complete, but the route carried avoidable risk.",
+    bustExplanation: "Bust. The visit was lost by standard double-out rules.",
+    impossibleExplanation: "This route could no longer finish with the darts left.",
+    noFinishExplanation: "No checkout completed within the dart limit."
   },
   checkoutTimedRun: {
     title: "Checkout Timed Run",
@@ -141,7 +152,23 @@ export const en = {
     fastest: "Fastest",
     slowest: "Slowest",
     averageTargetTime: "Average target/sector time",
-    newSession: "New session"
+    newSession: "New session",
+    customTargetsHelp: "Pick custom targets (order is preserved).",
+    selectAllSingles: "Select all singles",
+    selectAllDoubles: "Select all doubles",
+    selectAllTrebles: "Select all trebles",
+    selectCenter: "Select center",
+    commonDoublesQuick: "Common doubles",
+    d16Path: "D16 path",
+    clearAll: "Clear all",
+    center: "Center",
+    selectedCount: "Selected: {count}",
+    selectAtLeastOne: "Select at least one target.",
+    estimatedDarts: "Estimated darts",
+    basedOnPace: "Based on {pace} sec / 3 darts",
+    pauseTime: "Pause time",
+    newPersonalBest: "New personal best!",
+    pbDiff: "PB diff: +{time}"
   },
   checkoutLibrary: {
     title: "Checkout Library",
@@ -170,7 +197,7 @@ export const en = {
     avgCheckoutTime: "Avg checkout time",
     best: "Best",
     latest: "Latest",
-    average: "Average",
+    average: "Avg",
     overall: "Overall",
     byRange: "By range",
     byFinish: "By finish",
@@ -182,7 +209,19 @@ export const en = {
     fastestSlowest: "Fastest & slowest",
     bestRuns: "Best runs",
     noAttempts: "No attempts yet.",
-    noSessions: "No sessions yet."
+    noSessions: "No sessions yet.",
+    sevenDays: "7 Days",
+    thirtyDays: "30 Days",
+    total: "Total",
+    wrongRate: "Wrong rate",
+    bustRate: "Bust rate",
+    avgAttemptTime: "Avg attempt time",
+    bestAttemptTime: "Best attempt time",
+    attemptsShort: "att",
+    bestTotalTime: "Best total time",
+    latestTotalTime: "Latest total time",
+    avgTotalTime: "Avg total time",
+    bestLatestAvg: "Best {best} · Latest {latest} · Avg {avg}"
   },
   settings: {
     title: "Settings",
@@ -197,7 +236,27 @@ export const en = {
     vibrationFeedback: "Vibration feedback",
     throwPace: "Throw pace",
     measuredPace: "Measured pace",
-    manualPace: "Manual pace"
+    manualPace: "Manual pace",
+    currentNotSet: "Current: Not set",
+    currentMeasuredPace: "Current: Measured pace - {pace} sec / 3 darts",
+    currentManualPace: "Current: Manual pace - {pace} sec / 3 darts",
+    vibrationHelp: "Uses device vibration when available.",
+    fastPace: "Fast: 7 sec / 3 darts",
+    normalPace: "Normal: 10 sec / 3 darts",
+    relaxedPace: "Relaxed: 13 sec / 3 darts",
+    notSet: "Not set",
+    customSecondsPerThree: "Custom seconds per 3 darts",
+    saveCustom: "Save custom",
+    manualPaceSaved: "Manual pace saved: {pace} sec / 3 darts",
+    measuredPaceSaved: "Measured pace saved: {pace} sec / 3 darts",
+    paceRangeError: "Pace must be between {min} and {max} sec / 3 darts.",
+    calculatedPaceRangeError: "Calculated pace must be between {min} and {max} sec / 3 darts.",
+    fiveMinuteTest: "5 Minute Throw Pace Test",
+    fiveMinuteTestHelp: "Throw for 5 minutes, then enter the number of darts thrown. App calculates seconds per 3 darts.",
+    startFiveMinuteTest: "Start 5 minute test",
+    dartsThrownInFive: "Darts thrown in 5 minutes",
+    dartsThrownPositive: "Darts thrown must be a positive number.",
+    saveCalibratedPace: "Save calibrated pace"
   }
 };
 
