@@ -10,15 +10,14 @@ import {
   sanitizeCheckoutCustomRange
 } from "../utils/constants";
 import {
-  CheckoutRouteDetails,
   DartTarget,
   formatRoute,
-  getCheckoutRouteDetails,
   getPrimaryCheckoutRoute,
   getSingleHitContinuation,
   normalizeDartTarget
 } from "../utils/checkoutLibrary";
 import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
+import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 import { formatI18n, useI18n } from "../i18n";
@@ -103,49 +102,6 @@ function buildMissScenarios(
   return scenarios;
 }
 
-function routePanel(details: CheckoutRouteDetails | null, t: ReturnType<typeof useI18n>["t"]): JSX.Element {
-  if (!details || details.routes.length === 0) {
-    return <p className="warn-text">No detailed route yet.</p>;
-  }
-
-  return (
-    <>
-      {details.routes.map((option, index) => (
-        <div key={`${details.finish}-${option.label}-${index}`} className="route-teach-card">
-          <div className="route-teach-head">
-            <strong>{option.label}</strong>
-            {option.preferredDouble ? <Pill tone="success">Preferred double route</Pill> : null}
-          </div>
-          <p>
-            <span className="muted">Route:</span> {formatRoute(option.route)}
-          </p>
-          {option.singleHitTarget ? (
-            <p>
-              <span className="muted">{t.checkoutLibrary.singleHit}:</span>{" "}
-              {formatI18n(t.quickCheckout.ifHit, { from: option.firstTarget, to: option.singleHitTarget })}
-            </p>
-          ) : null}
-          {option.singleHitTarget ? (
-            <p>
-              <span className="muted">{t.quickCheckout.currentRemaining}:</span> {option.remainingAfterSingle} {t.common.left}
-            </p>
-          ) : null}
-          {option.followUpRoute && option.followUpRoute.length > 0 ? (
-            <p>
-              <span className="muted">Follow-up:</span> {formatRoute(option.followUpRoute)}
-            </p>
-          ) : null}
-          {option.note ? (
-            <p>
-              <span className="muted">Note:</span> {option.note}
-            </p>
-          ) : null}
-        </div>
-      ))}
-    </>
-  );
-}
-
 export function QuickCheckoutPracticeScreen({
   settings,
   onBack,
@@ -210,10 +166,6 @@ export function QuickCheckoutPracticeScreen({
     [finish, settings.preferredDouble]
   );
 
-  const routeDetails = useMemo(
-    () => getCheckoutRouteDetails(finish, settings.preferredDouble),
-    [finish, settings.preferredDouble]
-  );
   const attemptStartScore = missScenario ? missScenario.remaining : finish;
   const maxDarts = missScenario ? 2 : 3;
   const maxPicks = Math.max(maxDarts, 1);
@@ -604,7 +556,7 @@ export function QuickCheckoutPracticeScreen({
           {completed && routeVisible ? (
             <div className="finish-inline-detail">
               <h4>Finish {finish}</h4>
-              {routePanel(routeDetails, t)}
+              <CheckoutRouteSummary finish={finish} preferredDouble={settings.preferredDouble} />
             </div>
           ) : null}
 
