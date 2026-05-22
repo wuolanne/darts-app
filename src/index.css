@@ -317,39 +317,67 @@ body {
 }
 
 .home-streak-icon {
-  font-size: 1.8rem;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 8px;
+  background: linear-gradient(135deg, #ffcf76, #d7372f 58%, #7c1614);
+  box-shadow: 0 0 18px rgba(215, 55, 47, 0.38);
+  transform: rotate(-45deg);
+}
+
+.home-streak-icon::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50% 50% 50% 3px;
+  background: #ffdca2;
+  transform: translate(7px, 7px);
 }
 
 .home-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  gap: 0;
   border: 1px solid var(--card-border);
-  border-radius: 20px;
-  padding: 8px;
+  border-radius: 16px;
+  padding: 6px 4px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent),
     color-mix(in oklab, var(--surface-alt) 76%, black 24%);
 }
 
 .home-summary-card {
-  min-height: 88px;
-  border-radius: 15px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.18);
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 8px;
+  background: transparent;
+  border-right: 1px solid color-mix(in oklab, var(--card-border) 72%, transparent);
+}
+
+.home-summary-card:last-child {
+  border-right: 0;
 }
 
 .home-summary-card span,
 .home-summary-card small {
+  display: block;
+  overflow: hidden;
   color: var(--text-muted);
+  font-size: 0.62rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-summary-card strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--text-primary);
-  font-size: clamp(1.65rem, 7vw, 2.4rem);
+  font-size: 1.2rem;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .home-summary-card:first-child strong {
@@ -1226,7 +1254,22 @@ body {
   }
 
   .home-summary-grid {
-    grid-template-columns: 1fr 1fr;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .home-summary-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-summary-card {
+    flex-basis: 25%;
+    min-width: 72px;
+    padding: 6px;
+  }
+
+  .home-summary-card strong {
+    font-size: 1.05rem;
   }
 
   .home-mode-card {

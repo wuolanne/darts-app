@@ -162,7 +162,7 @@ export function HomeScreen({
           <p>{t.home.subtitle}</p>
         </div>
         <div className="home-streak-card" aria-label={t.home.todayReps}>
-          <span className="home-streak-icon">🔥</span>
+          <span className="home-streak-icon" aria-hidden="true" />
           <strong>{summary.streak}</strong>
           <span>{t.home.todayReps}</span>
         </div>
