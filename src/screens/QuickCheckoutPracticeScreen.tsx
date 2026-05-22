@@ -16,8 +16,12 @@ import {
   getSingleHitContinuation,
   normalizeDartTarget
 } from "../utils/checkoutLibrary";
-import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
-import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
+import {
+  CheckoutEvaluationResult,
+  evaluateCheckoutAttempt,
+  generateValidRoutes,
+  rankRoutes
+} from "../features/checkout-engine";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 import { formatI18n, useI18n } from "../i18n";
@@ -122,7 +126,6 @@ export function QuickCheckoutPracticeScreen({
   const [finish, setFinish] = useState(76);
   const [attemptStartedAt, setAttemptStartedAt] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState<number>(settings.defaultTimer);
-  const [routeVisible, setRouteVisible] = useState(false);
 
   const [activeRoute, setActiveRoute] = useState<DartTarget[]>([]);
   const [remaining, setRemaining] = useState(76);
@@ -170,6 +173,16 @@ export function QuickCheckoutPracticeScreen({
   const maxDarts = missScenario ? 2 : 3;
   const maxPicks = Math.max(maxDarts, 1);
   const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
+  const validRoutesForAttempt = useMemo(
+    () => generateValidRoutes(attemptStartScore, maxDarts),
+    [attemptStartScore, maxDarts]
+  );
+  const rankedRoutesForAttempt = useMemo(
+    () => rankRoutes(attemptStartScore, validRoutesForAttempt, settings.preferredDouble),
+    [attemptStartScore, validRoutesForAttempt, settings.preferredDouble]
+  );
+  const goodAlternativeRoutes = rankedRoutesForAttempt.slice(1, 5);
+
   useEffect(() => {
     if (stage !== "playing" || timerSeconds === 0 || completed) {
       return;
@@ -236,7 +249,6 @@ export function QuickCheckoutPracticeScreen({
   function resetAttemptState() {
     setAttemptStartedAt(performance.now());
     setSecondsLeft(timerSeconds);
-    setRouteVisible(false);
     setSelectedTarget(null);
     setFeedback(null);
     setCompleted(false);
@@ -414,7 +426,7 @@ export function QuickCheckoutPracticeScreen({
     }
   }
 
-  const boardRoute = routeVisible || completed
+  const boardRoute = completed
     ? activeRoute.join(", ")
     : "";
 
@@ -539,7 +551,7 @@ export function QuickCheckoutPracticeScreen({
 
           <Dartboard
             route={boardRoute}
-            reveal={completed || routeVisible}
+            reveal={completed}
             onTargetSelect={handleTargetTap}
             selectedTarget={selectedTarget}
             disabled={completed}
@@ -550,13 +562,6 @@ export function QuickCheckoutPracticeScreen({
               <Button variant="ghost" onClick={handleUndo}>
                 UNDO
               </Button>
-            </div>
-          ) : null}
-
-          {completed && routeVisible ? (
-            <div className="finish-inline-detail">
-              <h4>Finish {finish}</h4>
-              <CheckoutRouteSummary finish={finish} preferredDouble={settings.preferredDouble} />
             </div>
           ) : null}
 
@@ -572,8 +577,7 @@ export function QuickCheckoutPracticeScreen({
                   {evaluation ? (
                     <div className="route-box top-gap">
                       <p className="route-compact-line">
-                        <span className="muted">Route quality:</span> <strong>{evaluation.routeQuality}%</strong>{" "}
-                        <span className="muted">+{evaluation.xp} XP</span>
+                        <span className="muted">Route quality:</span> <strong>{evaluation.routeQuality}%</strong>
                       </p>
                       <p className="route-compact-line">
                         <span className="muted">Your route:</span>{" "}
@@ -586,21 +590,23 @@ export function QuickCheckoutPracticeScreen({
                       <p className="route-compact-line">
                         <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {evaluation.explanation}
                       </p>
-                      {evaluation.alternatives.length > 1 ? (
-                        <p className="route-compact-line">
+                      {goodAlternativeRoutes.length > 0 ? (
+                        <div className="route-compact-line">
                           <span className="muted">Good alternatives:</span>{" "}
-                          {evaluation.alternatives
-                            .slice(1, 4)
-                            .map((route) => formatRoute(route))
-                            .join(" · ")}
-                        </p>
+                          {goodAlternativeRoutes.map((route) => (
+                            <p key={formatRoute(route.path)} className="route-compact-line">
+                              <strong>{formatRoute(route.path)}</strong>{" "}
+                              <span className="muted">{route.quality}%</span>
+                            </p>
+                          ))}
+                        </div>
                       ) : null}
+                      <p className="route-compact-line">
+                        <span className="muted">Valid routes:</span> {validRoutesForAttempt.length}
+                      </p>
                     </div>
                   ) : null}
                   <div className="row top-gap">
-                    <Button variant="ghost" onClick={() => setRouteVisible((previous) => !previous)}>
-                      {routeVisible ? t.common.hideDetails.toUpperCase() : t.common.showDetails.toUpperCase()}
-                    </Button>
                     <Button onClick={nextCheckout}>{t.quickCheckout.nextCheckout.toUpperCase()}</Button>
                   </div>
                 </>
