@@ -48,7 +48,7 @@ export function StatsScreen({
   const around = getAroundClockStats(aroundSessions, range);
 
   return (
-    <div className="screen">
+    <div className="screen screen-stats">
       <ScreenTitle title={t.stats.title} subtitle={t.stats.subtitle} onBack={onBack} />
       <Card>
         <Segmented

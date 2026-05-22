@@ -1,5 +1,10 @@
 import { PreferredDouble } from "../../types/models";
-import { formatRoute, getPrimaryCheckoutRoute, getSingleHitContinuation, normalizeDartTarget } from "../../utils/checkoutLibrary";
+import {
+  formatRoute,
+  getPrimaryCheckoutRoute,
+  getSingleHitContinuation,
+  normalizeDartTarget
+} from "../../utils/checkoutLibrary";
 import { formatI18n, useI18n } from "../../i18n";
 import { generateValidRoutes, rankRoutes } from "./index";
 
@@ -24,7 +29,7 @@ export function CheckoutRouteSummary({
   if (!bestRoute) {
     return (
       <div className="route-teach-card">
-        <p className="warn-text">No valid route yet.</p>
+        <p className="warn-text">{t.quickCheckout.noValidRouteYet}</p>
       </div>
     );
   }
@@ -74,4 +79,3 @@ export function CheckoutRouteSummary({
     </div>
   );
 }
-

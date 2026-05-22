@@ -30,7 +30,7 @@ export function CheckoutLibraryScreen({
   }, [selectedFinish, preferredDouble]);
 
   return (
-    <div className="screen">
+    <div className="screen screen-library">
       <ScreenTitle
         title={t.checkoutLibrary.title}
         subtitle={`${t.checkoutLibrary.subtitle}: ${preferredDouble}`}

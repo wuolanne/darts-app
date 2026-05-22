@@ -266,7 +266,7 @@ export function AroundTheClockScreen({
       : null;
 
   return (
-    <div className="screen">
+    <div className="screen screen-around">
       <ScreenTitle title={t.aroundClock.title} subtitle={t.aroundClock.subtitle} onBack={onBack} />
 
       {!running && !result ? (

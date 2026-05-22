@@ -431,7 +431,7 @@ export function QuickCheckoutPracticeScreen({
     : "";
 
   return (
-    <div className="screen">
+    <div className="screen screen-quick">
       <ScreenTitle title={t.quickCheckout.title} subtitle={t.quickCheckout.subtitle} onBack={onBack} />
 
       {stage === "setup" ? (

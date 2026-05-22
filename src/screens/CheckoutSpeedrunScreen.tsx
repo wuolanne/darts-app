@@ -239,7 +239,7 @@ export function CheckoutSpeedrunScreen({
   };
 
   return (
-    <div className="screen">
+    <div className="screen screen-speedrun">
       <ScreenTitle title={t.checkoutTimedRun.title} subtitle={t.checkoutTimedRun.subtitle} onBack={onBack} />
 
       {!running && !result ? (

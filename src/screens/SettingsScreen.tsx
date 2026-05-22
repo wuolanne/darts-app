@@ -76,7 +76,7 @@ export function SettingsScreen({
     });
 
   return (
-    <div className="screen">
+    <div className="screen screen-settings">
       <ScreenTitle title={t.settings.title} subtitle={t.settings.subtitle} onBack={onBack} />
 
       <Card>
