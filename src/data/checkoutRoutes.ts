@@ -285,9 +285,24 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
       continuationRoute: ["T18", "D8"]
     }
   },
-  88: { finish: 88, label: "Optimal route", route: ["T16", "D20"] },
-  89: { finish: 89, label: "Optimal route", route: ["T19", "D16"] },
-  90: { finish: 90, label: "Optimal route", route: ["T20", "D15"] },
+  88: {
+    finish: 88,
+    label: "Optimal route",
+    route: ["T16", "D20"],
+    alternativeRoutes: [{ label: "Alternative route", route: ["T20", "D14"] }]
+  },
+  89: {
+    finish: 89,
+    label: "Optimal route",
+    route: ["T19", "D16"],
+    alternativeRoutes: [{ label: "Alternative route", route: ["T17", "D19"] }]
+  },
+  90: {
+    finish: 90,
+    label: "Optimal route",
+    route: ["T20", "D15"],
+    alternativeRoutes: [{ label: "Alternative route", route: ["T18", "D18"] }]
+  },
   91: { finish: 91, label: "Optimal route", route: ["T17", "D20"] },
   92: { finish: 92, label: "Optimal route", route: ["T20", "D16"] },
   93: { finish: 93, label: "Optimal route", route: ["T19", "D18"] },

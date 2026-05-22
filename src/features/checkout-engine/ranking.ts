@@ -11,11 +11,11 @@ function keyOf(route: SegmentCode[]): string {
 }
 
 function classBaseScore(routeClass: RankedRoute["routeClass"]): number {
-  if (routeClass === "optimal") return 25;
-  if (routeClass === "proAlternative") return 20;
+  if (routeClass === "optimal") return 38;
+  if (routeClass === "proAlternative") return 30;
   if (routeClass === "highQualityCustom") return 16;
-  if (routeClass === "validCustom") return 12;
-  return 8;
+  if (routeClass === "validCustom") return 10;
+  return 4;
 }
 
 function xpExplanation(quality: number, routeClass: RankedRoute["routeClass"]): string {
@@ -72,6 +72,14 @@ function leaveQuality(route: SegmentCode[], startScore: number): number {
   return Math.round(average * 15);
 }
 
+function routeLengthQuality(route: SegmentCode[], startScore: number): number {
+  const hasTwoDartOut = startScore <= 100 && startScore !== 99;
+  if (hasTwoDartOut && route.length === 2) return 14;
+  if (hasTwoDartOut && route.length > 2) return -18;
+  if (!hasTwoDartOut && route.length === 3) return 6;
+  return 0;
+}
+
 function missManagement(route: SegmentCode[], startScore: number): number {
   const first = normalizeDartTarget(route[0] ?? "");
   const treble = first.match(/^T(\d{1,2})$/);
@@ -88,7 +96,7 @@ function missManagement(route: SegmentCode[], startScore: number): number {
 function riskProfile(route: SegmentCode[], preferredDouble: PreferredDouble): number {
   const final = normalizeDartTarget(route[route.length - 1] ?? "");
   let score = 4;
-  if (AWKWARD_FINAL_DOUBLES.has(final)) score -= 2;
+  if (AWKWARD_FINAL_DOUBLES.has(final)) score -= 3;
   if (final === "Bull" && route.length < 3) score -= 1;
   if (preferredDouble !== "Not sure" && final === preferredDouble) score += 1;
   if (route.slice(0, -1).some((target) => normalizeDartTarget(target).startsWith("D"))) score -= 1;
@@ -108,6 +116,7 @@ export function rankRoute(
       100,
       legal +
         classBaseScore(routeClass) +
+        routeLengthQuality(route, startScore) +
         leaveQuality(route, startScore) +
         missManagement(route, startScore) +
         riskProfile(route, preferredDouble)
@@ -129,7 +138,21 @@ export function rankRoutes(
 ): RankedRoute[] {
   return routes
     .map((route) => rankRoute(startScore, route, preferredDouble))
-    .sort((a, b) => b.quality - a.quality || formatRoute(a.path).localeCompare(formatRoute(b.path)));
+    .sort((a, b) => {
+      const classOrder = {
+        optimal: 0,
+        proAlternative: 1,
+        highQualityCustom: 2,
+        validCustom: 3,
+        awkwardCustom: 4
+      } satisfies Record<RankedRoute["routeClass"], number>;
+      const classDiff = classOrder[a.routeClass] - classOrder[b.routeClass];
+      if (classDiff !== 0) return classDiff;
+      if (a.path.length !== b.path.length && (a.path.length === 2 || b.path.length === 2)) {
+        return a.path.length - b.path.length;
+      }
+      return b.quality - a.quality || formatRoute(a.path).localeCompare(formatRoute(b.path));
+    });
 }
 
 export function xpFromQuality(quality: number): 0 | 1 | 2 | 3 {
