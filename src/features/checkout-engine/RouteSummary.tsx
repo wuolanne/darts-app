@@ -49,10 +49,17 @@ export function CheckoutRouteSummary({
         </p>
       )}
       {alternatives.length > 0 ? (
-        <p className="route-compact-line">
-          <span className="muted">Good alternatives:</span>{" "}
-          {alternatives.map((route) => `${formatRoute(route.path)} (${route.quality}%)`).join(" · ")}
-        </p>
+        <div className="route-compact-line">
+          <span className="muted">Good alternatives:</span>
+          <div className="route-alternative-list">
+            {alternatives.map((route) => (
+              <p key={formatRoute(route.path)} className="route-compact-line">
+                <strong>{formatRoute(route.path)}</strong>{" "}
+                <span className="muted">{route.quality}%</span>
+              </p>
+            ))}
+          </div>
+        </div>
       ) : null}
       {!compact ? (
         <p className="route-compact-line">

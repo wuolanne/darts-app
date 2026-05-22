@@ -861,6 +861,14 @@ body {
   line-height: 1.25;
 }
 
+.route-alternative-list {
+  margin-top: 4px;
+}
+
+.route-alternative-list p {
+  margin: 3px 0;
+}
+
 .route-section {
   margin-top: 12px;
 }
