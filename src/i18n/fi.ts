@@ -223,7 +223,15 @@ export const fi: TranslationDict = {
     bestTotalTime: "Paras kokonaisaika",
     latestTotalTime: "Viimeisin kokonaisaika",
     avgTotalTime: "Keskimääräinen kokonaisaika",
-    bestLatestAvg: "Paras {best} · Viimeisin {latest} · Ka. {avg}"
+    bestLatestAvg: "Paras {best} · Viimeisin {latest} · Ka. {avg}",
+    openAllAroundStats: "Avaa kaikki Kellon ympäri -tilastot",
+    closeAllAroundStats: "Sulje kaikki Kellon ympäri -tilastot",
+    sessionHistory: "Suoritushistoria",
+    targets: "Kohteet",
+    sector: "Sektori",
+    pauses: "Tauot",
+    estimated: "Arvio",
+    entries: "Rivit"
   },
   settings: {
     title: "Asetukset",

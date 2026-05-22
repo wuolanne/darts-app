@@ -221,7 +221,15 @@ export const en = {
     bestTotalTime: "Best total time",
     latestTotalTime: "Latest total time",
     avgTotalTime: "Avg total time",
-    bestLatestAvg: "Best {best} · Latest {latest} · Avg {avg}"
+    bestLatestAvg: "Best {best} · Latest {latest} · Avg {avg}",
+    openAllAroundStats: "Open all Around the Clock stats",
+    closeAllAroundStats: "Close all Around the Clock stats",
+    sessionHistory: "Session history",
+    targets: "Targets",
+    sector: "Sector",
+    pauses: "Pauses",
+    estimated: "Estimated",
+    entries: "Entries"
   },
   settings: {
     title: "Settings",

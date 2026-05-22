@@ -1053,6 +1053,21 @@ body {
   background: color-mix(in oklab, var(--surface-alt) 80%, transparent);
 }
 
+.stats-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -2px;
+}
+
+.stats-toolbar .link-btn {
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: color-mix(in oklab, var(--surface-alt) 86%, transparent);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+}
+
 .stats-subsection summary {
   cursor: pointer;
   font-weight: 700;
