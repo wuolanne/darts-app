@@ -36,27 +36,74 @@ body {
 }
 
 .screen-head {
-  border: 1px solid color-mix(in oklab, var(--card-border) 88%, transparent);
-  border-radius: 16px;
-  padding: 10px 12px 12px;
+  --screen-accent: var(--accent);
+  position: relative;
+  min-height: 138px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--card-border) 70%, var(--screen-accent) 30%);
+  border-radius: 20px;
+  padding: 12px 14px 16px;
   background:
-    linear-gradient(118deg, color-mix(in oklab, var(--surface) 92%, black 8%), color-mix(in oklab, var(--surface-alt) 84%, transparent)),
-    linear-gradient(90deg, color-mix(in oklab, var(--accent) 10%, transparent), transparent 58%);
+    radial-gradient(circle at 80% 45%, color-mix(in oklab, var(--screen-accent) 28%, transparent), transparent 9%),
+    radial-gradient(circle at 82% 45%, transparent 0 14%, rgba(238, 231, 210, 0.13) 14.5% 16%, transparent 16.5% 22%, color-mix(in oklab, var(--screen-accent) 22%, transparent) 22.5% 25%, transparent 25.5%),
+    linear-gradient(112deg, rgba(5, 7, 10, 0.94) 0%, color-mix(in oklab, var(--surface-alt) 72%, black 28%) 58%, color-mix(in oklab, var(--screen-accent) 22%, black 78%) 100%);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--text-primary) 6%, transparent),
-    0 10px 26px rgba(0, 0, 0, 0.24);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 color-mix(in oklab, var(--screen-accent) 32%, transparent),
+    0 18px 42px rgba(0, 0, 0, 0.34);
+  isolation: isolate;
+}
+
+.screen-head::before {
+  content: "";
+  position: absolute;
+  right: -56px;
+  top: -58px;
+  width: 210px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #a12d2a 0 4%, #287246 4.5% 12%, #e1dcc6 12.5% 15%, transparent 15.5%),
+    conic-gradient(from -9deg, #0b0e12 0 9deg, #e6dfc6 9deg 18deg, #0b0e12 18deg 27deg, #e6dfc6 27deg 36deg, #0b0e12 36deg 45deg, #e6dfc6 45deg 54deg, #0b0e12 54deg 63deg, #e6dfc6 63deg 72deg, #0b0e12 72deg 81deg, #e6dfc6 81deg 90deg, #0b0e12 90deg 99deg, #e6dfc6 99deg 108deg, #0b0e12 108deg 117deg, #e6dfc6 117deg 126deg, #0b0e12 126deg 135deg, #e6dfc6 135deg 144deg, #0b0e12 144deg 153deg, #e6dfc6 153deg 162deg, #0b0e12 162deg 171deg, #e6dfc6 171deg 180deg, #0b0e12 180deg 189deg, #e6dfc6 189deg 198deg, #0b0e12 198deg 207deg, #e6dfc6 207deg 216deg, #0b0e12 216deg 225deg, #e6dfc6 225deg 234deg, #0b0e12 234deg 243deg, #e6dfc6 243deg 252deg, #0b0e12 252deg 261deg, #e6dfc6 261deg 270deg, #0b0e12 270deg 279deg, #e6dfc6 279deg 288deg, #0b0e12 288deg 297deg, #e6dfc6 297deg 306deg, #0b0e12 306deg 315deg, #e6dfc6 315deg 324deg, #0b0e12 324deg 333deg, #e6dfc6 333deg 342deg, #0b0e12 342deg 351deg, #e6dfc6 351deg 360deg);
+  border: 6px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 0 0 16px rgba(35, 126, 67, 0.38),
+    inset 0 0 0 26px rgba(176, 41, 36, 0.32),
+    0 0 56px color-mix(in oklab, var(--screen-accent) 32%, transparent);
+  opacity: 0.58;
+  transform: rotate(-18deg);
+  z-index: -1;
+}
+
+.screen-head::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.52), transparent 56%),
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(255, 255, 255, 0.027) 35px 36px);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .screen-head h1 {
-  margin: 6px 0 2px;
-  font-size: clamp(2rem, 6.5vw, 2.65rem);
-  line-height: 0.95;
-  letter-spacing: 0.015em;
+  position: relative;
+  max-width: min(380px, 78%);
+  margin: 12px 0 4px;
+  font-size: clamp(1.85rem, 2.8rem, 2.45rem);
+  line-height: 0.96;
+  letter-spacing: 0;
+  text-transform: none;
+  text-wrap: balance;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.62);
 }
 
 .screen-head p {
+  position: relative;
+  max-width: min(370px, 82%);
   margin: 0;
-  color: var(--text-secondary);
+  color: color-mix(in oklab, var(--text-secondary) 88%, white 12%);
+  line-height: 1.28;
 }
 
 .screen-head-spacer {
@@ -65,14 +112,27 @@ body {
 }
 
 .card {
+  --screen-accent: var(--accent);
+  position: relative;
+  overflow: hidden;
   background:
+    linear-gradient(135deg, color-mix(in oklab, var(--screen-accent) 7%, transparent), transparent 44%),
     linear-gradient(165deg, color-mix(in oklab, var(--card) 92%, black 8%), color-mix(in oklab, var(--surface-alt) 86%, black 14%));
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--card-border) 80%, var(--screen-accent) 20%);
+  border-radius: 18px;
   padding: 14px;
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, var(--text-primary) 7%, transparent),
-    0 14px 30px rgba(0, 0, 0, 0.32);
+    0 16px 34px rgba(0, 0, 0, 0.34);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--screen-accent), transparent);
+  opacity: 0.72;
 }
 
 .card h3 {
@@ -489,8 +549,33 @@ body {
 .screen-library,
 .screen-stats,
 .screen-settings {
+  --screen-accent: var(--accent);
   position: relative;
   isolation: isolate;
+}
+
+.screen-quick {
+  --screen-accent: #d64236;
+}
+
+.screen-speedrun {
+  --screen-accent: #7bb15c;
+}
+
+.screen-around {
+  --screen-accent: #6da0d4;
+}
+
+.screen-library {
+  --screen-accent: #c9a34f;
+}
+
+.screen-stats {
+  --screen-accent: #a263c9;
+}
+
+.screen-settings {
+  --screen-accent: #a8adb5;
 }
 
 .screen-quick::before,
@@ -510,38 +595,72 @@ body {
 
 .screen-quick::before {
   background:
-    radial-gradient(circle at 90% 8%, rgba(212, 53, 43, 0.22), transparent 34%),
-    linear-gradient(120deg, rgba(56, 93, 128, 0.2), transparent 42%);
+    radial-gradient(circle at 92% 2%, rgba(214, 66, 54, 0.28), transparent 34%),
+    linear-gradient(120deg, rgba(89, 28, 22, 0.24), transparent 42%);
 }
 
 .screen-speedrun::before {
   background:
-    radial-gradient(circle at 85% 15%, rgba(104, 178, 92, 0.2), transparent 34%),
-    linear-gradient(120deg, rgba(36, 82, 62, 0.22), transparent 48%);
+    radial-gradient(circle at 90% 4%, rgba(123, 177, 92, 0.25), transparent 34%),
+    linear-gradient(120deg, rgba(38, 83, 54, 0.24), transparent 48%);
 }
 
 .screen-around::before {
   background:
-    radial-gradient(circle at 86% 14%, rgba(79, 133, 195, 0.22), transparent 32%),
+    radial-gradient(circle at 90% 4%, rgba(109, 160, 212, 0.27), transparent 32%),
     linear-gradient(110deg, rgba(46, 82, 118, 0.2), transparent 46%);
 }
 
 .screen-library::before {
   background:
-    radial-gradient(circle at 84% 14%, rgba(194, 148, 67, 0.22), transparent 34%),
+    radial-gradient(circle at 90% 4%, rgba(201, 163, 79, 0.27), transparent 34%),
     linear-gradient(110deg, rgba(74, 65, 43, 0.2), transparent 48%);
 }
 
 .screen-stats::before {
   background:
-    radial-gradient(circle at 86% 15%, rgba(151, 88, 197, 0.2), transparent 34%),
+    radial-gradient(circle at 90% 4%, rgba(162, 99, 201, 0.25), transparent 34%),
     linear-gradient(120deg, rgba(83, 55, 118, 0.22), transparent 46%);
 }
 
 .screen-settings::before {
   background:
-    radial-gradient(circle at 86% 15%, rgba(135, 149, 170, 0.2), transparent 34%),
+    radial-gradient(circle at 90% 4%, rgba(168, 173, 181, 0.24), transparent 34%),
     linear-gradient(120deg, rgba(77, 86, 101, 0.2), transparent 46%);
+}
+
+.screen-quick .screen-head,
+.screen-speedrun .screen-head,
+.screen-around .screen-head,
+.screen-library .screen-head,
+.screen-stats .screen-head,
+.screen-settings .screen-head,
+.screen-quick .card,
+.screen-speedrun .card,
+.screen-around .card,
+.screen-library .card,
+.screen-stats .card,
+.screen-settings .card {
+  --screen-accent: inherit;
+}
+
+.screen-speedrun .screen-head::before {
+  box-shadow:
+    inset 0 0 0 16px rgba(67, 122, 47, 0.42),
+    inset 0 0 0 26px rgba(176, 41, 36, 0.22),
+    0 0 56px color-mix(in oklab, var(--screen-accent) 32%, transparent);
+}
+
+.screen-around .screen-head::before,
+.screen-stats .screen-head::before,
+.screen-settings .screen-head::before {
+  filter: saturate(0.75);
+  opacity: 0.46;
+}
+
+.screen-library .screen-head::before {
+  filter: sepia(0.35) saturate(0.85);
+  opacity: 0.52;
 }
 
 .screen-quick .card,
@@ -598,8 +717,10 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, color-mix(in oklab, var(--primary-button) 94%, white 6%), var(--primary-button));
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--screen-accent) 48%, white 8%), color-mix(in oklab, var(--screen-accent) 36%, black 20%));
   color: var(--primary-button-text);
+  border-color: color-mix(in oklab, var(--screen-accent) 64%, transparent);
 }
 
 .btn-secondary {
@@ -673,8 +794,10 @@ body {
 }
 
 .seg-btn {
-  border: 1px solid var(--card-border);
-  background: color-mix(in oklab, var(--surface-alt) 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--card-border) 84%, var(--screen-accent) 16%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    color-mix(in oklab, var(--surface-alt) 48%, transparent);
   color: var(--text-secondary);
   border-radius: 10px;
   padding: 8px 10px;
@@ -686,9 +809,13 @@ body {
 }
 
 .seg-btn-active {
-  background: linear-gradient(180deg, color-mix(in oklab, var(--selected) 92%, white 8%), var(--selected));
-  border-color: var(--selected-border);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--screen-accent) 48%, white 4%), color-mix(in oklab, var(--screen-accent) 34%, black 26%));
+  border-color: color-mix(in oklab, var(--screen-accent) 70%, white 12%);
   color: var(--text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 18px color-mix(in oklab, var(--screen-accent) 18%, transparent);
 }
 
 .practice-card {
@@ -703,10 +830,11 @@ body {
 }
 
 .big-number {
-  font-size: clamp(2.35rem, 9vw, 3.45rem);
+  font-size: clamp(2.25rem, 3.2rem, 3.4rem);
   margin: 10px 0;
   font-weight: 900;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  text-wrap: balance;
 }
 
 .metric-grid {
@@ -924,8 +1052,10 @@ body {
 }
 
 .finish-chip {
-  border: 1px solid var(--card-border);
-  background: color-mix(in oklab, var(--surface-alt) 74%, transparent);
+  border: 1px solid color-mix(in oklab, var(--card-border) 82%, var(--screen-accent) 18%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent),
+    color-mix(in oklab, var(--surface-alt) 74%, transparent);
   color: var(--text-primary);
   border-radius: 8px;
   padding: 8px 4px;
@@ -936,8 +1066,9 @@ body {
 }
 
 .finish-chip-active {
-  border-color: var(--selected-border);
-  background: var(--selected);
+  border-color: color-mix(in oklab, var(--screen-accent) 74%, white 8%);
+  background: color-mix(in oklab, var(--screen-accent) 36%, var(--surface-alt) 64%);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--screen-accent) 18%, transparent);
 }
 
 .finish-inline-detail {
@@ -1026,6 +1157,53 @@ body {
 }
 
 @media (max-width: 420px) {
+  .app-shell {
+    padding: 12px 12px 34px;
+  }
+
+  .screen-head {
+    min-height: 126px;
+    border-radius: 14px;
+    padding: 10px 12px 14px;
+  }
+
+  .screen-head::before {
+    right: -84px;
+    top: -42px;
+    width: 178px;
+  }
+
+  .screen-head h1 {
+    max-width: 86%;
+    font-size: 1.95rem;
+    line-height: 1;
+  }
+
+  .screen-head p {
+    max-width: 92%;
+    font-size: 0.82rem;
+  }
+
+  .card {
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .seg-btn {
+    padding: 8px 9px;
+    font-size: 0.76rem;
+  }
+
+  .btn {
+    padding: 11px 12px;
+    font-size: 0.86rem;
+  }
+
+  .big-number {
+    font-size: 2.25rem;
+    line-height: 1.02;
+  }
+
   .home-hero {
     min-height: 300px;
     padding: 20px;
