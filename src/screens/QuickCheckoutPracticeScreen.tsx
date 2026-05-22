@@ -11,16 +11,14 @@ import {
 } from "../utils/constants";
 import {
   CheckoutRouteDetails,
-  CheckoutRoute,
   DartTarget,
   formatRoute,
   getCheckoutRouteDetails,
-  getCheckoutRoutes,
   getPrimaryCheckoutRoute,
   getSingleHitContinuation,
-  normalizeDartTarget,
-  scoreOfTarget
+  normalizeDartTarget
 } from "../utils/checkoutLibrary";
+import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 import { formatI18n, useI18n } from "../i18n";
@@ -31,15 +29,6 @@ interface FeedbackState {
   tone: "correct" | "wrong" | "complete" | "info";
   title: string;
   body: string;
-}
-
-interface RouteEvaluation {
-  quality: number;
-  verdict: string;
-  optimalRoute: string;
-  yourRoute: string;
-  explanation: string;
-  matchedRouteLabel: string | null;
 }
 
 type PracticeMode = "main-route" | "single-miss-scenario";
@@ -58,88 +47,6 @@ interface RouteSnapshot {
 
 interface PickHistoryItem {
   snapshot: RouteSnapshot;
-}
-
-const AWKWARD_DOUBLES = new Set(["D15", "D13", "D11", "D9", "D7", "D5"]);
-
-function isCheckoutFinishTarget(target: string): boolean {
-  const normalized = normalizeDartTarget(target);
-  return normalized === "Bull" || normalized.startsWith("D");
-}
-
-function evaluateRouteQuality(params: {
-  startScore: number;
-  pickedTargets: string[];
-  success: boolean;
-  preferredDouble: UserSettings["preferredDouble"];
-}): RouteEvaluation {
-  const { startScore, pickedTargets, success, preferredDouble } = params;
-  const yourRoute = pickedTargets.length > 0 ? pickedTargets.join(" -> ") : "None";
-  const knownRoutes = getCheckoutRoutes(startScore, preferredDouble).filter((route) => !route.isBogey && route.route.length > 0);
-  const optimal = knownRoutes[0] ?? null;
-  const optimalRoute = optimal ? formatRoute(optimal.route) : "No valid route yet.";
-  if (!success) {
-    return {
-      quality: 0,
-      verdict: "No checkout",
-      optimalRoute,
-      yourRoute,
-      explanation: "Attempt did not finish the checkout.",
-      matchedRouteLabel: null
-    };
-  }
-
-  const normalizedPicked = pickedTargets.map((target) => normalizeDartTarget(target));
-  const pickedRouteKey = normalizedPicked.join("|");
-  let matched: CheckoutRoute | null = null;
-  for (const route of knownRoutes) {
-    const key = route.route.map((target) => normalizeDartTarget(target)).join("|");
-    if (key === pickedRouteKey) {
-      matched = route;
-      break;
-    }
-  }
-
-  let quality = matched ? (matched.label === "Optimal route" ? 100 : 93) : 78;
-  const firstScore = normalizedPicked[0] ? scoreOfTarget(normalizedPicked[0]) : null;
-  const afterFirst = firstScore !== null ? startScore - firstScore : null;
-  const lastTarget = normalizedPicked[normalizedPicked.length - 1] ?? "";
-
-  if (afterFirst === 50) quality += 8;
-  if (typeof afterFirst === "number" && afterFirst > 0 && afterFirst % 2 === 0) quality += 3;
-  if (lastTarget === "Bull") {
-    if (afterFirst === 50) quality += 2;
-    else quality -= 4;
-  }
-  if (AWKWARD_DOUBLES.has(lastTarget)) quality -= 8;
-  if (preferredDouble !== "Not sure" && lastTarget === preferredDouble) quality += 4;
-
-  quality = Math.max(40, Math.min(100, Math.round(quality)));
-
-  let verdict = "Good finish";
-  if (quality === 100) verdict = "Perfect route";
-  else if (quality >= 90) verdict = "Great route";
-  else if (quality < 70) verdict = "Checkout complete, but route quality was low";
-
-  const continuation = optimal ? getSingleHitContinuation(optimal) : undefined;
-  const firstTarget = optimal?.route[0] ? normalizeDartTarget(optimal.route[0]) : null;
-  const explanation =
-    continuation && firstTarget
-      ? `If ${firstTarget} becomes ${normalizeDartTarget(continuation.singleHitTarget)}: ${continuation.remaining} left -> ${
-          continuation.continuationRoute.length > 0
-            ? formatRoute(continuation.continuationRoute)
-            : "No detailed follow-up yet."
-        }`
-      : "No saved single-hit continuation yet.";
-
-  return {
-    quality,
-    verdict,
-    optimalRoute,
-    yourRoute,
-    explanation,
-    matchedRouteLabel: matched ? matched.label : null
-  };
 }
 
 function randomPick<T>(values: T[]): T | null {
@@ -265,7 +172,7 @@ export function QuickCheckoutPracticeScreen({
   const [remaining, setRemaining] = useState(76);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
-  const [evaluation, setEvaluation] = useState<RouteEvaluation | null>(null);
+  const [evaluation, setEvaluation] = useState<CheckoutEvaluationResult | null>(null);
   const [completed, setCompleted] = useState(false);
   const [savedResult, setSavedResult] = useState(false);
   const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
@@ -497,10 +404,13 @@ export function QuickCheckoutPracticeScreen({
 
     const chosenTarget = normalizeDartTarget(rawTarget);
     const nextPicks = [...pickedTargets, chosenTarget];
-    const scored = scoreOfTarget(chosenTarget);
-    if (scored === null) return;
-    const nextRemaining = remaining - scored;
-    const isFinalDart = nextPicks.length >= maxDarts;
+    const evalResult = evaluateCheckoutAttempt({
+      startScore: attemptStartScore,
+      dartsAvailable: maxDarts,
+      throws: nextPicks.map((actual) => ({ actual })),
+      preferredDouble: settings.preferredDouble
+    });
+    const latestStep = evalResult.steps[evalResult.steps.length - 1];
 
     setSelectedTarget(chosenTarget);
     setPickedTargets(nextPicks);
@@ -511,67 +421,45 @@ export function QuickCheckoutPracticeScreen({
       }
     ]);
 
-    if (nextRemaining < 0) {
-      setRemaining(remaining);
+    if (latestStep) {
+      setRemaining(latestStep.remainingAfter);
+    }
+
+    if (evalResult.status === "checked-out") {
+      setCompleted(true);
+      saveAttempt("finished");
+      setEvaluation(evalResult);
+      setFeedback({
+        tone: "complete",
+        title: evalResult.xp === 3 ? "Perfect checkout!" : "Checkout complete!",
+        body: evalResult.explanation
+      });
+      triggerHaptic(settings.vibrationFeedback);
+      return;
+    }
+
+    if (evalResult.status === "bust") {
       setCompleted(true);
       saveAttempt("bust");
-      setEvaluation(evaluateRouteQuality({
-        startScore: attemptStartScore,
-        pickedTargets: nextPicks,
-        success: false,
-        preferredDouble: settings.preferredDouble
-      }));
+      setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
         title: "Bust",
-        body: "Bust. Score went below zero."
+        body: evalResult.explanation
       });
       return;
     }
 
-    if (nextRemaining === 0) {
-      const success = isCheckoutFinishTarget(chosenTarget);
-      setRemaining(0);
-      setCompleted(true);
-      saveAttempt(success ? "finished" : "failed");
-      const evalResult = evaluateRouteQuality({
-        startScore: attemptStartScore,
-        pickedTargets: nextPicks,
-        success,
-        preferredDouble: settings.preferredDouble
-      });
-      setEvaluation(evalResult);
-      setFeedback({
-        tone: success ? "complete" : "wrong",
-        title: success ? "Checkout complete!" : "Wrong finish",
-        body: success ? `${evalResult.verdict}.` : "Checkout must end on a double or Bull."
-      });
-      if (success) triggerHaptic(settings.vibrationFeedback);
-      return;
-    }
-
-    if (nextRemaining === 1 || isFinalDart) {
-      setRemaining(Math.max(nextRemaining, 0));
+    if (evalResult.status === "impossible" || nextPicks.length >= maxDarts) {
       setCompleted(true);
       saveAttempt("failed");
-      const evalResult = evaluateRouteQuality({
-        startScore: attemptStartScore,
-        pickedTargets: nextPicks,
-        success: false,
-        preferredDouble: settings.preferredDouble
-      });
       setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
-        title: "No checkout",
-        body: nextRemaining === 1
-          ? "1 left is not finishable."
-          : "No checkout completed within the dart limit."
+        title: evalResult.status === "impossible" ? "No checkout available" : "No checkout",
+        body: evalResult.explanation
       });
-      return;
     }
-
-    setRemaining(nextRemaining);
   }
 
   const boardRoute = routeVisible || completed
@@ -732,17 +620,29 @@ export function QuickCheckoutPracticeScreen({
                   {evaluation ? (
                     <div className="route-box top-gap">
                       <p className="route-compact-line">
-                        <span className="muted">Route quality:</span> <strong>{evaluation.quality}%</strong>
+                        <span className="muted">Route quality:</span> <strong>{evaluation.routeQuality}%</strong>{" "}
+                        <span className="muted">+{evaluation.xp} XP</span>
                       </p>
                       <p className="route-compact-line">
-                        <span className="muted">Your route:</span> <strong>{evaluation.yourRoute}</strong>
+                        <span className="muted">Your route:</span>{" "}
+                        <strong>{evaluation.userRoute.length > 0 ? formatRoute(evaluation.userRoute) : "None"}</strong>
                       </p>
                       <p className="route-compact-line">
-                        <span className="muted">Optimal route:</span> <strong>{evaluation.optimalRoute}</strong>
+                        <span className="muted">Optimal route:</span>{" "}
+                        <strong>{evaluation.optimalRoute.length > 0 ? formatRoute(evaluation.optimalRoute) : "No valid route yet."}</strong>
                       </p>
                       <p className="route-compact-line">
                         <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {evaluation.explanation}
                       </p>
+                      {evaluation.alternatives.length > 1 ? (
+                        <p className="route-compact-line">
+                          <span className="muted">Good alternatives:</span>{" "}
+                          {evaluation.alternatives
+                            .slice(1, 4)
+                            .map((route) => formatRoute(route))
+                            .join(" · ")}
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                   <div className="row top-gap">
