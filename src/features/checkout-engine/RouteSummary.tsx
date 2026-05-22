@@ -1,5 +1,6 @@
 import { PreferredDouble } from "../../types/models";
 import { formatRoute, getPrimaryCheckoutRoute, getSingleHitContinuation, normalizeDartTarget } from "../../utils/checkoutLibrary";
+import { formatI18n, useI18n } from "../../i18n";
 import { generateValidRoutes, rankRoutes } from "./index";
 
 export function CheckoutRouteSummary({
@@ -12,6 +13,7 @@ export function CheckoutRouteSummary({
   compact?: boolean;
 }) {
   const validRoutes = generateValidRoutes(finish, 3);
+  const { t } = useI18n();
   const rankedRoutes = rankRoutes(finish, validRoutes, preferredDouble);
   const bestRoute = rankedRoutes[0] ?? null;
   const curatedPrimary = getPrimaryCheckoutRoute(finish, preferredDouble);
@@ -30,27 +32,30 @@ export function CheckoutRouteSummary({
   return (
     <div className="route-teach-card">
       <div className="route-teach-head">
-        <strong>Optimal route</strong>
+        <strong>{t.checkoutLibrary.optimalRoute}</strong>
         <span className="muted">{bestRoute.quality}%</span>
       </div>
       <p className="route-compact-line">
-        <span className="muted">Main:</span> <strong>{formatRoute(bestRoute.path)}</strong>
+        <span className="muted">{t.checkoutLibrary.main}:</span> <strong>{formatRoute(bestRoute.path)}</strong>
       </p>
       {continuation && firstTarget ? (
         <p className="route-compact-line">
-          <span className="muted">Why:</span>{" "}
-          If {firstTarget} becomes {normalizeDartTarget(continuation.singleHitTarget)}:{" "}
-          {continuation.remaining} left
-          {continuation.continuationRoute.length > 0 ? ` -> ${formatRoute(continuation.continuationRoute)}` : ""}
+          <span className="muted">{t.checkoutLibrary.why}:</span>{" "}
+          {formatI18n(t.checkoutTimedRun.ifHit, {
+            from: firstTarget,
+            to: normalizeDartTarget(continuation.singleHitTarget)
+          })}{" "}
+          {continuation.remaining} {t.common.left}
+          {continuation.continuationRoute.length > 0 ? ` → ${formatRoute(continuation.continuationRoute)}` : ""}
         </p>
       ) : (
         <p className="route-compact-line">
-          <span className="muted">Why:</span> Best ranked route from valid double-out finishes.
+          <span className="muted">{t.checkoutLibrary.why}:</span> {t.checkoutLibrary.bestRankedRoute}
         </p>
       )}
       {alternatives.length > 0 ? (
         <div className="route-compact-line">
-          <span className="muted">Good alternatives:</span>
+          <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>
           <div className="route-alternative-list">
             {alternatives.map((route) => (
               <p key={formatRoute(route.path)} className="route-compact-line">
@@ -63,7 +68,7 @@ export function CheckoutRouteSummary({
       ) : null}
       {!compact ? (
         <p className="route-compact-line">
-          <span className="muted">Valid routes:</span> {validRoutes.length}
+          <span className="muted">{t.checkoutLibrary.validRoutes}:</span> {validRoutes.length}
         </p>
       ) : null}
     </div>

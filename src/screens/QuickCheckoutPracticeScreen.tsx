@@ -507,7 +507,7 @@ export function QuickCheckoutPracticeScreen({
         <Card className="practice-card quick-practice-card">
           <div className="practice-header">
             <Pill tone="neutral">{activeRange.label}</Pill>
-            <Pill tone="neutral">Preferred double: {settings.preferredDouble}</Pill>
+            <Pill tone="neutral">{t.settings.preferredDouble}: {settings.preferredDouble}</Pill>
           </div>
 
           <p className="big-number">{t.quickCheckout.finish}: {finish}</p>

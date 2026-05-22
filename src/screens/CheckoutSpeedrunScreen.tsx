@@ -14,15 +14,12 @@ import {
   sanitizeCheckoutCustomRange
 } from "../utils/constants";
 import {
-  formatRoute,
-  getPrimaryCheckoutRoute,
-  getSingleHitContinuation,
-  isValidDartTarget,
-  normalizeDartTarget
+  getPrimaryCheckoutRoute
 } from "../utils/checkoutLibrary";
+import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, toRoundedSeconds } from "../utils/time";
-import { formatI18n, useI18n } from "../i18n";
+import { useI18n } from "../i18n";
 
 interface RunningState {
   list: number[];
@@ -99,15 +96,6 @@ export function CheckoutSpeedrunScreen({
 
   const currentCheckout = running ? running.list[running.index] : null;
   const primaryRoute = currentCheckout ? getPrimaryCheckoutRoute(currentCheckout, settings.preferredDouble) : null;
-  const singleHitContinuation = primaryRoute ? getSingleHitContinuation(primaryRoute) : undefined;
-  const firstTarget = primaryRoute?.route[0] ? normalizeDartTarget(primaryRoute.route[0]) : null;
-  const showTwoDartContinuation = Boolean(
-    singleHitContinuation &&
-      isValidDartTarget(singleHitContinuation.singleHitTarget) &&
-      singleHitContinuation.continuationRoute.length > 0 &&
-      singleHitContinuation.continuationRoute.length <= 2 &&
-      singleHitContinuation.continuationRoute.every((target) => isValidDartTarget(target))
-  );
 
   const activeTotalSeconds = running
     ? toRoundedSeconds((ticker - running.startedAt - running.pauseMs - (running.pauseStartedAt ? ticker - running.pauseStartedAt : 0)))
@@ -322,37 +310,20 @@ export function CheckoutSpeedrunScreen({
             </div>
           </div>
 
-          {showRoute && primaryRoute ? (
+          {showRoute && currentCheckout ? (
             <div className="route-box">
               <h4>{t.checkoutTimedRun.route}</h4>
-              <p className="route-compact-line">
-                <span className="muted">Optimal:</span> <strong>{formatRoute(primaryRoute.route)}</strong>
-              </p>
-              {singleHitContinuation ? (
-                <p className="route-compact-line">
-                  <span className="muted">{t.checkoutTimedRun.singleHit}:</span>{" "}
-                  <strong>
-                    {formatI18n(t.checkoutTimedRun.ifHit, {
-                      from: firstTarget ?? "first dart",
-                      to: singleHitContinuation.singleHitTarget
-                    })}{" "}
-                    {singleHitContinuation.remaining} {t.common.left}{" "}
-                    {showTwoDartContinuation
-                      ? `\u2192 ${formatRoute(singleHitContinuation.continuationRoute)}`
-                      : `\u2192 ${t.checkoutTimedRun.noDirectTwoDart}`}
-                  </strong>
-                </p>
-              ) : null}
-              {primaryRoute.note ? <p className="muted">{primaryRoute.note}</p> : null}
+              <CheckoutRouteSummary finish={currentCheckout} preferredDouble={settings.preferredDouble} compact />
+              {primaryRoute?.note ? <p className="muted">{primaryRoute.note}</p> : null}
             </div>
           ) : null}
 
           <div className="action-grid">
             <Button variant="success" onClick={finishEntry}>
-              READY
+              {t.common.ready.toUpperCase()}
             </Button>
             <Button variant="secondary" onClick={togglePause}>
-              {running.pauseStartedAt ? "RESUME" : t.common.pause.toUpperCase()}
+              {running.pauseStartedAt ? t.common.resume.toUpperCase() : t.common.pause.toUpperCase()}
             </Button>
             <Button variant="danger" onClick={endRun}>
               {t.checkoutTimedRun.endRun.toUpperCase()}

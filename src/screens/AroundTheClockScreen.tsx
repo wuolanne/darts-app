@@ -410,19 +410,19 @@ export function AroundTheClockScreen({
               />
               <p className="muted top-gap">
                 {fullSectorOrder === "start_with_bull"
-                  ? "Full Sector: Bull/25, then S/T/D for sectors 1-20"
-                  : "Full Sector: S/T/D for sectors 1-20, then 25/Bull"}
+                  ? t.aroundClock.fullSectorStartSummary
+                  : t.aroundClock.fullSectorEndSummary}
               </p>
             </div>
           ) : null}
           {mode === "full_sector" ? (
             <div className="top-gap">
-              <label>Double requirement for each numbered sector</label>
+              <label>{t.aroundClock.doubleRequirement}</label>
               <Segmented
                 value={doubleRequirement}
                 options={[
-                  { label: "1 double hit", value: 1 },
-                  { label: "2 double hits", value: 2 }
+                  { label: t.aroundClock.oneDoubleHit, value: 1 },
+                  { label: t.aroundClock.twoDoubleHits, value: 2 }
                 ]}
                 onChange={setDoubleRequirement}
               />
@@ -448,8 +448,8 @@ export function AroundTheClockScreen({
           {running.mode === "full_sector" ? (
             <p className="muted">
               {running.fullSectorOrder === "end_with_bull"
-                ? "Full Sector: S/T/D for sectors 1-20, then 25/Bull"
-                : "Full Sector: Bull/25, then S/T/D for sectors 1-20"}
+                ? t.aroundClock.fullSectorEndSummary
+                : t.aroundClock.fullSectorStartSummary}
             </p>
           ) : null}
           <div className="metric-grid">
@@ -467,7 +467,7 @@ export function AroundTheClockScreen({
               {running.mode === "full_sector" ? t.aroundClock.sectorDone.toUpperCase() : t.aroundClock.targetDone.toUpperCase()}
             </Button>
             <Button variant="secondary" onClick={togglePause}>
-              {running.pauseStartedAt ? "RESUME" : t.common.pause.toUpperCase()}
+              {running.pauseStartedAt ? t.common.resume.toUpperCase() : t.common.pause.toUpperCase()}
             </Button>
             <Button variant="secondary" onClick={undo}>
               {t.common.undo.toUpperCase()}
