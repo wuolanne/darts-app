@@ -26,7 +26,20 @@ export const fi: TranslationDict = {
     aroundDescription: "Ajoitetut sektorit ja kohteet minimaalisilla painalluksilla.",
     libraryDescription: "Checkout-reitit ja vaihtoehtoiset jatkot.",
     statsDescription: "7 pv / 30 pv / kaikki harjoitustilastot.",
-    settingsDescription: "Suosikkitupla, ajastin, teema, heittotahti."
+    settingsDescription: "Suosikkitupla, ajastin, teema, heittotahti.",
+    summary: "Harjoittelun yhteenveto",
+    lastAvg: "Viimeisin ka.",
+    bestCheckout: "Paras checkout",
+    bestFinish: "Paras lopetus",
+    practiceTime: "Harjoitusaika",
+    totalReps: "Toistot",
+    todayReps: "TÃ¤nÃ¤Ã¤n",
+    practiceModes: "Harjoitustilat",
+    latest: "Viimeisin",
+    bestTime: "Paras aika",
+    view: "NÃ¤ytÃ¤",
+    open: "Avaa",
+    table: "Taulukko"
   },
   quickCheckout: {
     title: "Nopea checkout-harjoitus",

@@ -43,7 +43,14 @@ function AppBody({
   setAroundSessions: (sessions: AroundClockSession[]) => void;
 }) {
   if (screen === "home") {
-    return <HomeScreen onNavigate={setScreen} />;
+    return (
+      <HomeScreen
+        onNavigate={setScreen}
+        checkoutAttempts={checkoutAttempts}
+        speedruns={speedruns}
+        aroundSessions={aroundSessions}
+      />
+    );
   }
   if (screen === "settings") {
     return (
