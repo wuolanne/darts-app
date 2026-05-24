@@ -8,9 +8,9 @@
   "theme_color": "#10141b",
   "icons": [
     {
-      "src": "/icons/dartsflow-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
