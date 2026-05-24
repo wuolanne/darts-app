@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
 import {
   CheckoutSpeedrunSession,
@@ -95,6 +95,7 @@ export function CheckoutSpeedrunScreen({
     : selectedPreset;
 
   const currentCheckout = running ? running.list[running.index] : null;
+  const deferredCheckoutForRoute = useDeferredValue(currentCheckout);
   const primaryRoute = currentCheckout ? getPrimaryCheckoutRoute(currentCheckout, settings.preferredDouble) : null;
 
   const activeTotalSeconds = running
@@ -312,10 +313,10 @@ export function CheckoutSpeedrunScreen({
             </div>
           </div>
 
-          {showRoute && currentCheckout ? (
+          {showRoute && deferredCheckoutForRoute ? (
             <div className="route-box">
               <h4>{t.checkoutTimedRun.route}</h4>
-              <CheckoutRouteSummary finish={currentCheckout} preferredDouble={settings.preferredDouble} compact />
+              <CheckoutRouteSummary finish={deferredCheckoutForRoute} preferredDouble={settings.preferredDouble} compact />
               {primaryRoute?.note ? <p className="muted">{primaryRoute.note}</p> : null}
             </div>
           ) : null}
