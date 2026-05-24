@@ -155,8 +155,8 @@ export function InteractiveDartboard({
           </filter>
         </defs>
 
-        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" />
-        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-shell)" />
+        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" style={{ pointerEvents: "none" }} />
+        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-shell)" style={{ pointerEvents: "none" }} />
 
         {BOARD_ORDER.map((sector, index) => {
           const a1 = index * 18 - 9;
@@ -240,16 +240,30 @@ export function InteractiveDartboard({
         />
 
         {routeTargets.some((item) => item.kind === "outer-bull") ? (
-          <circle cx={CX} cy={CY} r={R_BULL} className="dart-route-highlight" />
+          <circle cx={CX} cy={CY} r={R_BULL} className="dart-route-highlight" style={{ pointerEvents: "none" }} />
         ) : null}
         {routeTargets.some((item) => item.kind === "bull") ? (
-          <circle cx={CX} cy={CY} r={R_EYE} className="dart-route-highlight" />
+          <circle cx={CX} cy={CY} r={R_EYE} className="dart-route-highlight" style={{ pointerEvents: "none" }} />
         ) : null}
         {selected?.kind === "outer-bull" ? (
-          <circle key={`selected-outer-bull-${pulseKey}`} cx={CX} cy={CY} r={R_BULL} className="dart-selected-highlight" />
+          <circle
+            key={`selected-outer-bull-${pulseKey}`}
+            cx={CX}
+            cy={CY}
+            r={R_BULL}
+            className="dart-selected-highlight"
+            style={{ pointerEvents: "none" }}
+          />
         ) : null}
         {selected?.kind === "bull" ? (
-          <circle key={`selected-bull-${pulseKey}`} cx={CX} cy={CY} r={R_EYE} className="dart-selected-highlight" />
+          <circle
+            key={`selected-bull-${pulseKey}`}
+            cx={CX}
+            cy={CY}
+            r={R_EYE}
+            className="dart-selected-highlight"
+            style={{ pointerEvents: "none" }}
+          />
         ) : null}
 
         {BOARD_ORDER.map((sector, index) => {
@@ -268,9 +282,22 @@ export function InteractiveDartboard({
           );
         })}
 
-        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-depth)" />
-        <circle cx={CX} cy={CY} r={R_BOARD - 1} className="dartboard-rim" filter="url(#dartboard-rim-glow)" />
-        <circle cx={CX} cy={CY} r={R_BOARD + 2} className="dartboard-rim-secondary" />
+        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-depth)" style={{ pointerEvents: "none" }} />
+        <circle
+          cx={CX}
+          cy={CY}
+          r={R_BOARD - 1}
+          className="dartboard-rim"
+          filter="url(#dartboard-rim-glow)"
+          style={{ pointerEvents: "none" }}
+        />
+        <circle
+          cx={CX}
+          cy={CY}
+          r={R_BOARD + 2}
+          className="dartboard-rim-secondary"
+          style={{ pointerEvents: "none" }}
+        />
       </svg>
     </div>
   );
