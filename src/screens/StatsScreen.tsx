@@ -1,5 +1,5 @@
 import React from "react";
-import { AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, StatsRange } from "../types/models";
+import { AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, StatsRange, UserSettings } from "../types/models";
 import { Card, ScreenTitle, Segmented } from "../components/ui";
 import { getAroundClockStats, getCheckoutStats, getSpeedrunStats } from "../utils/stats";
 import { formatClock, formatSeconds } from "../utils/time";
@@ -59,12 +59,14 @@ export function StatsScreen({
   onBack,
   checkoutAttempts,
   speedruns,
-  aroundSessions
+  aroundSessions,
+  settings
 }: {
   onBack: () => void;
   checkoutAttempts: CheckoutAttempt[];
   speedruns: CheckoutSpeedrunSession[];
   aroundSessions: AroundClockSession[];
+  settings: UserSettings;
 }) {
   const { t } = useI18n();
   const [range, setRange] = React.useState<StatsRange>("7d");
@@ -77,6 +79,7 @@ export function StatsScreen({
   const checkout = getCheckoutStats(checkoutAttempts, range);
   const speedrun = getSpeedrunStats(speedruns, range);
   const around = getAroundClockStats(aroundSessions, range);
+  const hasThrowPace = typeof settings.throwPace.secondsPerThree === "number" && settings.throwPace.secondsPerThree > 0;
   const bestLatestAvg = (best: string, latest: string, avg: string) =>
     formatI18n(t.stats.bestLatestAvg, { best, latest, avg });
   const formatDurationOrDash = (seconds: number | null | undefined) =>
@@ -202,9 +205,9 @@ export function StatsScreen({
                   key={row.mode}
                   left={row.mode}
                   middle={`${t.stats.sessions} ${row.sessions}`}
-                  right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(
-                    row.latest
-                  )}`}
+                  right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(row.latest)} · ${t.stats.estimatedHitRate} ${
+                    row.estimatedHitRate === null ? "-" : `${row.estimatedHitRate.toFixed(1)} %`
+                  }`}
                 />
               ))}
             </details>
@@ -216,11 +219,17 @@ export function StatsScreen({
                 <CompactRow
                   key={row.key}
                   left={row.key}
-                  middle={`${t.stats.attempts} ${row.attempts}`}
-                  right={`${t.stats.averageLabel} ${formatSeconds(row.average)}`}
+                  middle={`${t.stats.estimatedDarts} ${
+                    row.estimatedDarts === null ? "-" : Math.round(row.estimatedDarts)
+                  }`}
+                  right={`${t.stats.estimatedHitRate} ${
+                    row.estimatedHitRate === null ? "-" : `${row.estimatedHitRate.toFixed(1)} %`
+                  }`}
                 />
               ))}
             </details>
+            {hasThrowPace ? <p className="muted">{t.stats.estimateBasedOnThrowRhythm}</p> : null}
+            {!hasThrowPace ? <p className="muted">{t.stats.throwRhythmCta}</p> : null}
 
             <details className="stats-subsection">
               <summary>{t.stats.bestPerformances}</summary>

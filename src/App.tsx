@@ -113,6 +113,7 @@ function AppBody({
       checkoutAttempts={checkoutAttempts}
       speedruns={speedruns}
       aroundSessions={aroundSessions}
+      settings={settings}
     />
   );
 }

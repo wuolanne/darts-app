@@ -68,6 +68,7 @@ type AroundModeRow = {
   best: number;
   latest: number;
   average: number;
+  estimatedHitRate: number | null;
 };
 
 type AroundTargetRow = {
@@ -89,6 +90,8 @@ type AroundHardestSectorRow = {
   attempts: number;
   average: number;
   total: number;
+  estimatedDarts: number | null;
+  estimatedHitRate: number | null;
 };
 
 type AroundBestTimeByModeRow = {
@@ -153,6 +156,49 @@ function normalizeHardestSectorKey(target: string): string {
   const sector = target.match(/\d+/)?.[0];
   if (sector) return String(Number(sector));
   return target;
+}
+
+const MIN_REASONABLE_SECONDS_PER_THREE = 4;
+const MAX_REASONABLE_SECONDS_PER_THREE = 30;
+
+function isReasonableSecondsPerThree(value: number | null | undefined): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= MIN_REASONABLE_SECONDS_PER_THREE &&
+    value <= MAX_REASONABLE_SECONDS_PER_THREE
+  );
+}
+
+function estimatedDartsFromSeconds(seconds: number, secondsPerThree: number | null): number | null {
+  if (!isReasonableSecondsPerThree(secondsPerThree) || seconds <= 0) return null;
+  return (seconds * 3) / secondsPerThree;
+}
+
+function requiredHitsForAroundTarget(mode: AroundClockMode, target: string): number | null {
+  if (mode !== "full_sector") return 1;
+  const normalized = target.trim().toLowerCase();
+  if (
+    normalized === "bull/25" ||
+    normalized === "25/bull" ||
+    normalized === "bull" ||
+    normalized === "25"
+  ) {
+    return 1;
+  }
+  const parts = target.split("+").map((part) => part.trim());
+  const validPartCount = parts.filter((part) => /^(S|T|D)\d{1,2}$/.test(part)).length;
+  return validPartCount > 0 ? validPartCount : null;
+}
+
+function requiredHitsForAroundSession(session: AroundClockSession): number | null {
+  let required = 0;
+  for (const entry of session.entries) {
+    const hits = requiredHitsForAroundTarget(session.mode, entry.target);
+    if (!hits) return null;
+    required += hits;
+  }
+  return required > 0 ? required : null;
 }
 
 function rangeOrder(label: string): number {
@@ -388,12 +434,27 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
     .map(([label, items]) => {
       const totals = items.map((item) => item.totalActiveSeconds);
       const latest = [...items].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+      const validModeEstimateRows = items
+        .map((item) => {
+          const requiredHits = requiredHitsForAroundSession(item);
+          const estimatedDarts = estimatedDartsFromSeconds(item.totalActiveSeconds, item.throwPaceSecondsPerThree);
+          if (!requiredHits || !estimatedDarts || estimatedDarts <= 0) return null;
+          return { requiredHits, estimatedDarts };
+        })
+        .filter((row): row is { requiredHits: number; estimatedDarts: number } => row !== null);
+      const estimatedHitRate =
+        validModeEstimateRows.length > 0
+          ? (validModeEstimateRows.reduce((sum, row) => sum + row.requiredHits, 0) /
+              validModeEstimateRows.reduce((sum, row) => sum + row.estimatedDarts, 0)) *
+            100
+          : null;
       return {
         mode: label,
         sessions: items.length,
         best: Math.min(...totals),
         latest: latest.totalActiveSeconds,
-        average: totals.reduce((sum, value) => sum + value, 0) / totals.length
+        average: totals.reduce((sum, value) => sum + value, 0) / totals.length,
+        estimatedHitRate
       };
     })
     .sort((a, b) => a.mode.localeCompare(b.mode));
@@ -441,20 +502,42 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
 
   const fastest = byTarget.length > 0 ? [...byTarget].sort((a, b) => a.best - b.best)[0] : null;
   const slowest = byTarget.length > 0 ? [...byTarget].sort((a, b) => b.average - a.average)[0] : null;
-  const hardestSectorsMap = new Map<string, { attempts: number; total: number }>();
-  for (const row of byTarget) {
-    const key = normalizeHardestSectorKey(row.key);
-    const current = hardestSectorsMap.get(key) ?? { attempts: 0, total: 0 };
-    current.attempts += row.attempts;
-    current.total += row.average * row.attempts;
-    hardestSectorsMap.set(key, current);
+  const hardestSectorsMap = new Map<
+    string,
+    { attempts: number; total: number; requiredHits: number; estimatedDarts: number }
+  >();
+  for (const session of filtered) {
+    for (const entry of session.entries) {
+      if (entry.seconds <= 0) continue;
+      const key = normalizeHardestSectorKey(normalizeAroundTarget(session.mode, entry.target));
+      const current = hardestSectorsMap.get(key) ?? {
+        attempts: 0,
+        total: 0,
+        requiredHits: 0,
+        estimatedDarts: 0
+      };
+      current.attempts += 1;
+      current.total += entry.seconds;
+      const requiredHits = requiredHitsForAroundTarget(session.mode, entry.target);
+      const estimatedDarts = estimatedDartsFromSeconds(entry.seconds, session.throwPaceSecondsPerThree);
+      if (requiredHits) {
+        current.requiredHits += requiredHits;
+      }
+      if (estimatedDarts && estimatedDarts > 0) {
+        current.estimatedDarts += estimatedDarts;
+      }
+      hardestSectorsMap.set(key, current);
+    }
   }
   const hardestSectors: AroundHardestSectorRow[] = Array.from(hardestSectorsMap.entries())
     .map(([key, item]) => ({
       key,
       attempts: item.attempts,
       total: item.total,
-      average: item.attempts > 0 ? item.total / item.attempts : 0
+      average: item.attempts > 0 ? item.total / item.attempts : 0,
+      estimatedDarts: item.estimatedDarts > 0 ? item.estimatedDarts : null,
+      estimatedHitRate:
+        item.requiredHits > 0 && item.estimatedDarts > 0 ? (item.requiredHits / item.estimatedDarts) * 100 : null
     }))
     .filter((item) => item.attempts > 0 && item.average > 0)
     .sort((a, b) => b.average - a.average || b.attempts - a.attempts || a.key.localeCompare(b.key, undefined, { numeric: true }))
