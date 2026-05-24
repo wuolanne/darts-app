@@ -11,15 +11,11 @@ import {
 } from "../utils/constants";
 import {
   DartTarget,
-  formatRoute,
   getPrimaryCheckoutRoute,
   getSingleHitContinuation,
   normalizeDartTarget
 } from "../utils/checkoutLibrary";
-import {
-  CheckoutEvaluationResult,
-  evaluateCheckoutAttempt
-} from "../features/checkout-engine";
+import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
 import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
@@ -130,7 +126,6 @@ export function QuickCheckoutPracticeScreen({
   const [remaining, setRemaining] = useState(76);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
-  const [evaluation, setEvaluation] = useState<CheckoutEvaluationResult | null>(null);
   const [completed, setCompleted] = useState(false);
   const [savedResult, setSavedResult] = useState(false);
   const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
@@ -260,7 +255,6 @@ export function QuickCheckoutPracticeScreen({
     setSavedResult(false);
     setPickedTargets([]);
     setPickHistory([]);
-    setEvaluation(null);
   }
 
   function loadCheckout(nextFinish: number) {
@@ -397,7 +391,6 @@ export function QuickCheckoutPracticeScreen({
     if (evalResult.status === "checked-out") {
       setCompleted(true);
       saveAttempt("finished");
-      setEvaluation(evalResult);
       setFeedback({
         tone: "complete",
         title: evalResult.xp === 3 ? t.quickCheckout.perfectCheckout : t.quickCheckout.checkoutComplete,
@@ -410,7 +403,6 @@ export function QuickCheckoutPracticeScreen({
     if (evalResult.status === "bust") {
       setCompleted(true);
       saveAttempt("bust");
-      setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
         title: t.quickCheckout.bust,
@@ -422,7 +414,6 @@ export function QuickCheckoutPracticeScreen({
     if (evalResult.status === "impossible" || nextPicks.length >= maxDarts) {
       setCompleted(true);
       saveAttempt("failed");
-      setEvaluation(evalResult);
       setFeedback({
         tone: "wrong",
         title: evalResult.status === "impossible" ? t.quickCheckout.noCheckoutAvailable : t.quickCheckout.noCheckout,
@@ -579,25 +570,9 @@ export function QuickCheckoutPracticeScreen({
                   <p>
                     <span className="muted">{t.quickCheckout.yourPicks}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : t.quickCheckout.none}
                   </p>
-                  {evaluation ? (
-                    <div className="route-box top-gap">
-                      <p className="route-compact-line">
-                        <span className="muted">{t.quickCheckout.routeQuality}:</span> <strong>{evaluation.routeQuality}%</strong>
-                      </p>
-                      <p className="route-compact-line">
-                        <span className="muted">{t.quickCheckout.yourRoute}:</span>{" "}
-                        <strong>{evaluation.userRoute.length > 0 ? formatRoute(evaluation.userRoute) : t.quickCheckout.none}</strong>
-                      </p>
-                      <p className="route-compact-line">
-                        <span className="muted">{t.checkoutLibrary.optimalRoute}:</span>{" "}
-                        <strong>{evaluation.optimalRoute.length > 0 ? formatRoute(evaluation.optimalRoute) : t.quickCheckout.noValidRouteYet}</strong>
-                      </p>
-                      <p className="route-compact-line">
-                        <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {getEvaluationExplanation(evaluation)}
-                      </p>
-                      <CheckoutRouteSummary finish={attemptStartScore} preferredDouble={settings.preferredDouble} compact />
-                    </div>
-                  ) : null}
+                  <div className="route-box top-gap">
+                    <CheckoutRouteSummary finish={attemptStartScore} preferredDouble={settings.preferredDouble} compact />
+                  </div>
                   <div className="row top-gap">
                     <Button onClick={nextCheckout}>{t.quickCheckout.nextCheckout.toUpperCase()}</Button>
                   </div>
