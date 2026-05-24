@@ -1,17 +1,33 @@
+import type { PointerEvent } from "react";
+
 const BOARD_ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 
 const CX = 170;
 const CY = 170;
 const R_BOARD = 164;
 const R_NUM = 148;
-const R_DBL_OUT = 147;
-const R_DBL_IN = 131;
-const R_TPL_OUT = 89;
-const R_TPL_IN = 79;
-const R_BULL = 20;
-const R_EYE = 9;
+const R_DBL_OUT = 150;
+const R_DBL_IN = 127;
+const R_TPL_OUT = 94;
+const R_TPL_IN = 75;
+const R_BULL = 24;
+const R_EYE = 11;
+const VIEWBOX_MIN = 8;
+const VIEWBOX_SIZE = 324;
+const DOUBLE_TOUCH_IN = 121;
+const DOUBLE_TOUCH_OUT = 158;
+const TREBLE_TOUCH_IN = 68;
+const TREBLE_TOUCH_OUT = 101;
+const OUTER_BULL_TOUCH = 31;
+const BULL_TOUCH = 15;
 
 type FeedbackTone = "idle" | "correct" | "wrong";
+type TargetKind = "single" | "double" | "treble" | "outer-bull" | "bull";
+
+interface ParsedTarget {
+  number: number | null;
+  kind: TargetKind;
+}
 
 function toRad(deg: number) {
   return ((deg - 90) * Math.PI) / 180;
@@ -43,8 +59,21 @@ function tokenFor(sector: number, kind: "single" | "double" | "treble"): string 
   return `T${sector}`;
 }
 
+function parseTarget(token: string | null | undefined): ParsedTarget | null {
+  if (!token) return null;
+  if (token === "Bull" || token === "DBull") return { number: null, kind: "bull" };
+  if (token === "25" || token === "SBull") return { number: null, kind: "outer-bull" };
+  const match = token.match(/^([SDT])(\d{1,2})$/);
+  if (!match) return null;
+  const [, prefix, number] = match;
+  if (prefix === "D") return { number: Number(number), kind: "double" };
+  if (prefix === "T") return { number: Number(number), kind: "treble" };
+  return { number: Number(number), kind: "single" };
+}
+
 export function InteractiveDartboard({
   onTargetSelect,
+  selectedTarget,
   disabled = false,
   feedbackTone = "idle"
 }: {
@@ -55,8 +84,34 @@ export function InteractiveDartboard({
   disabled?: boolean;
   feedbackTone?: FeedbackTone;
 }) {
-  const handleTargetPress = (target: string) => {
-    if (onTargetSelect && !disabled) {
+  const selected = parseTarget(selectedTarget);
+
+  const targetFromPoint = (clientX: number, clientY: number, rect: DOMRect): string | null => {
+    const x = VIEWBOX_MIN + ((clientX - rect.left) / rect.width) * VIEWBOX_SIZE;
+    const y = VIEWBOX_MIN + ((clientY - rect.top) / rect.height) * VIEWBOX_SIZE;
+    const dx = x - CX;
+    const dy = y - CY;
+    const radius = Math.hypot(dx, dy);
+
+    if (radius <= BULL_TOUCH) return "Bull";
+    if (radius <= OUTER_BULL_TOUCH) return "25";
+    if (radius > DOUBLE_TOUCH_OUT) return null;
+
+    const degrees = (Math.atan2(dy, dx) * 180) / Math.PI;
+    const boardAngle = (degrees + 90 + 360) % 360;
+    const sectorIndex = Math.floor((boardAngle + 9) / 18) % BOARD_ORDER.length;
+    const sector = BOARD_ORDER[sectorIndex];
+
+    if (radius >= DOUBLE_TOUCH_IN) return tokenFor(sector, "double");
+    if (radius >= TREBLE_TOUCH_IN && radius <= TREBLE_TOUCH_OUT) return tokenFor(sector, "treble");
+    return tokenFor(sector, "single");
+  };
+
+  const handleBoardPointerDown = (event: PointerEvent<SVGSVGElement>) => {
+    if (!onTargetSelect || disabled) return;
+    event.preventDefault();
+    const target = targetFromPoint(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
+    if (target) {
       onTargetSelect(target);
     }
   };
@@ -65,7 +120,12 @@ export function InteractiveDartboard({
     <div
       className={`interactive-dartboard-shell${feedbackTone === "correct" ? " is-correct" : ""}${feedbackTone === "wrong" ? " is-wrong" : ""}`}
     >
-      <svg viewBox="8 8 324 324" className="interactive-dartboard-svg" aria-label="Interactive checkout dartboard">
+      <svg
+        viewBox={`${VIEWBOX_MIN} ${VIEWBOX_MIN} ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+        className="interactive-dartboard-svg"
+        aria-label="Interactive checkout dartboard"
+        onPointerDown={handleBoardPointerDown}
+      >
         <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" />
         <circle cx={CX} cy={CY} r={R_BOARD} fill="#0a0f18" />
 
@@ -94,10 +154,21 @@ export function InteractiveDartboard({
                   strokeWidth="0.85"
                   strokeLinejoin="round"
                   className={segmentClasses}
-                  onPointerDown={() => handleTargetPress(zone.token)}
                 />
               ))}
 
+              {selected?.number === sector && selected.kind === "double" ? (
+                <path d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-selected-outline" />
+              ) : null}
+              {selected?.number === sector && selected.kind === "treble" ? (
+                <path d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-selected-outline" />
+              ) : null}
+              {selected?.number === sector && selected.kind === "single" ? (
+                <>
+                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-selected-outline is-soft" />
+                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-selected-outline is-soft" />
+                </>
+              ) : null}
             </g>
           );
         })}
@@ -110,7 +181,6 @@ export function InteractiveDartboard({
           stroke="#070910"
           strokeWidth="1"
           className={onTargetSelect && !disabled ? "dart-zone is-clickable" : "dart-zone"}
-          onPointerDown={() => handleTargetPress("25")}
         />
         <circle
           cx={CX}
@@ -120,8 +190,13 @@ export function InteractiveDartboard({
           stroke="#070910"
           strokeWidth="1"
           className={onTargetSelect && !disabled ? "dart-zone is-clickable" : "dart-zone"}
-          onPointerDown={() => handleTargetPress("Bull")}
         />
+        {selected?.kind === "outer-bull" ? (
+          <circle cx={CX} cy={CY} r={R_BULL} className="dart-selected-outline" />
+        ) : null}
+        {selected?.kind === "bull" ? (
+          <circle cx={CX} cy={CY} r={R_EYE} className="dart-selected-outline" />
+        ) : null}
 
         {BOARD_ORDER.map((sector, index) => {
           const [x, y] = polarXY(R_NUM, index * 18);

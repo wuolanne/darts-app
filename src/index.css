@@ -1114,6 +1114,8 @@ body {
     0 18px 42px rgba(0, 0, 0, 0.4);
   overflow: visible;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1131,9 +1133,14 @@ body {
   aspect-ratio: 1 / 1;
   display: block;
   overflow: visible;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .dart-zone {
+  pointer-events: none;
   transition: transform 120ms ease, opacity 120ms ease, filter 160ms ease;
   transform-origin: center;
 }
@@ -1167,6 +1174,18 @@ body {
 
 .dart-selected-highlight.is-soft {
   fill: none;
+}
+
+.dart-selected-outline {
+  fill: none;
+  stroke: rgba(87, 255, 172, 0.95);
+  stroke-width: 2.3;
+  pointer-events: none;
+}
+
+.dart-selected-outline.is-soft {
+  stroke-width: 1.8;
+  opacity: 0.86;
 }
 
 .dartboard-number {
