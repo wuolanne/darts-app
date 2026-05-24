@@ -27,11 +27,9 @@ function dateLabel(value: string): string {
   return new Date(value).toLocaleDateString("en-GB");
 }
 
-type AroundSectionKey = "overall" | "byMode" | "byTarget" | "history";
+type AroundSectionKey = "byTarget" | "history";
 
 const closedAroundSections: Record<AroundSectionKey, boolean> = {
-  overall: false,
-  byMode: false,
   byTarget: false,
   history: false
 };
@@ -70,6 +68,7 @@ export function StatsScreen({
 }) {
   const { t } = useI18n();
   const [range, setRange] = React.useState<StatsRange>("7d");
+  const [aroundDetailsOpen, setAroundDetailsOpen] = React.useState(false);
   const [openAroundSections, setOpenAroundSections] =
     React.useState<Record<AroundSectionKey, boolean>>(closedAroundSections);
   const [showAllTargetsOpen, setShowAllTargetsOpen] = React.useState(false);
@@ -82,41 +81,18 @@ export function StatsScreen({
     formatI18n(t.stats.bestLatestAvg, { best, latest, avg });
   const formatDurationOrDash = (seconds: number | null | undefined) =>
     typeof seconds === "number" && seconds > 0 ? formatClock(seconds) : "-";
+
   const filteredAroundSessions = React.useMemo(() => {
     if (range === "total") return [...aroundSessions];
     const days = range === "7d" ? 7 : 30;
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     return aroundSessions.filter((session) => new Date(session.timestamp).getTime() >= cutoff);
   }, [aroundSessions, range]);
+
   const sortedAroundSessions = React.useMemo(
     () => [...filteredAroundSessions].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
     [filteredAroundSessions]
   );
-  const aroundExpanded =
-    Object.values(openAroundSections).some(Boolean) || showAllTargetsOpen || Object.values(openTargetModes).some(Boolean);
-
-  const toggleAroundExpanded = () => {
-    if (aroundExpanded) {
-      setOpenAroundSections(closedAroundSections);
-      setShowAllTargetsOpen(false);
-      setOpenTargetModes({});
-      return;
-    }
-
-    setOpenAroundSections({
-      overall: true,
-      byMode: true,
-      byTarget: true,
-      history: true
-    });
-    setShowAllTargetsOpen(true);
-    setOpenTargetModes(
-      around.byTargetGrouped.reduce<Record<string, boolean>>((modes, group) => {
-        modes[group.mode] = true;
-        return modes;
-      }, {})
-    );
-  };
 
   const setAroundSection = (section: AroundSectionKey, isOpen: boolean) => {
     setOpenAroundSections((previous) => ({
@@ -126,6 +102,7 @@ export function StatsScreen({
   };
 
   React.useEffect(() => {
+    setAroundDetailsOpen(false);
     setOpenAroundSections(closedAroundSections);
     setShowAllTargetsOpen(false);
     setOpenTargetModes({});
@@ -215,127 +192,151 @@ export function StatsScreen({
 
       <Card>
         <h3>{t.stats.aroundTheClock}</h3>
-        {around.sessions > 0 ? (
-          <div className="stats-toolbar">
-            <button type="button" className="link-btn" onClick={toggleAroundExpanded}>
-              {aroundExpanded ? t.stats.closeAllAroundStats : t.stats.openAllAroundStats}
-            </button>
-          </div>
-        ) : null}
         {around.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
         {around.sessions > 0 ? (
           <>
-            <details
-              className="stats-subsection"
-              open={openAroundSections.overall}
-              onToggle={(event) => setAroundSection("overall", event.currentTarget.open)}
-            >
-              <summary>{t.stats.overall}</summary>
-              <CompactRow left={t.stats.sessions} right={around.sessions} />
-              <CompactRow
-                left={t.stats.bestTotalTime}
-                right={around.bestTotalTime !== null ? formatClock(around.bestTotalTime) : t.common.noDataYet}
-              />
-              <CompactRow
-                left={t.stats.latestTotalTime}
-                right={around.latestTotalTime !== null ? formatClock(around.latestTotalTime) : t.common.noDataYet}
-              />
-              <CompactRow
-                left={t.stats.avgTotalTime}
-                right={around.averageTotalTime !== null ? formatClock(around.averageTotalTime) : t.common.noDataYet}
-              />
-            </details>
-            <details
-              className="stats-subsection"
-              open={openAroundSections.byMode}
-              onToggle={(event) => setAroundSection("byMode", event.currentTarget.open)}
-            >
+            <details className="stats-subsection">
               <summary>{t.stats.byMode}</summary>
               {around.byMode.map((row) => (
                 <CompactRow
                   key={row.mode}
                   left={row.mode}
-                  middle={`${row.sessions} ${t.stats.sessions.toLowerCase()}`}
-                  right={bestLatestAvg(formatClock(row.best), formatClock(row.latest), formatClock(row.average))}
+                  middle={`${t.stats.sessions} ${row.sessions}`}
+                  right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(
+                    row.latest
+                  )}`}
                 />
               ))}
             </details>
-            <details
-              className="stats-subsection"
-              open={openAroundSections.byTarget}
-              onToggle={(event) => setAroundSection("byTarget", event.currentTarget.open)}
-            >
-              <summary>{t.stats.byTargetSector}</summary>
-              {around.byTargetGrouped.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {around.byTargetGrouped.length > 0 ? (
+
+            <details className="stats-subsection">
+              <summary>{t.stats.hardestSectors}</summary>
+              {around.hardestSectors.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
+              {around.hardestSectors.map((row) => (
+                <CompactRow
+                  key={row.key}
+                  left={row.key}
+                  middle={`${t.stats.attempts} ${row.attempts}`}
+                  right={`${t.stats.averageLabel} ${formatSeconds(row.average)}`}
+                />
+              ))}
+            </details>
+
+            <details className="stats-subsection">
+              <summary>{t.stats.bestPerformances}</summary>
+              {around.bestTimeByMode.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
+              {around.bestTimeByMode.map((row) => (
+                <CompactRow
+                  key={row.mode}
+                  left={row.mode}
+                  middle={`${t.stats.bestTotalTime} ${formatClock(row.bestTotalTime)}`}
+                  right={`${t.stats.date} ${dateLabel(row.timestamp)}`}
+                />
+              ))}
+            </details>
+
+            <div className="stats-toolbar">
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => {
+                  if (aroundDetailsOpen) {
+                    setOpenAroundSections(closedAroundSections);
+                    setShowAllTargetsOpen(false);
+                    setOpenTargetModes({});
+                  }
+                  setAroundDetailsOpen((prev) => !prev);
+                }}
+              >
+                {aroundDetailsOpen ? t.stats.hideDetailedAroundStats : t.stats.showDetailedAroundStats}
+              </button>
+            </div>
+
+            {aroundDetailsOpen ? (
+              <>
                 <details
-                  className="stats-subsection top-gap"
-                  open={showAllTargetsOpen}
-                  onToggle={(event) => {
-                    const isOpen = event.currentTarget.open;
-                    setShowAllTargetsOpen(isOpen);
-                  }}
+                  className="stats-subsection"
+                  open={openAroundSections.byTarget}
+                  onToggle={(event) => setAroundSection("byTarget", event.currentTarget.open)}
                 >
-                  <summary>{t.stats.showAllTargetsSectors}</summary>
-                  {around.byTargetGrouped.map((group) => (
+                  <summary>{t.stats.byTargetSector}</summary>
+                  {around.byTargetGrouped.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
+                  {around.byTargetGrouped.length > 0 ? (
                     <details
-                      key={group.mode}
                       className="stats-subsection top-gap"
-                      open={openTargetModes[group.mode] === true}
+                      open={showAllTargetsOpen}
                       onToggle={(event) => {
                         const isOpen = event.currentTarget.open;
-                        setOpenTargetModes((prev) => ({
-                          ...prev,
-                          [group.mode]: isOpen
-                        }));
+                        setShowAllTargetsOpen(isOpen);
                       }}
                     >
-                      <summary>{group.mode}</summary>
-                      {group.rows.map((row) => (
-                        <CompactRow
-                          key={`${group.mode}-${row.key}`}
-                          left={row.key}
-                          right={bestLatestAvg(formatSeconds(row.best), formatSeconds(row.latest), formatSeconds(row.average))}
-                        />
+                      <summary>{t.stats.showAllTargetsSectors}</summary>
+                      {around.byTargetGrouped.map((group) => (
+                        <details
+                          key={group.mode}
+                          className="stats-subsection top-gap"
+                          open={openTargetModes[group.mode] === true}
+                          onToggle={(event) => {
+                            const isOpen = event.currentTarget.open;
+                            setOpenTargetModes((prev) => ({
+                              ...prev,
+                              [group.mode]: isOpen
+                            }));
+                          }}
+                        >
+                          <summary>{group.mode}</summary>
+                          {group.rows.map((row) => (
+                            <CompactRow
+                              key={`${group.mode}-${row.key}`}
+                              left={row.key}
+                              right={bestLatestAvg(
+                                formatSeconds(row.best),
+                                formatSeconds(row.latest),
+                                formatSeconds(row.average)
+                              )}
+                            />
+                          ))}
+                        </details>
                       ))}
+                    </details>
+                  ) : null}
+                </details>
+
+                <details
+                  className="stats-subsection"
+                  open={openAroundSections.history}
+                  onToggle={(event) => setAroundSection("history", event.currentTarget.open)}
+                >
+                  <summary>{t.stats.sessionHistory}</summary>
+                  {sortedAroundSessions.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
+                  {sortedAroundSessions.map((session) => (
+                    <details key={session.id} className="stats-subsection top-gap">
+                      <summary>
+                        {dateLabel(session.timestamp)}{" · "}
+                        {formatAroundMode(session, t)}{" · "}
+                        {formatClock(session.totalActiveSeconds)}
+                      </summary>
+                      <CompactRow left={t.aroundClock.activeTime} right={formatClock(session.totalActiveSeconds)} />
+                      <CompactRow left={t.stats.pauses} right={formatClock(session.pauseSeconds)} />
+                      <CompactRow left={t.stats.targets} right={session.entries.length} />
+                      {session.estimatedDarts !== null ? (
+                        <CompactRow left={t.stats.estimated} right={`~${session.estimatedDarts}`} />
+                      ) : null}
+                      <details className="stats-subsection top-gap">
+                        <summary>{t.stats.entries}</summary>
+                        {session.entries.map((entry, index) => (
+                          <CompactRow
+                            key={`${session.id}-${entry.target}-${index}`}
+                            left={formatAroundEntryLabel(session, entry.target, t)}
+                            right={formatSeconds(entry.seconds)}
+                          />
+                        ))}
+                      </details>
                     </details>
                   ))}
                 </details>
-              ) : null}
-            </details>
-            <details
-              className="stats-subsection"
-              open={openAroundSections.history}
-              onToggle={(event) => setAroundSection("history", event.currentTarget.open)}
-            >
-              <summary>{t.stats.sessionHistory}</summary>
-              {sortedAroundSessions.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
-              {sortedAroundSessions.map((session) => (
-                <details key={session.id} className="stats-subsection top-gap">
-                  <summary>
-                    {dateLabel(session.timestamp)}{" · "}
-                    {formatAroundMode(session, t)}{" · "}
-                    {formatClock(session.totalActiveSeconds)}
-                  </summary>
-                  <CompactRow left={t.aroundClock.activeTime} right={formatClock(session.totalActiveSeconds)} />
-                  <CompactRow left={t.stats.pauses} right={formatClock(session.pauseSeconds)} />
-                  <CompactRow left={t.stats.targets} right={session.entries.length} />
-                  {session.estimatedDarts !== null ? (
-                    <CompactRow left={t.stats.estimated} right={`~${session.estimatedDarts}`} />
-                  ) : null}
-                  <details className="stats-subsection top-gap">
-                    <summary>{t.stats.entries}</summary>
-                    {session.entries.map((entry, index) => (
-                      <CompactRow
-                        key={`${session.id}-${entry.target}-${index}`}
-                        left={formatAroundEntryLabel(session, entry.target, t)}
-                        right={formatSeconds(entry.seconds)}
-                      />
-                    ))}
-                  </details>
-                </details>
-              ))}
-            </details>
+              </>
+            ) : null}
           </>
         ) : null}
       </Card>

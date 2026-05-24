@@ -73,6 +73,7 @@ type AroundModeRow = {
 type AroundTargetRow = {
   mode: string;
   key: string;
+  attempts: number;
   best: number;
   latest: number;
   average: number;
@@ -81,6 +82,19 @@ type AroundTargetRow = {
 type AroundTargetGroup = {
   mode: string;
   rows: AroundTargetRow[];
+};
+
+type AroundHardestSectorRow = {
+  key: string;
+  attempts: number;
+  average: number;
+  total: number;
+};
+
+type AroundBestTimeByModeRow = {
+  mode: string;
+  bestTotalTime: number;
+  timestamp: string;
 };
 
 function cutoff(range: StatsRange): number {
@@ -130,6 +144,15 @@ function aroundTargetGroupLabel(mode: AroundClockMode): string {
   if (mode === "common_doubles") return "Common Doubles";
   if (mode === "custom") return "Custom";
   return "Full Sector";
+}
+
+function normalizeHardestSectorKey(target: string): string {
+  if (target === "Bull/25" || target === "25/Bull" || target === "Bull" || target === "25") {
+    return "Bull/25";
+  }
+  const sector = target.match(/\d+/)?.[0];
+  if (sector) return String(Number(sector));
+  return target;
 }
 
 function rangeOrder(label: string): number {
@@ -395,6 +418,7 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
       return {
         mode: rows[0].mode,
         key: rows[0].key,
+        attempts: rows.length,
         best: Math.min(...values),
         latest: sorted[0].seconds,
         average: values.reduce((sum, value) => sum + value, 0) / values.length
@@ -417,9 +441,46 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
 
   const fastest = byTarget.length > 0 ? [...byTarget].sort((a, b) => a.best - b.best)[0] : null;
   const slowest = byTarget.length > 0 ? [...byTarget].sort((a, b) => b.average - a.average)[0] : null;
+  const hardestSectorsMap = new Map<string, { attempts: number; total: number }>();
+  for (const row of byTarget) {
+    const key = normalizeHardestSectorKey(row.key);
+    const current = hardestSectorsMap.get(key) ?? { attempts: 0, total: 0 };
+    current.attempts += row.attempts;
+    current.total += row.average * row.attempts;
+    hardestSectorsMap.set(key, current);
+  }
+  const hardestSectors: AroundHardestSectorRow[] = Array.from(hardestSectorsMap.entries())
+    .map(([key, item]) => ({
+      key,
+      attempts: item.attempts,
+      total: item.total,
+      average: item.attempts > 0 ? item.total / item.attempts : 0
+    }))
+    .filter((item) => item.attempts > 0 && item.average > 0)
+    .sort((a, b) => b.average - a.average || b.attempts - a.attempts || a.key.localeCompare(b.key, undefined, { numeric: true }))
+    .slice(0, 5);
 
   const totalTimes = filtered.map((session) => session.totalActiveSeconds);
   const latestSession = sortedByDate[0] ?? null;
+  const bestTimeByModeMap = new Map<string, { bestTotalTime: number; timestamp: string }>();
+  for (const session of filtered) {
+    const modeLabel = toModeLabel(session.mode, session.doubleRequirement);
+    if (session.totalActiveSeconds <= 0) continue;
+    const current = bestTimeByModeMap.get(modeLabel);
+    if (!current || session.totalActiveSeconds < current.bestTotalTime) {
+      bestTimeByModeMap.set(modeLabel, {
+        bestTotalTime: session.totalActiveSeconds,
+        timestamp: session.timestamp
+      });
+    }
+  }
+  const bestTimeByMode: AroundBestTimeByModeRow[] = Array.from(bestTimeByModeMap.entries())
+    .map(([mode, value]) => ({
+      mode,
+      bestTotalTime: value.bestTotalTime,
+      timestamp: value.timestamp
+    }))
+    .sort((a, b) => a.mode.localeCompare(b.mode));
 
   return {
     sessions: filtered.length,
@@ -430,6 +491,8 @@ export function getAroundClockStats(sessions: AroundClockSession[], range: Stats
     byMode,
     byTarget,
     byTargetGrouped,
+    hardestSectors,
+    bestTimeByMode,
     fastest,
     slowest
   };
