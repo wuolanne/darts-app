@@ -8,6 +8,7 @@ import { CheckoutSpeedrunScreen } from "./screens/CheckoutSpeedrunScreen";
 import { AroundTheClockScreen } from "./screens/AroundTheClockScreen";
 import { CheckoutLibraryScreen } from "./screens/CheckoutLibraryScreen";
 import { StatsScreen } from "./screens/StatsScreen";
+import { ThrowPaceOnboarding } from "./screens/ThrowPaceOnboarding";
 import { AppScreen, AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, UserSettings } from "./types/models";
 import { DEFAULT_SETTINGS, readSettings, writeSettings } from "./storage/settings";
 import {
@@ -121,6 +122,7 @@ function AppBody({
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [checkoutAttempts, setCheckoutAttempts] = useState<CheckoutAttempt[]>([]);
   const [speedruns, setSpeedruns] = useState<CheckoutSpeedrunSession[]>([]);
   const [aroundSessions, setAroundSessions] = useState<AroundClockSession[]>([]);
@@ -130,6 +132,7 @@ export default function App() {
     setCheckoutAttempts(readCheckoutAttempts());
     setSpeedruns(readCheckoutSpeedruns());
     setAroundSessions(readAroundClockSessions());
+    setSettingsLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -140,18 +143,25 @@ export default function App() {
     <I18nProvider requestedLanguage={settings.languageMode}>
       <ThemeProvider requestedMode={settings.themeMode}>
         <main className="app-shell">
-          <AppBody
-            screen={screen}
-            setScreen={setScreen}
-            settings={settings}
-            setSettings={setSettings}
-            checkoutAttempts={checkoutAttempts}
-            setCheckoutAttempts={setCheckoutAttempts}
-            speedruns={speedruns}
-            setSpeedruns={setSpeedruns}
-            aroundSessions={aroundSessions}
-            setAroundSessions={setAroundSessions}
-          />
+          {settingsLoaded &&
+          !settings.throwPaceOnboardingCompleted &&
+          settings.throwPace.mode === "not_set" &&
+          !settings.throwPace.secondsPerThree ? (
+            <ThrowPaceOnboarding settings={settings} onComplete={setSettings} />
+          ) : (
+            <AppBody
+              screen={screen}
+              setScreen={setScreen}
+              settings={settings}
+              setSettings={setSettings}
+              checkoutAttempts={checkoutAttempts}
+              setCheckoutAttempts={setCheckoutAttempts}
+              speedruns={speedruns}
+              setSpeedruns={setSpeedruns}
+              aroundSessions={aroundSessions}
+              setAroundSessions={setAroundSessions}
+            />
+          )}
         </main>
       </ThemeProvider>
     </I18nProvider>

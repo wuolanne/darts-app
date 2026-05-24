@@ -55,23 +55,26 @@ export function SettingsScreen({
     return () => window.clearInterval(timer);
   }, [paceTestRunning]);
 
-  const setThrowPace = (secondsPerThree: number | null, mode: "not_set" | "manual" | "calibrated") =>
+  const setThrowPace = (
+    secondsPerThree: number | null,
+    mode: "not_set" | "manual" | "calibrated",
+    source: UserSettings["throwPace"]["source"]
+  ) =>
     onUpdateSettings({
       ...settings,
+      throwPaceOnboardingCompleted: true,
       throwPace: {
         mode,
+        source,
         secondsPerThree,
         updatedAt: new Date().toISOString()
       }
     });
   const currentPace = !settings.throwPace.secondsPerThree
     ? t.settings.currentNotSet
-    : formatI18n(
-        settings.throwPace.mode === "calibrated"
-          ? t.settings.currentMeasuredPace
-          : t.settings.currentManualPace,
-        { pace: settings.throwPace.secondsPerThree.toFixed(1) }
-      );
+    : formatI18n(t.settings.currentThrowPace, {
+        pace: settings.throwPace.secondsPerThree.toFixed(1)
+      });
   const formatPaceMessage = (template: string, pace: number) =>
     formatI18n(template, { pace: pace.toFixed(1) });
   const formatRangeMessage = (template: string) =>
@@ -148,13 +151,14 @@ export function SettingsScreen({
       <Card>
         <h3>{t.settings.throwPace}</h3>
         <p className="muted">{currentPace}</p>
+        <p className="muted">{t.settings.throwPaceHelp}</p>
         {paceSuccess ? <p className="good-text">{paceSuccess}</p> : null}
         {paceError ? <p className="warn-text">{paceError}</p> : null}
 
         <div className="stack-row">
           <Button
             onClick={() => {
-              setThrowPace(7, "manual");
+              setThrowPace(7, "manual", "preset_fast");
               setPaceError(null);
               setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 7));
             }}
@@ -164,7 +168,7 @@ export function SettingsScreen({
           </Button>
           <Button
             onClick={() => {
-              setThrowPace(10, "manual");
+              setThrowPace(10, "manual", "preset_normal");
               setPaceError(null);
               setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 10));
             }}
@@ -174,7 +178,7 @@ export function SettingsScreen({
           </Button>
           <Button
             onClick={() => {
-              setThrowPace(13, "manual");
+              setThrowPace(13, "manual", "preset_relaxed");
               setPaceError(null);
               setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, 13));
             }}
@@ -184,7 +188,7 @@ export function SettingsScreen({
           </Button>
           <Button
             onClick={() => {
-              setThrowPace(null, "not_set");
+              setThrowPace(null, "not_set", "unset");
               setPaceError(null);
               setPaceSuccess(null);
             }}
@@ -214,7 +218,7 @@ export function SettingsScreen({
                   setPaceSuccess(null);
                   return;
                 }
-                setThrowPace(parsed, "manual");
+                setThrowPace(parsed, "manual", "manual");
                 setPaceError(null);
                 setPaceSuccess(formatPaceMessage(t.settings.manualPaceSaved, parsed));
                 setCustomPaceDraft("");
@@ -277,7 +281,7 @@ export function SettingsScreen({
                     setPaceSuccess(null);
                     return;
                   }
-                  setThrowPace(calculated, "calibrated");
+                  setThrowPace(calculated, "calibrated", "measured");
                   setCustomPaceDraft(calculated.toFixed(1));
                   setPaceError(null);
                   setPaceSuccess(formatPaceMessage(t.settings.measuredPaceSaved, calculated));

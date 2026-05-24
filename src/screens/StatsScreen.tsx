@@ -228,8 +228,8 @@ export function StatsScreen({
                 />
               ))}
             </details>
-            {hasThrowPace ? <p className="muted">{t.stats.estimateBasedOnThrowRhythm}</p> : null}
-            {!hasThrowPace ? <p className="muted">{t.stats.throwRhythmCta}</p> : null}
+            {hasThrowPace ? <p className="muted">{t.stats.estimateBasedOnThrowPace}</p> : null}
+            {!hasThrowPace ? <p className="muted">{t.stats.throwPaceCta}</p> : null}
 
             <details className="stats-subsection">
               <summary>{t.stats.bestPerformances}</summary>

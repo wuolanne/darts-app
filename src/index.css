@@ -606,6 +606,30 @@ body {
   --screen-accent: #a8adb5;
 }
 
+.onboarding-card {
+  max-width: 440px;
+  margin: 10vh auto 0;
+  padding: 22px 18px 18px;
+}
+
+.onboarding-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.onboarding-card p {
+  white-space: pre-line;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.onboarding-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 .screen-quick::before,
 .screen-speedrun::before,
 .screen-around::before,

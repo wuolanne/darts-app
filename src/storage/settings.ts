@@ -9,8 +9,10 @@ export const DEFAULT_SETTINGS: UserSettings = {
   themeMode: "dark",
   languageMode: "en",
   vibrationFeedback: false,
+  throwPaceOnboardingCompleted: false,
   throwPace: {
     mode: "not_set",
+    source: "unset",
     secondsPerThree: null,
     updatedAt: null
   }
