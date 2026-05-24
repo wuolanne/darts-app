@@ -62,8 +62,12 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   50: {
     finish: 50,
     label: "Optimal route",
-    route: ["S10", "D20"],
+    route: ["Bull"],
     alternativeRoutes: [
+      {
+        label: "Alternative route",
+        route: ["S10", "D20"]
+      },
       {
         label: "Preferred double route",
         route: ["S18", "D16"],
@@ -90,13 +94,18 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   61: {
     finish: 61,
     label: "Optimal route",
-    route: ["T11", "D14"],
-    singleHitContinuation: {
-      singleHitTarget: "S11",
-      remaining: 50,
-      continuationRoute: ["Bull"]
-    },
-    alternativeRoutes: [{ label: "Alternative route", route: ["T15", "D8"] }]
+    route: ["T15", "D8"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T11", "D14"],
+        singleHitContinuation: {
+          singleHitTarget: "S11",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
   },
   62: {
     finish: 62,
@@ -206,13 +215,18 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   69: {
     finish: 69,
     label: "Optimal route",
-    route: ["T19", "D6"],
-    singleHitContinuation: {
-      singleHitTarget: "S19",
-      remaining: 50,
-      continuationRoute: ["Bull"]
-    },
-    alternativeRoutes: [{ label: "Alternative route", route: ["T15", "D12"] }]
+    route: ["T15", "D12"],
+    alternativeRoutes: [
+      {
+        label: "Bull-friendly route",
+        route: ["T19", "D6"],
+        singleHitContinuation: {
+          singleHitTarget: "S19",
+          remaining: 50,
+          continuationRoute: ["Bull"]
+        }
+      }
+    ]
   },
   70: {
     finish: 70,
@@ -361,9 +375,13 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   116: { finish: 116, label: "Optimal route", route: ["T20", "S16", "D20"] },
   117: { finish: 117, label: "Optimal route", route: ["T20", "S17", "D20"] },
   118: { finish: 118, label: "Optimal route", route: ["T20", "S18", "D20"] },
-  119: { finish: 119, label: "Optimal route", route: ["T19", "S10", "D16"] },
+  119: { finish: 119, label: "Optimal route", route: ["T19", "T10", "D16"] },
   120: { finish: 120, label: "Optimal route", route: ["T20", "S20", "D20"] },
-  121: { finish: 121, label: "Optimal route", route: ["T17", "T10", "D20"] },
+  121: {
+    finish: 121,
+    label: "Optimal route",
+    route: ["T17", "T10", "D20"]
+  },
   122: {
     finish: 122,
     label: "Optimal route",
@@ -388,10 +406,32 @@ const CHECKOUT_ROUTES: Record<number, CheckoutRoute> = {
   134: { finish: 134, label: "Optimal route", route: ["T20", "T14", "D16"] },
   135: { finish: 135, label: "Optimal route", route: ["T20", "T17", "D12"] },
   136: { finish: 136, label: "Optimal route", route: ["T20", "T20", "D8"] },
-  137: { finish: 137, label: "Optimal route", route: ["T20", "T19", "D10"] },
+  137: {
+    finish: 137,
+    label: "Optimal route",
+    route: ["T20", "T19", "D10"],
+    alternativeRoutes: [
+      {
+        label: "Preferred double route",
+        route: ["T19", "T16", "D16"],
+        preferredDouble: "D16"
+      }
+    ]
+  },
   138: { finish: 138, label: "Optimal route", route: ["T20", "T18", "D12"] },
   139: { finish: 139, label: "Optimal route", route: ["T19", "T14", "D20"] },
-  140: { finish: 140, label: "Optimal route", route: ["T20", "T20", "D10"] },
+  140: {
+    finish: 140,
+    label: "Optimal route",
+    route: ["T20", "T20", "D10"],
+    alternativeRoutes: [
+      {
+        label: "Preferred double route",
+        route: ["T20", "T16", "D16"],
+        preferredDouble: "D16"
+      }
+    ]
+  },
   141: { finish: 141, label: "Optimal route", route: ["T20", "T19", "D12"] },
   142: { finish: 142, label: "Optimal route", route: ["T20", "T14", "D20"] },
   143: { finish: 143, label: "Optimal route", route: ["T20", "T17", "D16"] },
@@ -486,9 +526,23 @@ function preferredDoubleRank(route: CheckoutRoute, preferredDouble: PreferredDou
 
 const AWKWARD_DOUBLE_TARGETS = new Set(["D15", "D13", "D11", "D9", "D7", "D5"]);
 const EXPLICIT_ROUTE_PREFERENCES: Record<number, string> = {
+  50: "Bull",
+  61: "T15->D8",
   65: "T15->D10",
   67: "T17->D8",
-  69: "T19->D6"
+  69: "T15->D12"
+};
+
+const PREFERRED_TWO_DART_FINISHES: Record<number, DartTarget[]> = {
+  50: ["Bull"],
+  80: ["T20", "D10"],
+  81: ["T19", "D12"],
+  87: ["T17", "D18"],
+  100: ["T20", "D20"],
+  101: ["T17", "Bull"],
+  104: ["T18", "Bull"],
+  107: ["T19", "Bull"],
+  110: ["T20", "Bull"]
 };
 
 function routeKey(route: CheckoutRoute): string {
@@ -547,6 +601,83 @@ function isValidTargetSequence(route: DartTarget[]): boolean {
   return isValidFinalTarget(route[route.length - 1]);
 }
 
+function isValidTwoDartSequence(route: DartTarget[]): boolean {
+  if (route.length < 1 || route.length > 2) return false;
+  return isValidTargetSequence(route);
+}
+
+export function findTwoDartFinish(score: number): DartTarget[] | null {
+  if (!Number.isInteger(score) || score < 2 || score > 110) {
+    return null;
+  }
+
+  const preferred = PREFERRED_TWO_DART_FINISHES[score];
+  if (preferred && isValidTwoDartSequence(preferred)) {
+    const preferredTotal = preferred.reduce((sum, target) => sum + (scoreOfTarget(target) ?? 0), 0);
+    if (preferredTotal === score) {
+      return [...preferred];
+    }
+  }
+
+  const bullFinish = score === 50 ? ["Bull"] : null;
+  if (bullFinish) {
+    return bullFinish;
+  }
+
+  const oneDartDouble = score % 2 === 0 ? `D${score / 2}` : null;
+  if (oneDartDouble && isValidDartTarget(oneDartDouble)) {
+    return [oneDartDouble];
+  }
+
+  const firstTargets = ["25", ...Array.from({ length: 20 }, (_, index) => `S${index + 1}`), ...Array.from({ length: 20 }, (_, index) => `D${index + 1}`), ...Array.from({ length: 20 }, (_, index) => `T${index + 1}`)];
+  const finalTargets = ["Bull", ...Array.from({ length: 20 }, (_, index) => `D${index + 1}`)];
+
+  let bestRoute: DartTarget[] | null = null;
+  let bestScore = -Infinity;
+
+  for (const finalTarget of finalTargets) {
+    const finalValue = scoreOfTarget(finalTarget);
+    if (finalValue === null || finalValue > score) continue;
+    const remaining = score - finalValue;
+
+    if (remaining === 0) {
+      const route = [finalTarget];
+      if (!isValidTwoDartSequence(route)) continue;
+      const routeScore = finalTarget === "Bull" ? 200 : 100 + Number(finalTarget.slice(1));
+      if (routeScore > bestScore) {
+        bestRoute = route;
+        bestScore = routeScore;
+      }
+      continue;
+    }
+
+    for (const firstTarget of firstTargets) {
+      const firstValue = scoreOfTarget(firstTarget);
+      if (firstValue === null || firstValue !== remaining) continue;
+      const route = [firstTarget, finalTarget];
+      if (!isValidTwoDartSequence(route)) continue;
+
+      const normalizedFirst = normalizeDartTarget(firstTarget);
+      const normalizedFinal = normalizeDartTarget(finalTarget);
+      let routeScore = 0;
+      if (normalizedFirst.startsWith("T")) routeScore += 100;
+      else if (normalizedFirst.startsWith("S")) routeScore += 50;
+      else if (normalizedFirst === "25") routeScore += 45;
+      else routeScore += 30;
+
+      if (normalizedFinal === "Bull") routeScore += 25;
+      else routeScore += Number(normalizedFinal.slice(1));
+
+      if (routeScore > bestScore) {
+        bestRoute = route;
+        bestScore = routeScore;
+      }
+    }
+  }
+
+  return bestRoute ? [...bestRoute] : null;
+}
+
 function deriveSingleHitContinuation(
   finish: number,
   route: DartTarget[],
@@ -567,19 +698,19 @@ function deriveSingleHitContinuation(
   if (remaining <= 1 || remaining > 170) {
     return undefined;
   }
-  const fallback = CHECKOUT_ROUTES[remaining];
-  if (!fallback || fallback.isBogey || !isValidTargetSequence(fallback.route)) {
+  const fallback = findTwoDartFinish(remaining);
+  if (!fallback) {
     return {
       singleHitTarget,
       remaining,
       continuationRoute: [],
-      note: "No detailed follow-up yet."
+      note: "No two-dart finish available."
     };
   }
   return {
     singleHitTarget,
     remaining,
-    continuationRoute: fallback.route
+    continuationRoute: fallback
   };
 }
 
@@ -658,7 +789,10 @@ export function validateCheckoutRoute(route: CheckoutRoute): boolean {
   if (primaryContinuation) {
     if (!isValidDartTarget(primaryContinuation.singleHitTarget)) return false;
     if (!primaryContinuation.continuationRoute.every((token) => isValidDartTarget(token))) return false;
-    if (primaryContinuation.continuationRoute.length > 0 && !isValidTargetSequence(primaryContinuation.continuationRoute)) {
+    if (
+      primaryContinuation.continuationRoute.length > 0 &&
+      !isValidTwoDartSequence(primaryContinuation.continuationRoute)
+    ) {
       return false;
     }
   }
@@ -678,7 +812,7 @@ export function validateCheckoutRoute(route: CheckoutRoute): boolean {
     if (continuation) {
       if (!isValidDartTarget(continuation.singleHitTarget)) return false;
       if (!continuation.continuationRoute.every((token) => isValidDartTarget(token))) return false;
-      if (continuation.continuationRoute.length > 0 && !isValidTargetSequence(continuation.continuationRoute)) {
+      if (continuation.continuationRoute.length > 0 && !isValidTwoDartSequence(continuation.continuationRoute)) {
         return false;
       }
     }

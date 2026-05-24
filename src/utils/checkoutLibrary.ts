@@ -1,4 +1,5 @@
 export {
+  findTwoDartFinish,
   formatRoute,
   getAlternativeCheckoutRoutes,
   getBestFirstTarget,
