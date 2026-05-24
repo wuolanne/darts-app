@@ -5,7 +5,14 @@ import { getCheckoutStats, getSpeedrunStats } from "../utils/stats";
 import { formatClock, formatSeconds } from "../utils/time";
 import { useI18n } from "../i18n";
 
-type AroundDetailModeKey = "all" | "singles" | "doubles" | "trebles" | "common_doubles" | "custom" | "full_sector";
+type AroundDetailModeKey =
+  | "all"
+  | "singles"
+  | "doubles"
+  | "trebles"
+  | "common_doubles"
+  | "custom"
+  | "full_sector";
 
 type AroundModeSummary = {
   key: string;
@@ -19,7 +26,6 @@ type AroundModeSummary = {
 type AroundEntryRecord = {
   modeKey: Exclude<AroundDetailModeKey, "all">;
   modeLabel: string;
-  sessionModeLabel: string;
   targetLabel: string;
   sectorLabel: string;
   seconds: number;
@@ -30,7 +36,6 @@ type AroundSectorSummary = {
   key: string;
   attempts: number;
   averageTime: number;
-  totalTime: number;
 };
 
 type AroundTargetSummary = {
@@ -120,7 +125,7 @@ export function StatsScreen({
   speedruns: CheckoutSpeedrunSession[];
   aroundSessions: AroundClockSession[];
 }) {
-  const { t } = useI18n();
+  const { t, resolvedLanguage } = useI18n();
   const [range, setRange] = React.useState<StatsRange>("7d");
   const [aroundDetailsOpen, setAroundDetailsOpen] = React.useState(false);
   const [hardestMode, setHardestMode] = React.useState<AroundDetailModeKey>("all");
@@ -128,6 +133,11 @@ export function StatsScreen({
 
   const checkout = getCheckoutStats(checkoutAttempts, range);
   const speedrun = getSpeedrunStats(speedruns, range);
+
+  const showDetailedTargetStats =
+    resolvedLanguage === "fi" ? "Näytä kohdekohtaiset lisätilastot" : "Show detailed target stats";
+  const hideDetailedTargetStats =
+    resolvedLanguage === "fi" ? "Piilota kohdekohtaiset lisätilastot" : "Hide detailed target stats";
 
   const formatDurationOrDash = (seconds: number | null | undefined) =>
     typeof seconds === "number" && seconds > 0 ? formatClock(seconds) : "-";
@@ -181,7 +191,6 @@ export function StatsScreen({
         .map((entry) => ({
           modeKey: getModeKey(session),
           modeLabel: getModeLabel(getModeKey(session), t),
-          sessionModeLabel: getSessionModeLabel(session, t),
           targetLabel: getEntryTargetLabel(session, entry.target, t),
           sectorLabel: getSectorLabel(entry.target),
           seconds: entry.seconds,
@@ -191,7 +200,11 @@ export function StatsScreen({
   }, [filteredAroundSessions, t]);
 
   const aroundModeOptions = React.useMemo(() => {
-    const map = new Map<Exclude<AroundDetailModeKey, "all">, { value: Exclude<AroundDetailModeKey, "all">; label: string; entries: number; latestTimestamp: string }>();
+    const map = new Map<
+      Exclude<AroundDetailModeKey, "all">,
+      { value: Exclude<AroundDetailModeKey, "all">; label: string; entries: number; latestTimestamp: string }
+    >();
+
     for (const row of aroundEntryRecords) {
       const current = map.get(row.modeKey);
       if (!current) {
@@ -208,6 +221,7 @@ export function StatsScreen({
         current.latestTimestamp = row.timestamp;
       }
     }
+
     return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
   }, [aroundEntryRecords]);
 
@@ -237,34 +251,21 @@ export function StatsScreen({
         ? aroundEntryRecords
         : aroundEntryRecords.filter((row) => row.modeKey === hardestMode);
 
-    const map = new Map<
-      string,
-      {
-        attempts: number;
-        totalTime: number;
-      }
-    >();
+    const map = new Map<string, { attempts: number; totalTime: number }>();
 
     for (const row of sourceRows) {
-      const current = map.get(row.sectorLabel) ?? {
-        attempts: 0,
-        totalTime: 0
-      };
+      const current = map.get(row.sectorLabel) ?? { attempts: 0, totalTime: 0 };
       current.attempts += 1;
       current.totalTime += row.seconds;
       map.set(row.sectorLabel, current);
     }
 
     return Array.from(map.entries())
-      .map(([key, item]) => {
-        const averageTime = item.attempts > 0 ? item.totalTime / item.attempts : 0;
-        return {
-          key,
-          attempts: item.attempts,
-          averageTime,
-          totalTime: item.totalTime
-        };
-      })
+      .map(([key, item]) => ({
+        key,
+        attempts: item.attempts,
+        averageTime: item.attempts > 0 ? item.totalTime / item.attempts : 0
+      }))
       .filter((row) => row.attempts > 0 && row.averageTime > 0)
       .sort((a, b) => b.averageTime - a.averageTime || b.attempts - a.attempts || a.key.localeCompare(b.key, undefined, { numeric: true }))
       .slice(0, 5);
@@ -330,7 +331,7 @@ export function StatsScreen({
     );
   }, [filteredAroundSessions, t]);
 
-  const aroundHasDetailedData = targetStatRows.length > 0 || sortedAroundSessions.length > 0;
+  const aroundHasDetailedData = targetStatRows.length > 0;
 
   return (
     <div className="screen screen-stats">
@@ -460,85 +461,82 @@ export function StatsScreen({
               ))}
             </details>
 
+            <details className="stats-subsection">
+              <summary>{t.stats.sessionHistory}</summary>
+              {sortedAroundSessions.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
+              {sortedAroundSessions.map((session) => {
+                const sessionEntries = session.entries.filter((entry) => entry.seconds > 0);
+                const hasMeaningfulDetail = sessionEntries.length > 0;
+
+                if (!hasMeaningfulDetail) {
+                  return (
+                    <CompactRow
+                      key={session.id}
+                      left={dateLabel(session.timestamp)}
+                      middle={getSessionModeLabel(session, t)}
+                      right={`${t.stats.totalTime} ${formatClock(session.totalActiveSeconds)}`}
+                    />
+                  );
+                }
+
+                return (
+                  <details key={session.id} className="stats-subsection top-gap">
+                    <summary>
+                      {dateLabel(session.timestamp)}{" · "}
+                      {getSessionModeLabel(session, t)}{" · "}
+                      {t.stats.totalTime} {formatClock(session.totalActiveSeconds)}
+                    </summary>
+                    <CompactRow left={t.stats.date} right={dateLabel(session.timestamp)} />
+                    <CompactRow left={t.stats.gameModes} right={getSessionModeLabel(session, t)} />
+                    <CompactRow left={t.stats.totalTime} right={formatClock(session.totalActiveSeconds)} />
+                    {sessionEntries.map((entry, index) => (
+                      <CompactRow
+                        key={`${session.id}-${entry.target}-${index}`}
+                        left={getEntryTargetLabel(session, entry.target, t)}
+                        right={formatSeconds(entry.seconds)}
+                      />
+                    ))}
+                  </details>
+                );
+              })}
+            </details>
+
             <div className="stats-toolbar">
               <button
                 type="button"
                 className="link-btn"
                 onClick={() => setAroundDetailsOpen((prev) => !prev)}
               >
-                {aroundDetailsOpen ? t.stats.hideDetailedAroundStats : t.stats.showDetailedAroundStats}
+                {aroundDetailsOpen ? hideDetailedTargetStats : showDetailedTargetStats}
               </button>
             </div>
 
             {aroundDetailsOpen ? (
               aroundHasDetailedData ? (
-                <>
-                  <div className="stats-subsection">
-                    <strong>{t.stats.byTargetSector}</strong>
-                    {aroundModeOptions.length > 0 && targetMode ? (
-                      <>
-                        <Segmented
-                          value={targetMode}
-                          options={aroundModeOptions.map((option) => ({ label: option.label, value: option.value }))}
-                          onChange={(value) => setTargetMode(value as Exclude<AroundDetailModeKey, "all">)}
-                        />
-                        <p className="muted">
-                          {t.stats.selectedGameMode}: {getModeLabel(targetMode, t)}
-                        </p>
-                      </>
-                    ) : null}
-                    {targetStatRows.length === 0 ? <p className="muted">{t.stats.noTargetLevelData}</p> : null}
-                    {targetStatRows.map((row) => (
-                      <CompactRow
-                        key={`target-${row.key}`}
-                        left={row.key}
-                        middle={`${t.stats.bestTime} ${formatSeconds(row.best)}`}
-                        right={`${t.stats.latestTime} ${formatSeconds(row.latest)}`}
+                <div className="stats-subsection">
+                  <strong>{t.stats.byTargetSector}</strong>
+                  {aroundModeOptions.length > 0 && targetMode ? (
+                    <>
+                      <Segmented
+                        value={targetMode}
+                        options={aroundModeOptions.map((option) => ({ label: option.label, value: option.value }))}
+                        onChange={(value) => setTargetMode(value as Exclude<AroundDetailModeKey, "all">)}
                       />
-                    ))}
-                  </div>
-
-                  {sortedAroundSessions.length > 0 ? (
-                    <details className="stats-subsection">
-                      <summary>{t.stats.sessionHistory}</summary>
-                      {sortedAroundSessions.map((session) => {
-                        const sessionEntries = session.entries.filter((entry) => entry.seconds > 0);
-                        const hasMeaningfulDetail = sessionEntries.length > 0;
-
-                        if (!hasMeaningfulDetail) {
-                          return (
-                            <CompactRow
-                              key={session.id}
-                              left={dateLabel(session.timestamp)}
-                              middle={getSessionModeLabel(session, t)}
-                              right={`${t.stats.totalTime} ${formatClock(session.totalActiveSeconds)}`}
-                            />
-                          );
-                        }
-
-                        return (
-                          <details key={session.id} className="stats-subsection top-gap">
-                            <summary>
-                              {dateLabel(session.timestamp)}{" · "}
-                              {getSessionModeLabel(session, t)}{" · "}
-                              {t.stats.totalTime} {formatClock(session.totalActiveSeconds)}
-                            </summary>
-                            <CompactRow left={t.stats.date} right={dateLabel(session.timestamp)} />
-                            <CompactRow left={t.stats.gameModes} right={getSessionModeLabel(session, t)} />
-                            <CompactRow left={t.stats.totalTime} right={formatClock(session.totalActiveSeconds)} />
-                            {sessionEntries.map((entry, index) => (
-                              <CompactRow
-                                key={`${session.id}-${entry.target}-${index}`}
-                                left={getEntryTargetLabel(session, entry.target, t)}
-                                right={formatSeconds(entry.seconds)}
-                              />
-                            ))}
-                          </details>
-                        );
-                      })}
-                    </details>
+                      <p className="muted">
+                        {t.stats.selectedGameMode}: {getModeLabel(targetMode, t)}
+                      </p>
+                    </>
                   ) : null}
-                </>
+                  {targetStatRows.length === 0 ? <p className="muted">{t.stats.noTargetLevelData}</p> : null}
+                  {targetStatRows.map((row) => (
+                    <CompactRow
+                      key={`target-${row.key}`}
+                      left={row.key}
+                      middle={`${t.stats.bestTime} ${formatSeconds(row.best)}`}
+                      right={`${t.stats.latestTime} ${formatSeconds(row.latest)}`}
+                    />
+                  ))}
+                </div>
               ) : (
                 <>
                   <p className="muted">{t.stats.noDetailedAroundStats}</p>
