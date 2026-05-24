@@ -865,6 +865,12 @@ body {
   text-wrap: balance;
 }
 
+.screen-speedrun .big-number {
+  font-size: clamp(1.95rem, 9vw, 3rem);
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
