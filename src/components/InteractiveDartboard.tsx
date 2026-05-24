@@ -55,11 +55,17 @@ export function InteractiveDartboard({
   disabled?: boolean;
   feedbackTone?: FeedbackTone;
 }) {
+  const handleTargetPress = (target: string) => {
+    if (onTargetSelect && !disabled) {
+      onTargetSelect(target);
+    }
+  };
+
   return (
     <div
       className={`interactive-dartboard-shell${feedbackTone === "correct" ? " is-correct" : ""}${feedbackTone === "wrong" ? " is-wrong" : ""}`}
     >
-      <svg viewBox="0 0 340 340" className="interactive-dartboard-svg" aria-label="Interactive checkout dartboard">
+      <svg viewBox="8 8 324 324" className="interactive-dartboard-svg" aria-label="Interactive checkout dartboard">
         <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" />
         <circle cx={CX} cy={CY} r={R_BOARD} fill="#0a0f18" />
 
@@ -88,9 +94,7 @@ export function InteractiveDartboard({
                   strokeWidth="0.85"
                   strokeLinejoin="round"
                   className={segmentClasses}
-                  onClick={() =>
-                    onTargetSelect && !disabled ? onTargetSelect(zone.token) : undefined
-                  }
+                  onPointerDown={() => handleTargetPress(zone.token)}
                 />
               ))}
 
@@ -106,7 +110,7 @@ export function InteractiveDartboard({
           stroke="#070910"
           strokeWidth="1"
           className={onTargetSelect && !disabled ? "dart-zone is-clickable" : "dart-zone"}
-          onClick={() => (onTargetSelect && !disabled ? onTargetSelect("25") : undefined)}
+          onPointerDown={() => handleTargetPress("25")}
         />
         <circle
           cx={CX}
@@ -116,7 +120,7 @@ export function InteractiveDartboard({
           stroke="#070910"
           strokeWidth="1"
           className={onTargetSelect && !disabled ? "dart-zone is-clickable" : "dart-zone"}
-          onClick={() => (onTargetSelect && !disabled ? onTargetSelect("Bull") : undefined)}
+          onPointerDown={() => handleTargetPress("Bull")}
         />
 
         {BOARD_ORDER.map((sector, index) => {
