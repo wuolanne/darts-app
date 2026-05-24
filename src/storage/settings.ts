@@ -1,5 +1,5 @@
 import { readJson, writeJson } from "./localStorage";
-import { UserSettings } from "../types/models";
+import { AppLanguageMode, UserSettings } from "../types/models";
 
 const SETTINGS_KEY = "settings";
 
@@ -13,9 +13,11 @@ export const DEFAULT_SETTINGS: UserSettings = {
 
 export function readSettings(): UserSettings {
   const loaded = readJson<UserSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
+  const languageMode = loaded.languageMode === "fi" ? "fi" : "en";
   return {
     ...DEFAULT_SETTINGS,
-    ...loaded
+    ...loaded,
+    languageMode: languageMode as AppLanguageMode
   };
 }
 

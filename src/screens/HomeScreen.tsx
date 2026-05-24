@@ -1,13 +1,21 @@
 import { AppScreen, AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession } from "../types/models";
 import { formatPracticeDuration } from "../utils/time";
 import { useI18n } from "../i18n";
+import { HomeDashboardCopy, getHomeDashboardCopy } from "../i18n/uiTokens";
+
+const DASH = "—";
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface HomeSummary {
-  lastAverage: string;
-  bestCheckout: string;
+  streak: number;
   practiceTime: string;
-  totalReps: string;
-  streak: string;
+  practiceTimeLabel: string;
+  bestFinish: string;
+  bestFinishLabel: string;
+  bestRangeTime: string;
+  bestRangeLabel: string;
+  bestAtcOne: string;
+  bestAtcTwo: string;
 }
 
 interface ModeCard {
@@ -21,53 +29,154 @@ interface ModeCard {
   metaValue: string;
 }
 
-function isToday(value: string): boolean {
+function getDateKey(value: string): string | null {
   const date = new Date(value);
-  const now = new Date();
-  return date.toDateString() === now.toDateString();
+  if (Number.isNaN(date.getTime())) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function formatNumber(value: number): string {
-  return value.toLocaleString("en-US").replace(/,/g, " ");
+function getDaysAgoKey(daysAgo: number): string {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setTime(date.getTime() - daysAgo * DAY_MS);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isWithinLastSevenDays(value: string): boolean {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setTime(start.getTime() - 6 * DAY_MS);
+  return date.getTime() >= start.getTime();
+}
+
+function formatHomeMinutes(totalSeconds: number, language: "en" | "fi"): string {
+  if (totalSeconds <= 0) {
+    return "0 min";
+  }
+
+  const roundedMinutes = Math.max(0, Math.round(totalSeconds / 60));
+  if (roundedMinutes < 60) {
+    return `${roundedMinutes} min`;
+  }
+
+  const hours = Math.floor(roundedMinutes / 60);
+  const minutes = roundedMinutes % 60;
+  if (language === "fi") {
+    return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+  }
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+}
+
+function getBestRangeSession(speedruns: CheckoutSpeedrunSession[]): CheckoutSpeedrunSession | null {
+  const completed = speedruns.filter(
+    (session) =>
+      session.totalActiveSeconds > 0 &&
+      session.entries.length > 0 &&
+      session.entries.every((entry) => entry.result === "finished")
+  );
+
+  if (completed.length === 0) return null;
+
+  return completed.reduce((best, session) =>
+    session.totalActiveSeconds < best.totalActiveSeconds ? session : best
+  );
+}
+
+function getBestAroundClockTime(
+  aroundSessions: AroundClockSession[],
+  doubleRequirement: 1 | 2
+): string {
+  const matches = aroundSessions.filter(
+    (session) =>
+      session.mode === "full_sector" &&
+      session.doubleRequirement === doubleRequirement &&
+      session.totalActiveSeconds > 0
+  );
+
+  if (matches.length === 0) return DASH;
+
+  const best = matches.reduce((lowest, session) =>
+    session.totalActiveSeconds < lowest.totalActiveSeconds ? session : lowest
+  );
+
+  return formatPracticeDuration(best.totalActiveSeconds);
 }
 
 function buildSummary(
   checkoutAttempts: CheckoutAttempt[],
   speedruns: CheckoutSpeedrunSession[],
-  aroundSessions: AroundClockSession[]
+  aroundSessions: AroundClockSession[],
+  language: "en" | "fi",
+  copy: HomeDashboardCopy
 ): HomeSummary {
-  const timedAttempts = checkoutAttempts.filter((attempt) => attempt.elapsedSeconds !== null);
-  const lastAverageSeconds = timedAttempts.slice(0, 5).reduce((sum, attempt) => sum + (attempt.elapsedSeconds ?? 0), 0);
-  const lastAverage = timedAttempts.length > 0
-    ? formatPracticeDuration(lastAverageSeconds / Math.min(timedAttempts.length, 5))
-    : "-";
+  const practiceDates = new Set<string>();
+
+  for (const attempt of checkoutAttempts) {
+    const key = getDateKey(attempt.timestamp);
+    if (key) practiceDates.add(key);
+  }
+
+  for (const session of speedruns) {
+    const key = getDateKey(session.timestamp);
+    if (key) practiceDates.add(key);
+  }
+
+  for (const session of aroundSessions) {
+    const key = getDateKey(session.timestamp);
+    if (key) practiceDates.add(key);
+  }
+
+  let streak = 0;
+  while (practiceDates.has(getDaysAgoKey(streak))) {
+    streak += 1;
+  }
+
+  const attemptTime = checkoutAttempts.reduce((sum, attempt) => {
+    if (!isWithinLastSevenDays(attempt.timestamp) || attempt.elapsedSeconds === null || attempt.elapsedSeconds <= 0) {
+      return sum;
+    }
+    return sum + attempt.elapsedSeconds;
+  }, 0);
+
+  const speedrunTime = speedruns.reduce((sum, session) => {
+    if (!isWithinLastSevenDays(session.timestamp) || session.totalActiveSeconds <= 0) {
+      return sum;
+    }
+    return sum + session.totalActiveSeconds;
+  }, 0);
+
+  const aroundTime = aroundSessions.reduce((sum, session) => {
+    if (!isWithinLastSevenDays(session.timestamp) || session.totalActiveSeconds <= 0) {
+      return sum;
+    }
+    return sum + session.totalActiveSeconds;
+  }, 0);
+
   const finishedCheckouts = checkoutAttempts
     .filter((attempt) => attempt.result === "finished")
     .map((attempt) => attempt.finishNumber);
-  const bestCheckout = finishedCheckouts.length > 0 ? String(Math.max(...finishedCheckouts)) : "-";
-  const speedrunTime = speedruns.reduce((sum, session) => sum + session.totalActiveSeconds, 0);
-  const aroundTime = aroundSessions.reduce((sum, session) => sum + session.totalActiveSeconds, 0);
-  const attemptTime = checkoutAttempts.reduce((sum, attempt) => sum + (attempt.elapsedSeconds ?? 0), 0);
-  const practiceTimeSeconds = speedrunTime + aroundTime + attemptTime;
-  const totalReps =
-    checkoutAttempts.length +
-    speedruns.reduce((sum, session) => sum + session.entries.length, 0) +
-    aroundSessions.reduce((sum, session) => sum + session.entries.length, 0);
-  const todayReps =
-    checkoutAttempts.filter((attempt) => isToday(attempt.timestamp)).length +
-    speedruns
-      .filter((session) => isToday(session.timestamp))
-      .reduce((sum, session) => sum + session.entries.length, 0) +
-    aroundSessions
-      .filter((session) => isToday(session.timestamp))
-      .reduce((sum, session) => sum + session.entries.length, 0);
+
+  const bestFinish = finishedCheckouts.length > 0 ? String(Math.max(...finishedCheckouts)) : DASH;
+  const bestRange = getBestRangeSession(speedruns);
 
   return {
-    lastAverage,
-    bestCheckout,
-    practiceTime: practiceTimeSeconds > 0 ? formatPracticeDuration(practiceTimeSeconds) : "-",
-    totalReps: totalReps > 0 ? formatNumber(totalReps) : "-",
-    streak: todayReps > 0 ? String(todayReps) : "-"
+    streak,
+    practiceTime: formatHomeMinutes(attemptTime + speedrunTime + aroundTime, language),
+    practiceTimeLabel: copy.sevenDays,
+    bestFinish,
+    bestFinishLabel: bestFinish === DASH ? DASH : copy.checkoutLabel,
+    bestRangeTime: bestRange ? formatPracticeDuration(bestRange.totalActiveSeconds) : DASH,
+    bestRangeLabel: bestRange ? bestRange.rangeLabel.replace(/-/g, "–") : DASH,
+    bestAtcOne: `1xD · ${getBestAroundClockTime(aroundSessions, 1)}`,
+    bestAtcTwo: `2xD · ${getBestAroundClockTime(aroundSessions, 2)}`
   };
 }
 
@@ -82,8 +191,10 @@ export function HomeScreen({
   speedruns: CheckoutSpeedrunSession[];
   aroundSessions: AroundClockSession[];
 }) {
-  const { t } = useI18n();
-  const summary = buildSummary(checkoutAttempts, speedruns, aroundSessions);
+  const { t, resolvedLanguage } = useI18n();
+  const homeCopy: HomeDashboardCopy = getHomeDashboardCopy(resolvedLanguage);
+
+  const summary = buildSummary(checkoutAttempts, speedruns, aroundSessions, resolvedLanguage, homeCopy);
   const titleParts = t.home.title.split(" ");
   const latestAround = aroundSessions[0] ?? null;
   const latestCheckout = checkoutAttempts[0] ?? null;
@@ -100,7 +211,7 @@ export function HomeScreen({
       tone: "hot",
       badge: "Hot",
       metaLabel: t.home.latest,
-      metaValue: latestCheckout ? String(latestCheckout.finishNumber) : "-"
+      metaValue: latestCheckout ? String(latestCheckout.finishNumber) : DASH
     },
     {
       title: t.stats.checkoutTimedRun,
@@ -109,7 +220,7 @@ export function HomeScreen({
       icon: "T",
       tone: "timer",
       metaLabel: t.home.bestTime,
-      metaValue: bestTimedRun !== null ? formatPracticeDuration(bestTimedRun) : "-"
+      metaValue: bestTimedRun !== null ? formatPracticeDuration(bestTimedRun) : DASH
     },
     {
       title: t.stats.aroundTheClock,
@@ -118,7 +229,7 @@ export function HomeScreen({
       icon: "C",
       tone: "clock",
       metaLabel: t.home.latest,
-      metaValue: latestAround ? formatPracticeDuration(latestAround.totalActiveSeconds) : "-"
+      metaValue: latestAround ? formatPracticeDuration(latestAround.totalActiveSeconds) : DASH
     },
     {
       title: t.checkoutLibrary.title,
@@ -161,30 +272,33 @@ export function HomeScreen({
           </h1>
           <p>{t.home.subtitle}</p>
         </div>
-        <div className="home-streak-card" aria-label={t.home.todayReps}>
+        <div className="home-streak-card" aria-label={homeCopy.dayStreak}>
           <span className="home-streak-icon" aria-hidden="true" />
           <strong>{summary.streak}</strong>
-          <span>{t.home.todayReps}</span>
+          <span>{homeCopy.dayStreak}</span>
         </div>
       </section>
 
       <section className="home-summary-grid" aria-label={t.home.summary}>
         <div className="home-summary-card">
-          <span>{t.home.lastAvg}</span>
-          <strong>{summary.lastAverage}</strong>
-        </div>
-        <div className="home-summary-card">
-          <span>{t.home.bestCheckout}</span>
-          <strong>{summary.bestCheckout}</strong>
-          <small>{summary.bestCheckout === "-" ? "-" : t.home.bestFinish}</small>
-        </div>
-        <div className="home-summary-card">
-          <span>{t.home.practiceTime}</span>
+          <span>{homeCopy.practiceTime}</span>
           <strong>{summary.practiceTime}</strong>
+          <small>{summary.practiceTimeLabel}</small>
         </div>
         <div className="home-summary-card">
-          <span>{t.home.totalReps}</span>
-          <strong>{summary.totalReps}</strong>
+          <span>{homeCopy.bestFinish}</span>
+          <strong>{summary.bestFinish}</strong>
+          <small>{summary.bestFinishLabel}</small>
+        </div>
+        <div className="home-summary-card">
+          <span>{homeCopy.bestRange}</span>
+          <strong>{summary.bestRangeTime}</strong>
+          <small>{summary.bestRangeLabel}</small>
+        </div>
+        <div className="home-summary-card home-summary-card-atc">
+          <span>{homeCopy.bestAtc}</span>
+          <strong>{summary.bestAtcOne}</strong>
+          <small>{summary.bestAtcTwo}</small>
         </div>
       </section>
 

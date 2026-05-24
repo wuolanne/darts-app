@@ -18,9 +18,7 @@ const I18nContext = createContext<I18nContextValue>({
 });
 
 function resolveLanguage(mode: AppLanguageMode): ResolvedLang {
-  if (mode === "en" || mode === "fi") return mode;
-  if (typeof navigator === "undefined") return "en";
-  return navigator.language.toLowerCase().startsWith("fi") ? "fi" : "en";
+  return mode === "fi" ? "fi" : "en";
 }
 
 export function I18nProvider({

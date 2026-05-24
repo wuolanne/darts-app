@@ -384,6 +384,16 @@ body {
   color: var(--success);
 }
 
+.home-summary-card-atc strong {
+  font-size: 0.98rem;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.home-summary-card-atc small {
+  margin-top: 4px;
+}
+
 .home-modes-section {
   display: flex;
   flex-direction: column;
@@ -1494,6 +1504,10 @@ body {
 
   .home-summary-card strong {
     font-size: 1.05rem;
+  }
+
+  .home-summary-card-atc strong {
+    font-size: 0.86rem;
   }
 
   .home-mode-card {

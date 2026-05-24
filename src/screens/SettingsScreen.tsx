@@ -1,6 +1,7 @@
 import { Card, ScreenTitle, Segmented } from "../components/ui";
 import { AppLanguageMode, ThemeMode, TimerOption, UserSettings } from "../types/models";
 import { useI18n } from "../i18n";
+import { getSettingsLanguageCopy } from "../i18n/uiTokens";
 
 const PREFERRED_DOUBLES = ["D16", "D20", "D18", "D12", "Not sure"] as const;
 const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim", "system"];
@@ -14,7 +15,8 @@ export function SettingsScreen({
   onUpdateSettings: (next: UserSettings) => void;
   onBack: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, resolvedLanguage } = useI18n();
+  const languageLabels = getSettingsLanguageCopy(resolvedLanguage);
 
   return (
     <div className="screen screen-settings">
@@ -73,9 +75,8 @@ export function SettingsScreen({
         <Segmented
           value={settings.languageMode}
           options={[
-            { label: t.settings.english, value: "en" as AppLanguageMode },
-            { label: t.settings.finnish, value: "fi" as AppLanguageMode },
-            { label: t.settings.system, value: "system" as AppLanguageMode }
+            { label: languageLabels.english, value: "en" as AppLanguageMode },
+            { label: languageLabels.finnish, value: "fi" as AppLanguageMode }
           ]}
           onChange={(languageMode) => onUpdateSettings({ ...settings, languageMode })}
         />

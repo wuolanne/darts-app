@@ -1,5 +1,5 @@
 export type ThemeMode = "dark" | "light" | "dim" | "system";
-export type AppLanguageMode = "en" | "fi" | "system";
+export type AppLanguageMode = "en" | "fi";
 export type PreferredDouble = "D16" | "D20" | "D18" | "D12" | "Not sure";
 export type TimerOption = 0 | 10 | 20 | 30;
 
