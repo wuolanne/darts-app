@@ -22,15 +22,6 @@ export const fi: TranslationDict = {
     on: "On",
     stop: "Lopeta"
   },
-  onboarding: {
-    throwPaceTitle: "Heittotahti",
-    throwPaceBody:
-      "Käytämme heittotahtia Kellon ympäri -tilastoissa arvioimaan tikkamäärää ja osumatarkkuutta.\n\nValitse nyt lähin arvio. Voit myöhemmin mitata oman heittotahtisi tarkemmin asetuksissa, ja sovellus käyttää sitä tilastoissa.",
-    fastPreset: "Nopea: 7 s / 3 tikkaa",
-    normalPreset: "Normaali: 10 s / 3 tikkaa",
-    relaxedPreset: "Rento: 13 s / 3 tikkaa",
-    setLater: "Asetan myöhemmin"
-  },
   home: {
     title: "Darts Practice",
     subtitle: "Vähän syöttöä vaativat harjoitustilat päivittäiseen treeniin.",
@@ -175,8 +166,6 @@ export const fi: TranslationDict = {
     center: "Keskiö",
     selectedCount: "Valittu: {count}",
     selectAtLeastOne: "Valitse vähintään yksi kohde.",
-    estimatedDarts: "Arvioidut tikat",
-    basedOnPace: "Perustuu tahtiin {pace} s / 3 tikkaa",
     pauseTime: "Taukoaika",
     newPersonalBest: "Uusi ennätys!",
     pbDiff: "Ero ennätykseen: +{time}"
@@ -249,10 +238,6 @@ export const fi: TranslationDict = {
     closeAllAroundStats: "Sulje kaikki Kellon ympäri -tilastot",
     showDetailedAroundStats: "Näytä tarkemmat Kellon ympäri -tilastot",
     hideDetailedAroundStats: "Piilota tarkemmat Kellon ympäri -tilastot",
-    estimatedDarts: "Arvioidut tikat",
-    estimatedHitRate: "Arvioitu osumatarkkuus",
-    estimateBasedOnThrowPace: "Arvio perustuu heittotahtiisi",
-    throwPaceCta: "Mittaa heittotahtisi nähdäksesi arvioidut tikat ja osumatarkkuuden.",
     noSectorLevelData: "Ei sektorikohtaista dataa tälle pelimuodolle.",
     noTargetLevelData: "Ei kohdekohtaista dataa tälle pelimuodolle.",
     noDetailedAroundStats: "Ei vielä tarkempia Kellon ympäri -tilastoja",
@@ -276,26 +261,7 @@ export const fi: TranslationDict = {
     finnish: "Suomi",
     system: "Järjestelmä",
     vibrationFeedback: "Värinäpalaute",
-    throwPace: "Heittotahti",
-    currentNotSet: "Nykyinen heittotahti: Ei asetettu",
-    currentThrowPace: "Nykyinen heittotahti: {pace} s / 3 tikkaa",
-    throwPaceHelp: "Tätä käytetään Kellon ympäri -tilastoissa arvioituihin tikkoihin ja arvioituun osumatarkkuuteen.",
     vibrationHelp: "Käyttää laitteen värinää, jos se on saatavilla.",
-    fastPace: "Nopea: 7 s / 3 tikkaa",
-    normalPace: "Normaali: 10 s / 3 tikkaa",
-    relaxedPace: "Rento: 13 s / 3 tikkaa",
-    notSet: "Ei asetettu",
-    customSecondsPerThree: "Mukautetut sekunnit / 3 tikkaa",
-    saveCustom: "Tallenna",
-    manualPaceSaved: "Manuaalinen tahti tallennettu: {pace} s / 3 tikkaa",
-    measuredPaceSaved: "Mitattu tahti tallennettu: {pace} s / 3 tikkaa",
-    paceRangeError: "Tahdin pitää olla {min}-{max} s / 3 tikkaa.",
-    calculatedPaceRangeError: "Lasketun tahdin pitää olla {min}-{max} s / 3 tikkaa.",
-    fiveMinuteTest: "5 minuutin heittotahditesti",
-    fiveMinuteTestHelp: "Heitä 5 minuuttia ja syötä lopuksi heitettyjen tikkojen määrä. Sovellus laskee sekunnit / 3 tikkaa.",
-    startFiveMinuteTest: "Aloita 5 minuutin testi",
-    dartsThrownInFive: "Heitetyt tikat 5 minuutissa",
-    dartsThrownPositive: "Heitettyjen tikkojen pitää olla positiivinen luku.",
-    saveCalibratedPace: "Tallenna mitattu tahti"
+    notSet: "Ei asetettu"
   }
 };

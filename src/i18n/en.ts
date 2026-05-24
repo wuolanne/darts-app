@@ -20,15 +20,6 @@ export const en = {
     on: "On",
     stop: "Stop"
   },
-  onboarding: {
-    throwPaceTitle: "Throw pace",
-    throwPaceBody:
-      "We use your throw pace in Around the Clock stats to estimate darts thrown and hit rate.\n\nChoose the closest estimate for now. Later, you can measure your own throw pace more accurately in settings, and the app will use it in your stats.",
-    fastPreset: "Fast: 7 s / 3 darts",
-    normalPreset: "Normal: 10 s / 3 darts",
-    relaxedPreset: "Relaxed: 13 s / 3 darts",
-    setLater: "Set later"
-  },
   home: {
     title: "Darts Practice",
     subtitle: "Low-input practice modes for daily reps.",
@@ -173,8 +164,6 @@ export const en = {
     center: "Center",
     selectedCount: "Selected: {count}",
     selectAtLeastOne: "Select at least one target.",
-    estimatedDarts: "Estimated darts",
-    basedOnPace: "Based on {pace} sec / 3 darts",
     pauseTime: "Pause time",
     newPersonalBest: "New personal best!",
     pbDiff: "PB diff: +{time}"
@@ -247,10 +236,6 @@ export const en = {
     closeAllAroundStats: "Close all Around the Clock stats",
     showDetailedAroundStats: "Show detailed Around the Clock stats",
     hideDetailedAroundStats: "Hide detailed Around the Clock stats",
-    estimatedDarts: "Estimated darts",
-    estimatedHitRate: "Estimated hit rate",
-    estimateBasedOnThrowPace: "Estimate based on your throw pace",
-    throwPaceCta: "Measure your throw pace to see estimated darts and hit rate.",
     noSectorLevelData: "No sector-level data for this game mode yet.",
     noTargetLevelData: "No target-level data for this game mode yet.",
     noDetailedAroundStats: "No detailed Around the Clock stats yet",
@@ -274,27 +259,8 @@ export const en = {
     finnish: "Suomi",
     system: "System",
     vibrationFeedback: "Vibration feedback",
-    throwPace: "Throw pace",
-    currentNotSet: "Current throw pace: Not set",
-    currentThrowPace: "Current throw pace: {pace} sec / 3 darts",
-    throwPaceHelp: "This is used in Around the Clock stats to estimate darts thrown and hit rate.",
     vibrationHelp: "Uses device vibration when available.",
-    fastPace: "Fast: 7 sec / 3 darts",
-    normalPace: "Normal: 10 sec / 3 darts",
-    relaxedPace: "Relaxed: 13 sec / 3 darts",
-    notSet: "Not set",
-    customSecondsPerThree: "Custom seconds / 3 darts",
-    saveCustom: "Save custom",
-    manualPaceSaved: "Manual pace saved: {pace} sec / 3 darts",
-    measuredPaceSaved: "Measured pace saved: {pace} sec / 3 darts",
-    paceRangeError: "Pace must be between {min} and {max} sec / 3 darts.",
-    calculatedPaceRangeError: "Calculated pace must be between {min} and {max} sec / 3 darts.",
-    fiveMinuteTest: "5-minute throw pace test",
-    fiveMinuteTestHelp: "Throw for 5 minutes and enter the number of darts thrown. The app calculates seconds / 3 darts.",
-    startFiveMinuteTest: "Start 5 minute test",
-    dartsThrownInFive: "Darts thrown in 5 minutes",
-    dartsThrownPositive: "Darts thrown must be a positive number.",
-    saveCalibratedPace: "Save calibrated pace"
+    notSet: "Not set"
   }
 };
 

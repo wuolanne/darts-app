@@ -895,6 +895,22 @@ body {
   text-wrap: nowrap;
 }
 
+.checkout-focus {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkout-focus-label {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.checkout-focus-value {
+  margin-top: 0;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,5 +1,6 @@
 import { PreferredDouble } from "../../types/models";
 import {
+  getAlternativeCheckoutRoutes,
   formatRoute,
   getPrimaryCheckoutRoute,
   getSingleHitContinuation,
@@ -24,9 +25,27 @@ export function CheckoutRouteSummary({
   const curatedPrimary = getPrimaryCheckoutRoute(finish, preferredDouble);
   const continuation = curatedPrimary ? getSingleHitContinuation(curatedPrimary) : undefined;
   const firstTarget = curatedPrimary?.route[0] ? normalizeDartTarget(curatedPrimary.route[0]) : null;
-  const alternatives = rankedRoutes.slice(1, 2);
+  const curatedAlternatives = getAlternativeCheckoutRoutes(finish, preferredDouble);
+  const primaryPath = curatedPrimary?.route ?? bestRoute?.path ?? [];
+  const primaryQuality =
+    rankedRoutes.find((route) => formatRoute(route.path) === formatRoute(primaryPath))?.quality ??
+    bestRoute?.quality ??
+    null;
+  const topAlternative = curatedAlternatives[0]
+    ? {
+        route: curatedAlternatives[0].route,
+        quality:
+          rankedRoutes.find((route) => formatRoute(route.path) === formatRoute(curatedAlternatives[0].route))?.quality ??
+          null
+      }
+    : rankedRoutes.find((route) => formatRoute(route.path) !== formatRoute(primaryPath))
+      ? {
+          route: rankedRoutes.find((route) => formatRoute(route.path) !== formatRoute(primaryPath))!.path,
+          quality: rankedRoutes.find((route) => formatRoute(route.path) !== formatRoute(primaryPath))!.quality
+        }
+      : null;
 
-  if (!bestRoute) {
+  if (!bestRoute && !curatedPrimary) {
     return (
       <div className="route-teach-card">
         <p className="warn-text">{t.quickCheckout.noValidRouteYet}</p>
@@ -38,10 +57,10 @@ export function CheckoutRouteSummary({
     <div className={`route-teach-card${compact ? " route-teach-card-compact" : ""}`}>
       <div className="route-teach-head">
         <strong>{t.checkoutLibrary.optimalRoute}</strong>
-        <span className="muted">{bestRoute.quality}%</span>
+        {primaryQuality !== null ? <span className="muted">{primaryQuality}%</span> : null}
       </div>
       <p className="route-compact-line">
-        <span className="muted">{t.checkoutLibrary.main}:</span> <strong>{formatRoute(bestRoute.path)}</strong>
+        <span className="muted">{t.checkoutLibrary.main}:</span> <strong>{formatRoute(primaryPath)}</strong>
       </p>
       {continuation && firstTarget ? (
         <p className="route-compact-line">
@@ -58,11 +77,16 @@ export function CheckoutRouteSummary({
           <span className="muted">{t.checkoutLibrary.why}:</span> {t.checkoutLibrary.bestRankedRoute}
         </p>
       )}
-      {alternatives.length > 0 ? (
+      {topAlternative ? (
         <p className="route-compact-line">
           <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>{" "}
-          <strong>{formatRoute(alternatives[0].path)}</strong>{" "}
-          <span className="muted">{alternatives[0].quality}%</span>
+          <strong>{formatRoute(topAlternative.route)}</strong>
+          {topAlternative.quality !== null ? (
+            <>
+              {" "}
+              <span className="muted">{topAlternative.quality}%</span>
+            </>
+          ) : null}
         </p>
       ) : null}
     </div>

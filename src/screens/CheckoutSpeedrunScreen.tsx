@@ -297,7 +297,10 @@ export function CheckoutSpeedrunScreen({
               {running.index + 1}/{running.list.length}
             </Pill>
           </div>
-          <p className="big-number">{`${t.checkoutTimedRun.currentCheckout}: ${currentCheckout}`}</p>
+          <div className="checkout-focus">
+            <p className="muted checkout-focus-label">{t.checkoutTimedRun.currentCheckout}</p>
+            <p className="big-number checkout-focus-value">{currentCheckout}</p>
+          </div>
           <div className="metric-grid">
             <div>
               <p className="muted">{t.checkoutTimedRun.totalTime}</p>
