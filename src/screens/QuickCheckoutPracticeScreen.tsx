@@ -18,10 +18,9 @@ import {
 } from "../utils/checkoutLibrary";
 import {
   CheckoutEvaluationResult,
-  evaluateCheckoutAttempt,
-  generateValidRoutes,
-  rankRoutes
+  evaluateCheckoutAttempt
 } from "../features/checkout-engine";
+import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
 import { formatI18n, useI18n } from "../i18n";
@@ -173,15 +172,6 @@ export function QuickCheckoutPracticeScreen({
   const maxDarts = missScenario ? 2 : 3;
   const maxPicks = Math.max(maxDarts, 1);
   const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
-  const validRoutesForAttempt = useMemo(
-    () => generateValidRoutes(attemptStartScore, maxDarts),
-    [attemptStartScore, maxDarts]
-  );
-  const rankedRoutesForAttempt = useMemo(
-    () => rankRoutes(attemptStartScore, validRoutesForAttempt, settings.preferredDouble),
-    [attemptStartScore, validRoutesForAttempt, settings.preferredDouble]
-  );
-  const goodAlternativeRoutes = rankedRoutesForAttempt.slice(1, 5);
   const getEvaluationExplanation = (result: CheckoutEvaluationResult): string => {
     if (!result.isValidCheckout) {
       if (result.status === "bust") return t.quickCheckout.bustExplanation;
@@ -605,20 +595,7 @@ export function QuickCheckoutPracticeScreen({
                       <p className="route-compact-line">
                         <span className="muted">{t.quickCheckout.whyThisRoute}:</span> {getEvaluationExplanation(evaluation)}
                       </p>
-                      {goodAlternativeRoutes.length > 0 ? (
-                        <div className="route-compact-line">
-                          <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>{" "}
-                          {goodAlternativeRoutes.map((route) => (
-                            <p key={formatRoute(route.path)} className="route-compact-line">
-                              <strong>{formatRoute(route.path)}</strong>{" "}
-                              <span className="muted">{route.quality}%</span>
-                            </p>
-                          ))}
-                        </div>
-                      ) : null}
-                      <p className="route-compact-line">
-                        <span className="muted">{t.quickCheckout.validRoutes}:</span> {validRoutesForAttempt.length}
-                      </p>
+                      <CheckoutRouteSummary finish={attemptStartScore} preferredDouble={settings.preferredDouble} compact />
                     </div>
                   ) : null}
                   <div className="row top-gap">

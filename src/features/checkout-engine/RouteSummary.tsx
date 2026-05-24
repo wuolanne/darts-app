@@ -24,7 +24,7 @@ export function CheckoutRouteSummary({
   const curatedPrimary = getPrimaryCheckoutRoute(finish, preferredDouble);
   const continuation = curatedPrimary ? getSingleHitContinuation(curatedPrimary) : undefined;
   const firstTarget = curatedPrimary?.route[0] ? normalizeDartTarget(curatedPrimary.route[0]) : null;
-  const alternatives = rankedRoutes.slice(1, compact ? 4 : 2);
+  const alternatives = rankedRoutes.slice(1, 2);
 
   if (!bestRoute) {
     return (
@@ -35,7 +35,7 @@ export function CheckoutRouteSummary({
   }
 
   return (
-    <div className="route-teach-card">
+    <div className={`route-teach-card${compact ? " route-teach-card-compact" : ""}`}>
       <div className="route-teach-head">
         <strong>{t.checkoutLibrary.optimalRoute}</strong>
         <span className="muted">{bestRoute.quality}%</span>
@@ -59,21 +59,10 @@ export function CheckoutRouteSummary({
         </p>
       )}
       {alternatives.length > 0 ? (
-        <div className="route-compact-line">
-          <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>
-          <div className="route-alternative-list">
-            {alternatives.map((route) => (
-              <p key={formatRoute(route.path)} className="route-compact-line">
-                <strong>{formatRoute(route.path)}</strong>{" "}
-                <span className="muted">{route.quality}%</span>
-              </p>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      {!compact ? (
         <p className="route-compact-line">
-          <span className="muted">{t.checkoutLibrary.validRoutes}:</span> {validRoutes.length}
+          <span className="muted">{t.checkoutLibrary.goodAlternatives}:</span>{" "}
+          <strong>{formatRoute(alternatives[0].path)}</strong>{" "}
+          <span className="muted">{alternatives[0].quality}%</span>
         </p>
       ) : null}
     </div>
