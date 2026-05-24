@@ -15,6 +15,7 @@ type AroundModeSummary = {
   latest: number;
   latestTimestamp: string;
   entryCount: number;
+  estimatedHitRate: number | null;
 };
 
 type AroundEntryRecord = {
@@ -103,16 +104,50 @@ function getSectorLabel(target: string): string {
   return sector ? String(Number(sector)) : target;
 }
 
+function isReasonableThrowPace(secondsPerThree: number | null | undefined): secondsPerThree is number {
+  return (
+    typeof secondsPerThree === "number" &&
+    Number.isFinite(secondsPerThree) &&
+    secondsPerThree >= 4 &&
+    secondsPerThree <= 30
+  );
+}
+
+function resolveThrowPace(
+  sessionSecondsPerThree: number | null | undefined,
+  settingsSecondsPerThree: number | null
+): number | null {
+  if (isReasonableThrowPace(sessionSecondsPerThree)) {
+    return sessionSecondsPerThree;
+  }
+  return isReasonableThrowPace(settingsSecondsPerThree) ? settingsSecondsPerThree : null;
+}
+
 function estimateEntryDarts(seconds: number, secondsPerThree: number | null): number | null {
   if (
-    typeof secondsPerThree !== "number" ||
-    !Number.isFinite(secondsPerThree) ||
-    secondsPerThree <= 0 ||
+    !isReasonableThrowPace(secondsPerThree) ||
     seconds <= 0
   ) {
     return null;
   }
   return (seconds * 3) / secondsPerThree;
+}
+
+function getEstimateMetrics(requiredHits: number | null, estimatedDarts: number | null) {
+  if (estimatedDarts === null || !Number.isFinite(estimatedDarts) || estimatedDarts <= 0) {
+    return { estimatedDarts: null as number | null, estimatedHitRate: null as number | null };
+  }
+  if (requiredHits === null || !Number.isFinite(requiredHits) || requiredHits <= 0) {
+    return { estimatedDarts, estimatedHitRate: null as number | null };
+  }
+  if (estimatedDarts < requiredHits) {
+    return { estimatedDarts: null as number | null, estimatedHitRate: null as number | null };
+  }
+  const estimatedHitRate = (requiredHits / estimatedDarts) * 100;
+  if (!Number.isFinite(estimatedHitRate) || estimatedHitRate <= 0 || estimatedHitRate > 100) {
+    return { estimatedDarts: null as number | null, estimatedHitRate: null as number | null };
+  }
+  return { estimatedDarts, estimatedHitRate };
 }
 
 function requiredHitsForEntry(session: AroundClockSession, target: string): number | null {
@@ -156,7 +191,10 @@ export function StatsScreen({
 
   const checkout = getCheckoutStats(checkoutAttempts, range);
   const speedrun = getSpeedrunStats(speedruns, range);
-  const hasThrowPace = typeof settings.throwPace.secondsPerThree === "number" && settings.throwPace.secondsPerThree > 0;
+  const settingsThrowPace = isReasonableThrowPace(settings.throwPace.secondsPerThree)
+    ? settings.throwPace.secondsPerThree
+    : null;
+  const hasThrowPace = settingsThrowPace !== null;
 
   const formatDurationOrDash = (seconds: number | null | undefined) =>
     typeof seconds === "number" && seconds > 0 ? formatClock(seconds) : "-";
@@ -201,12 +239,39 @@ export function StatsScreen({
           best: Math.min(...times),
           latest: latest.totalActiveSeconds,
           latestTimestamp: latest.timestamp,
-          entryCount
+          entryCount,
+          estimatedHitRate: (() => {
+            const estimates = items
+              .map((item) => {
+                const estimatedDarts = estimateEntryDarts(
+                  item.totalActiveSeconds,
+                  resolveThrowPace(item.throwPaceSecondsPerThree, settingsThrowPace)
+                );
+                const requiredHits = item.entries.reduce((sum, entry) => {
+                  const hits = requiredHitsForEntry(item, entry.target);
+                  return hits ? sum + hits : sum;
+                }, 0);
+                return getEstimateMetrics(requiredHits > 0 ? requiredHits : null, estimatedDarts);
+              })
+              .filter(
+                (row): row is { estimatedDarts: number; estimatedHitRate: number } =>
+                  row.estimatedDarts !== null && row.estimatedHitRate !== null
+              );
+            if (estimates.length === 0) return null;
+            const totalRequiredHitsRateWeighted = estimates.reduce(
+              (sum, row) => sum + row.estimatedDarts * (row.estimatedHitRate / 100),
+              0
+            );
+            const totalEstimatedDarts = estimates.reduce((sum, row) => sum + row.estimatedDarts, 0);
+            if (totalEstimatedDarts <= 0) return null;
+            const aggregatedRate = (totalRequiredHitsRateWeighted / totalEstimatedDarts) * 100;
+            return aggregatedRate > 0 && aggregatedRate <= 100 ? aggregatedRate : null;
+          })()
         };
       })
       .filter((row) => row.sessions > 0 && row.best > 0 && row.latest > 0)
       .sort((a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime());
-  }, [filteredAroundSessions, t]);
+  }, [filteredAroundSessions, settingsThrowPace, t]);
 
   const aroundEntryRecords = React.useMemo<AroundEntryRecord[]>(() => {
     return filteredAroundSessions.flatMap((session) =>
@@ -220,11 +285,14 @@ export function StatsScreen({
           sectorLabel: getSectorLabel(entry.target),
           seconds: entry.seconds,
           timestamp: session.timestamp,
-          estimatedDarts: estimateEntryDarts(entry.seconds, session.throwPaceSecondsPerThree),
+          estimatedDarts: estimateEntryDarts(
+            entry.seconds,
+            resolveThrowPace(session.throwPaceSecondsPerThree, settingsThrowPace)
+          ),
           requiredHits: requiredHitsForEntry(session, entry.target)
         }))
     );
-  }, [filteredAroundSessions, t]);
+  }, [filteredAroundSessions, settingsThrowPace, t]);
 
   const aroundModeOptions = React.useMemo(() => {
     const map = new Map<Exclude<AroundDetailModeKey, "all">, { value: Exclude<AroundDetailModeKey, "all">; label: string; entries: number; latestTimestamp: string }>();
@@ -311,18 +379,16 @@ export function StatsScreen({
       .map(([key, item]) => {
         const averageTime = item.attempts > 0 ? item.totalTime / item.attempts : 0;
         const estimateReady = item.estimatedCount === item.attempts && item.requiredCount === item.attempts;
-        const estimatedDarts = estimateReady && item.estimatedDartsSum > 0 ? item.estimatedDartsSum : null;
-        const estimatedHitRate =
-          estimateReady && item.estimatedDartsSum > 0 && item.requiredHitsSum > 0
-            ? (item.requiredHitsSum / item.estimatedDartsSum) * 100
-            : null;
+        const estimateMetrics = estimateReady
+          ? getEstimateMetrics(item.requiredHitsSum > 0 ? item.requiredHitsSum : null, item.estimatedDartsSum)
+          : { estimatedDarts: null, estimatedHitRate: null };
         return {
           key,
           attempts: item.attempts,
           averageTime,
           totalTime: item.totalTime,
-          estimatedDarts,
-          estimatedHitRate
+          estimatedDarts: estimateMetrics.estimatedDarts,
+          estimatedHitRate: estimateMetrics.estimatedHitRate
         };
       })
       .filter((row) => row.attempts > 0 && row.averageTime > 0)
@@ -479,7 +545,9 @@ export function StatsScreen({
                   key={row.key}
                   left={row.label}
                   middle={`${t.stats.sessions} ${row.sessions}`}
-                  right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(row.latest)}`}
+                  right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(row.latest)}${
+                    row.estimatedHitRate !== null ? ` · ${t.stats.estimatedHitRate} ${row.estimatedHitRate.toFixed(1)} %` : ""
+                  }`}
                 />
               ))}
             </details>
@@ -573,18 +641,24 @@ export function StatsScreen({
                       <summary>{t.stats.sessionHistory}</summary>
                       {sortedAroundSessions.map((session) => {
                         const sessionEntries = session.entries.filter((entry) => entry.seconds > 0);
-                        const sessionEstimatedDarts =
-                          typeof session.throwPaceSecondsPerThree === "number" && session.throwPaceSecondsPerThree > 0
-                            ? (session.totalActiveSeconds * 3) / session.throwPaceSecondsPerThree
-                            : null;
+                        const resolvedThrowPace = resolveThrowPace(
+                          session.throwPaceSecondsPerThree,
+                          settingsThrowPace
+                        );
+                        const rawSessionEstimatedDarts = estimateEntryDarts(
+                          session.totalActiveSeconds,
+                          resolvedThrowPace
+                        );
                         const sessionRequiredHits = sessionEntries.reduce((sum, entry) => {
                           const hits = requiredHitsForEntry(session, entry.target);
                           return hits ? sum + hits : sum;
                         }, 0);
-                        const sessionEstimatedHitRate =
-                          sessionEstimatedDarts && sessionRequiredHits > 0
-                            ? (sessionRequiredHits / sessionEstimatedDarts) * 100
-                            : null;
+                        const sessionEstimateMetrics = getEstimateMetrics(
+                          sessionRequiredHits > 0 ? sessionRequiredHits : null,
+                          rawSessionEstimatedDarts
+                        );
+                        const sessionEstimatedDarts = sessionEstimateMetrics.estimatedDarts;
+                        const sessionEstimatedHitRate = sessionEstimateMetrics.estimatedHitRate;
                         const hasMeaningfulDetail =
                           sessionEntries.length > 0 ||
                           sessionEstimatedDarts !== null ||
