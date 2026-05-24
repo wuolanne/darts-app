@@ -12,14 +12,13 @@ import {
 import {
   DartTarget,
   getPrimaryCheckoutRoute,
-  getSingleHitContinuation,
   normalizeDartTarget
 } from "../utils/checkoutLibrary";
 import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
 import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, toRoundedSeconds } from "../utils/time";
-import { formatI18n, useI18n } from "../i18n";
+import { useI18n } from "../i18n";
 
 type Stage = "setup" | "playing";
 
@@ -27,16 +26,6 @@ interface FeedbackState {
   tone: "correct" | "wrong" | "complete" | "info";
   title: string;
   body: string;
-}
-
-type PracticeMode = "main-route" | "single-miss-scenario";
-
-interface MissScenario {
-  finish: number;
-  triedTreble: string;
-  hitSingle: string;
-  remaining: number;
-  continuationRoute: DartTarget[];
 }
 
 interface RouteSnapshot {
@@ -72,35 +61,6 @@ function buildPlayableFinishes(
   });
 }
 
-function buildMissScenarios(
-  min: number,
-  max: number,
-  preferredDouble: UserSettings["preferredDouble"]
-): MissScenario[] {
-  const scenarios: MissScenario[] = [];
-  const candidates = buildPlayableFinishes(min, max, preferredDouble);
-
-  for (const finish of candidates) {
-    const primary = getPrimaryCheckoutRoute(finish, preferredDouble);
-    if (!primary || primary.route.length === 0) continue;
-    const first = normalizeDartTarget(primary.route[0] ?? "");
-    if (!first.startsWith("T")) continue;
-    const continuation = getSingleHitContinuation(primary);
-    if (!continuation) continue;
-    const continuationRoute = continuation.continuationRoute.map((item) => normalizeDartTarget(item));
-    if (continuationRoute.length === 0 || continuationRoute.length > 2) continue;
-    scenarios.push({
-      finish,
-      triedTreble: first,
-      hitSingle: normalizeDartTarget(continuation.singleHitTarget),
-      remaining: continuation.remaining,
-      continuationRoute
-    });
-  }
-
-  return scenarios;
-}
-
 export function QuickCheckoutPracticeScreen({
   settings,
   onBack,
@@ -112,7 +72,6 @@ export function QuickCheckoutPracticeScreen({
 }) {
   const { t } = useI18n();
   const [selectedRange, setSelectedRange] = useState<CheckoutRangeKey>("61-70");
-  const [practiceMode, setPracticeMode] = useState<PracticeMode>("main-route");
   const [customStart, setCustomStart] = useState("61");
   const [customEnd, setCustomEnd] = useState("70");
   const [timerSeconds, setTimerSeconds] = useState<TimerOption>(settings.defaultTimer);
@@ -128,11 +87,9 @@ export function QuickCheckoutPracticeScreen({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [completed, setCompleted] = useState(false);
   const [savedResult, setSavedResult] = useState(false);
-  const [missScenario, setMissScenario] = useState<MissScenario | null>(null);
   const [pickedTargets, setPickedTargets] = useState<string[]>([]);
   const [pickHistory, setPickHistory] = useState<PickHistoryItem[]>([]);
   const [lastMainFinish, setLastMainFinish] = useState<number | null>(null);
-  const [lastScenarioKey, setLastScenarioKey] = useState<string | null>(null);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -152,19 +109,15 @@ export function QuickCheckoutPracticeScreen({
     () => buildPlayableFinishes(activeRange.min, activeRange.max, settings.preferredDouble),
     [activeRange.min, activeRange.max, settings.preferredDouble]
   );
-  const missScenarios = useMemo(
-    () => buildMissScenarios(activeRange.min, activeRange.max, settings.preferredDouble),
-    [activeRange.min, activeRange.max, settings.preferredDouble]
-  );
-  const playableCountForMode = practiceMode === "single-miss-scenario" ? missScenarios.length : playableFinishes.length;
+  const playableCountForMode = playableFinishes.length;
 
   const currentRouteData = useMemo(
     () => getPrimaryCheckoutRoute(finish, settings.preferredDouble),
     [finish, settings.preferredDouble]
   );
 
-  const attemptStartScore = missScenario ? missScenario.remaining : finish;
-  const maxDarts = missScenario ? 2 : 3;
+  const attemptStartScore = finish;
+  const maxDarts = 3;
   const maxPicks = Math.max(maxDarts, 1);
   const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
   const getEvaluationExplanation = (result: CheckoutEvaluationResult): string => {
@@ -262,7 +215,6 @@ export function QuickCheckoutPracticeScreen({
     const fallbackRoute = primary?.route ?? [];
 
     setFinish(nextFinish);
-    setMissScenario(null);
     resetAttemptState();
     setRemaining(nextFinish);
     setActiveRoute(fallbackRoute);
@@ -270,35 +222,7 @@ export function QuickCheckoutPracticeScreen({
     setStage("playing");
   }
 
-  function loadMissScenario(nextScenario: MissScenario) {
-    setFinish(nextScenario.finish);
-    setMissScenario(nextScenario);
-    resetAttemptState();
-    setRemaining(nextScenario.remaining);
-    setActiveRoute(nextScenario.continuationRoute);
-    setLastScenarioKey(`${nextScenario.finish}-${nextScenario.triedTreble}-${nextScenario.remaining}`);
-    setStage("playing");
-  }
-
   function startPractice() {
-    if (practiceMode === "single-miss-scenario") {
-      const scenario = randomPickAvoiding(
-        missScenarios,
-        (item) => `${item.finish}-${item.triedTreble}-${item.remaining}`,
-        null
-      );
-      if (!scenario) {
-        setFeedback({
-          tone: "info",
-          title: t.quickCheckout.noScenarioDataTitle,
-          body: t.quickCheckout.noScenarioInRange
-        });
-        return;
-      }
-      loadMissScenario(scenario);
-      return;
-    }
-
     const nextFinish = randomPickAvoiding(
       playableFinishes,
       (item) => String(item),
@@ -316,24 +240,6 @@ export function QuickCheckoutPracticeScreen({
   }
 
   function nextCheckout() {
-    if (practiceMode === "single-miss-scenario") {
-      const scenario = randomPickAvoiding(
-        missScenarios,
-        (item) => `${item.finish}-${item.triedTreble}-${item.remaining}`,
-        lastScenarioKey
-      );
-      if (!scenario) {
-        setFeedback({
-          tone: "info",
-          title: t.quickCheckout.noScenarioData,
-          body: t.quickCheckout.noScenarioInRange
-        });
-        return;
-      }
-      loadMissScenario(scenario);
-      return;
-    }
-
     const nextFinish = randomPickAvoiding(
       playableFinishes,
       (item) => String(item),
@@ -469,26 +375,13 @@ export function QuickCheckoutPracticeScreen({
             }))}
             onChange={setTimerSeconds}
           />
-          <p className="muted top-gap">{t.quickCheckout.mode}</p>
-          <Segmented
-            value={practiceMode}
-            options={[
-              { label: t.quickCheckout.mainRoute, value: "main-route" },
-              { label: t.quickCheckout.singleMissScenarios, value: "single-miss-scenario" }
-            ]}
-            onChange={(value) => setPracticeMode(value as PracticeMode)}
-          />
           <p className="muted top-gap">{t.quickCheckout.playableFinishes}: {playableCountForMode}</p>
-          {practiceMode === "single-miss-scenario" ? (
-            <p className="muted">{t.quickCheckout.availableScenarios}: {missScenarios.length}</p>
-          ) : null}
           <div className="top-gap">
             <Button
               full
               onClick={startPractice}
               disabled={
-                (practiceMode === "main-route" && playableCountForMode === 0) ||
-                (practiceMode === "single-miss-scenario" && playableCountForMode === 0) ||
+                playableCountForMode === 0 ||
                 (selectedRange === "custom" && !customRange)
               }
             >
@@ -507,17 +400,6 @@ export function QuickCheckoutPracticeScreen({
           </div>
 
           <p className="big-number">{t.quickCheckout.finish}: {finish}</p>
-          {practiceMode === "single-miss-scenario" && missScenario ? (
-            <>
-              <p>
-                {formatI18n(t.quickCheckout.triedHit, {
-                  tried: missScenario.triedTreble,
-                  hit: missScenario.hitSingle
-                })}
-              </p>
-              <p>{formatI18n(t.quickCheckout.leftChooseContinuation, { remaining: missScenario.remaining })}</p>
-            </>
-          ) : null}
           <p>
             <span className="muted">{t.quickCheckout.currentRemaining}:</span> {remaining}
           </p>
