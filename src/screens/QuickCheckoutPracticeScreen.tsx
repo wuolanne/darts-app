@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, ScreenTitle, Segmented } from "../components/ui";
 import { CheckoutMiniGameScreen } from "../components/CheckoutMiniGameScreen";
 import { CheckoutAttempt, CheckoutRangeKey, CheckoutResult, TimerOption, UserSettings } from "../types/models";
@@ -85,10 +85,10 @@ export function QuickCheckoutPracticeScreen({
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [completed, setCompleted] = useState(false);
-  const [savedResult, setSavedResult] = useState(false);
   const [pickedTargets, setPickedTargets] = useState<string[]>([]);
   const [pickHistory, setPickHistory] = useState<PickHistoryItem[]>([]);
   const [lastMainFinish, setLastMainFinish] = useState<number | null>(null);
+  const savedResultRef = useRef(false);
 
   const selectedPreset = useMemo(
     () => CHECKOUT_RANGE_PRESETS.find((preset) => preset.key === selectedRange) ?? CHECKOUT_RANGE_PRESETS[0],
@@ -110,14 +110,9 @@ export function QuickCheckoutPracticeScreen({
   );
   const playableCountForMode = playableFinishes.length;
 
-  const currentRouteData = useMemo(
-    () => getPrimaryCheckoutRoute(finish, settings.preferredDouble),
-    [finish, settings.preferredDouble]
-  );
-
   const attemptStartScore = finish;
   const maxDarts = 3;
-  const getEvaluationExplanation = (result: CheckoutEvaluationResult): string => {
+  const getEvaluationExplanation = useCallback((result: CheckoutEvaluationResult): string => {
     if (!result.isValidCheckout) {
       if (result.status === "bust") return t.quickCheckout.bustExplanation;
       if (result.status === "impossible") return t.quickCheckout.impossibleExplanation;
@@ -131,7 +126,23 @@ export function QuickCheckoutPracticeScreen({
     }
     if (result.routeQuality >= 60) return t.quickCheckout.cleanerRouteAvailable;
     return t.quickCheckout.avoidableRisk;
-  };
+  }, [t]);
+
+  const saveAttempt = useCallback((result: CheckoutResult) => {
+    if (savedResultRef.current) return;
+    savedResultRef.current = true;
+    const elapsed = toRoundedSeconds(performance.now() - attemptStartedAt);
+    const attempt: CheckoutAttempt = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      finishNumber: finish,
+      range: selectedRange,
+      preferredDouble: settings.preferredDouble,
+      result,
+      elapsedSeconds: timerSeconds > 0 ? elapsed : null
+    };
+    window.setTimeout(() => onSaveAttempt(attempt), 0);
+  }, [attemptStartedAt, finish, onSaveAttempt, selectedRange, settings.preferredDouble, timerSeconds]);
 
   useEffect(() => {
     if (stage !== "playing" || timerSeconds === 0 || completed) {
@@ -141,7 +152,7 @@ export function QuickCheckoutPracticeScreen({
       setSecondsLeft((previous) => {
         if (previous <= 1) {
           window.clearInterval(interval);
-          if (!savedResult) {
+          if (!savedResultRef.current) {
             const elapsed = toRoundedSeconds(performance.now() - attemptStartedAt);
             const attempt: CheckoutAttempt = {
               id: crypto.randomUUID(),
@@ -152,8 +163,8 @@ export function QuickCheckoutPracticeScreen({
               result: "failed",
               elapsedSeconds: timerSeconds > 0 ? elapsed : null
             };
-            onSaveAttempt(attempt);
-            setSavedResult(true);
+            savedResultRef.current = true;
+            window.setTimeout(() => onSaveAttempt(attempt), 0);
           }
           setCompleted(true);
           setFeedback({
@@ -170,31 +181,13 @@ export function QuickCheckoutPracticeScreen({
   }, [
     attemptStartedAt,
     completed,
-    currentRouteData,
     finish,
     onSaveAttempt,
-    savedResult,
     selectedRange,
     settings.preferredDouble,
     stage,
     timerSeconds
   ]);
-
-  function saveAttempt(result: CheckoutResult) {
-    if (savedResult) return;
-    const elapsed = toRoundedSeconds(performance.now() - attemptStartedAt);
-    const attempt: CheckoutAttempt = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      finishNumber: finish,
-      range: selectedRange,
-      preferredDouble: settings.preferredDouble,
-      result,
-      elapsedSeconds: timerSeconds > 0 ? elapsed : null
-    };
-    onSaveAttempt(attempt);
-    setSavedResult(true);
-  }
 
   function resetAttemptState() {
     setAttemptStartedAt(performance.now());
@@ -202,7 +195,7 @@ export function QuickCheckoutPracticeScreen({
     setSelectedTarget(null);
     setFeedback(null);
     setCompleted(false);
-    setSavedResult(false);
+    savedResultRef.current = false;
     setPickedTargets([]);
     setPickHistory([]);
   }
@@ -236,7 +229,7 @@ export function QuickCheckoutPracticeScreen({
     loadCheckout(nextFinish);
   }
 
-  function nextCheckout() {
+  const nextCheckout = useCallback(() => {
     const nextFinish = randomPickAvoiding(
       playableFinishes,
       (item) => String(item),
@@ -251,9 +244,9 @@ export function QuickCheckoutPracticeScreen({
       return;
     }
     loadCheckout(nextFinish);
-  }
+  }, [lastMainFinish, playableFinishes]);
 
-  function handleUndo() {
+  const handleUndo = useCallback(() => {
     if (completed || pickHistory.length === 0) return;
     const latest = pickHistory[pickHistory.length - 1];
     setPickHistory((prev) => prev.slice(0, -1));
@@ -261,9 +254,9 @@ export function QuickCheckoutPracticeScreen({
     setSelectedTarget(null);
     setRemaining(latest.snapshot.remaining);
     setFeedback(null);
-  }
+  }, [completed, pickHistory]);
 
-  function handleTargetTap(rawTarget: string) {
+  const handleTargetTap = useCallback((rawTarget: string) => {
     if (stage !== "playing" || completed) {
       return;
     }
@@ -323,7 +316,19 @@ export function QuickCheckoutPracticeScreen({
         body: getEvaluationExplanation(evalResult)
       });
     }
-  }
+  }, [
+    attemptStartScore,
+    completed,
+    getEvaluationExplanation,
+    maxDarts,
+    pickedTargets,
+    remaining,
+    saveAttempt,
+    settings.preferredDouble,
+    settings.vibrationFeedback,
+    stage,
+    t
+  ]);
 
   const boardRoute = completed
     ? activeRoute.join(", ")

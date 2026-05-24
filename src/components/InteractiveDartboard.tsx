@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { PointerEvent } from "react";
 
 const BOARD_ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
@@ -71,7 +72,7 @@ function parseTarget(token: string | null | undefined): ParsedTarget | null {
   return { number: Number(number), kind: "single" };
 }
 
-export function InteractiveDartboard({
+export const InteractiveDartboard = memo(function InteractiveDartboard({
   onTargetSelect,
   selectedTarget,
   disabled = false,
@@ -219,4 +220,4 @@ export function InteractiveDartboard({
       </svg>
     </div>
   );
-}
+});
