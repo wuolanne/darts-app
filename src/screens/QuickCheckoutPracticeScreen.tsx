@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
-import { Dartboard } from "../components/Dartboard";
+import { Button, Card, ScreenTitle, Segmented } from "../components/ui";
+import { CheckoutMiniGameScreen } from "../components/CheckoutMiniGameScreen";
 import { CheckoutAttempt, CheckoutRangeKey, CheckoutResult, TimerOption, UserSettings } from "../types/models";
 import {
   CHECKOUT_RANGE_PRESETS,
@@ -15,9 +15,8 @@ import {
   normalizeDartTarget
 } from "../utils/checkoutLibrary";
 import { CheckoutEvaluationResult, evaluateCheckoutAttempt } from "../features/checkout-engine";
-import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { triggerHaptic } from "../utils/haptics";
-import { formatClock, toRoundedSeconds } from "../utils/time";
+import { toRoundedSeconds } from "../utils/time";
 import { useI18n } from "../i18n";
 
 type Stage = "setup" | "playing";
@@ -118,8 +117,6 @@ export function QuickCheckoutPracticeScreen({
 
   const attemptStartScore = finish;
   const maxDarts = 3;
-  const maxPicks = Math.max(maxDarts, 1);
-  const shownPicks = Array.from({ length: maxPicks }, (_, index) => pickedTargets[index] ?? "_");
   const getEvaluationExplanation = (result: CheckoutEvaluationResult): string => {
     if (!result.isValidCheckout) {
       if (result.status === "bust") return t.quickCheckout.bustExplanation;
@@ -393,76 +390,32 @@ export function QuickCheckoutPracticeScreen({
       ) : null}
 
       {stage === "playing" ? (
-        <Card className="practice-card quick-practice-card">
-          <div className="practice-header">
-            <Pill tone="neutral">{activeRange.label}</Pill>
-            <Pill tone="neutral">{t.settings.preferredDouble}: {settings.preferredDouble}</Pill>
-          </div>
-
-          <p className="big-number">{t.quickCheckout.finish}: {finish}</p>
-          <p>
-            <span className="muted">{t.quickCheckout.currentRemaining}:</span> {remaining}
-          </p>
-          <div className="pick-row">
-            <span className="muted">{t.quickCheckout.yourPicks}:</span>
-            <div className="pick-chips">
-              {shownPicks.map((pick, index) => (
-                <span key={`pick-${index}`} className="pick-chip">
-                  {pick}
-                </span>
-              ))}
-            </div>
-          </div>
-          {!completed ? <p className="muted">{t.quickCheckout.tapBoard}</p> : null}
-
-          {timerSeconds > 0 ? (
-            <div className="timer-wrap">
-              <div className="timer-row">
-                <span>Timer</span>
-                <strong>{formatClock(secondsLeft)}</strong>
-              </div>
-              <div className="progress">
-                <span style={{ width: `${(Math.max(secondsLeft, 0) / timerSeconds) * 100}%` }} />
-              </div>
-            </div>
-          ) : null}
-
-          <Dartboard
-            route={boardRoute}
-            reveal={completed}
-            onTargetSelect={handleTargetTap}
-            selectedTarget={selectedTarget}
-            disabled={completed}
-          />
-
-          {!completed && pickedTargets.length > 0 ? (
-            <div className="top-gap">
-              <Button variant="ghost" onClick={handleUndo}>
-                UNDO
-              </Button>
-            </div>
-          ) : null}
-
-          {feedback ? (
-            <div className="feedback-box quick-feedback-box">
-              <h4>{feedback.title}</h4>
-              <p>{feedback.body}</p>
-              {completed ? (
-                <>
-                  <p>
-                    <span className="muted">{t.quickCheckout.yourPicks}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : t.quickCheckout.none}
-                  </p>
-                  <div className="route-box top-gap">
-                    <CheckoutRouteSummary finish={attemptStartScore} preferredDouble={settings.preferredDouble} compact />
-                  </div>
-                  <div className="row top-gap">
-                    <Button onClick={nextCheckout}>{t.quickCheckout.nextCheckout.toUpperCase()}</Button>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          ) : null}
-        </Card>
+        <CheckoutMiniGameScreen
+          rangeLabel={activeRange.label}
+          preferredDouble={settings.preferredDouble}
+          finish={finish}
+          remaining={remaining}
+          pickedTargets={pickedTargets}
+          maxPicks={maxDarts}
+          timerSeconds={timerSeconds}
+          secondsLeft={secondsLeft}
+          boardRoute={boardRoute}
+          completed={completed}
+          selectedTarget={selectedTarget}
+          onTargetSelect={handleTargetTap}
+          onUndo={handleUndo}
+          feedback={feedback}
+          onNextCheckout={nextCheckout}
+          noneLabel={t.quickCheckout.none}
+          finishLabel={t.quickCheckout.finish}
+          remainingLabel={t.quickCheckout.currentRemaining}
+          picksLabel={t.quickCheckout.yourPicks}
+          tapBoardLabel={t.quickCheckout.tapBoard}
+          timerLabel="Timer"
+          nextCheckoutLabel={t.quickCheckout.nextCheckout}
+          preferredDoubleLabel={t.settings.preferredDouble}
+          disabled={completed}
+        />
       ) : null}
     </div>
   );

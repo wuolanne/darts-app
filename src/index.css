@@ -977,6 +977,28 @@ body {
   );
 }
 
+.checkout-mini-game-card {
+  gap: 14px;
+}
+
+.checkout-mini-game-top {
+  display: flex;
+  gap: 12px;
+}
+
+.checkout-mini-game-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-mini-stat {
+  margin-bottom: 6px;
+}
+
+.checkout-mini-helper {
+  margin-top: 10px;
+}
+
 .quick-route-box {
   background: color-mix(in oklab, var(--surface-alt) 62%, black 38%);
   border-color: color-mix(in oklab, var(--card-border) 88%, var(--accent-muted) 12%);
@@ -1004,6 +1026,35 @@ body {
   flex-wrap: wrap;
 }
 
+.target-card-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.target-card {
+  min-width: 54px;
+  text-align: center;
+  border: 1px solid color-mix(in oklab, var(--card-border) 78%, #27cfff 22%);
+  border-radius: 12px;
+  padding: 7px 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    color-mix(in oklab, var(--surface-alt) 82%, #071121 18%);
+  color: color-mix(in oklab, var(--text-secondary) 88%, #d2f4ff 12%);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.target-card.is-active {
+  border-color: color-mix(in oklab, #27cfff 72%, var(--card-border) 28%);
+  color: #f5fbff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 16px rgba(39, 207, 255, 0.18);
+}
+
 .pick-chip {
   min-width: 44px;
   text-align: center;
@@ -1015,56 +1066,140 @@ body {
   letter-spacing: 0.02em;
 }
 
-.dartboard-wrap {
-  margin-top: 8px;
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 8px;
+.interactive-dartboard-shell {
+  position: relative;
+  width: min(100%, 430px);
+  margin: 4px auto 0;
+  padding: 10px;
+  border-radius: 30px;
+  border: 1px solid color-mix(in oklab, #27cfff 22%, var(--card-border) 78%);
   background:
-    radial-gradient(110% 90% at 50% 8%, color-mix(in oklab, var(--surface-alt) 82%, #0a0d12 18%) 0%, transparent 64%),
-    linear-gradient(180deg, color-mix(in oklab, var(--dartboard-shell) 84%, #0b1017 16%), color-mix(in oklab, var(--dartboard-shell) 90%, #060a10 10%));
+    radial-gradient(circle at 50% 10%, rgba(88, 209, 255, 0.16), transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(12, 15, 29, 0.24), transparent 62%),
+    linear-gradient(180deg, #0d1322 0%, #090d18 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -8px 24px rgba(0, 0, 0, 0.25);
+    0 0 0 1px rgba(39, 207, 255, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.4);
+  animation: dartboard-idle-glow 3.8s ease-in-out infinite;
 }
 
-.dartboard-svg {
+.interactive-dartboard-shell.is-correct {
+  animation: dartboard-correct-pulse 680ms ease;
+}
+
+.interactive-dartboard-shell.is-wrong {
+  animation: dartboard-wrong-flash 420ms ease;
+}
+
+.interactive-dartboard-svg {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.34));
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.42));
 }
 
-.dart-clickable {
+.dart-zone {
+  transition: transform 120ms ease, opacity 120ms ease, filter 160ms ease;
+  transform-origin: center;
+}
+
+.dart-zone.is-clickable {
   cursor: pointer;
-  transition: opacity 120ms ease;
 }
 
-.dart-clickable:hover {
-  opacity: 0.86;
+.dart-zone.is-clickable:hover {
+  opacity: 0.9;
+  filter: brightness(1.08);
 }
 
-.timer-wrap {
-  margin: 8px 0;
+.dart-route-highlight {
+  fill: rgba(80, 228, 255, 0.32);
+  stroke: rgba(124, 237, 255, 0.82);
+  stroke-width: 1.25;
+  pointer-events: none;
+  filter: url(#dartboard-selection-glow);
 }
 
-.timer-row {
+.dart-route-highlight.is-soft {
+  fill: rgba(80, 228, 255, 0.18);
+}
+
+.dart-selected-highlight {
+  fill: rgba(87, 255, 172, 0.32);
+  stroke: rgba(87, 255, 172, 0.95);
+  stroke-width: 1.6;
+  pointer-events: none;
+  filter: url(#dartboard-selection-glow);
+  animation: dart-target-pulse 340ms ease;
+}
+
+.dart-selected-highlight.is-soft {
+  fill: rgba(87, 255, 172, 0.24);
+}
+
+.dartboard-number {
+  fill: #efd271;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  user-select: none;
+  pointer-events: none;
+}
+
+.dartboard-rim {
+  fill: none;
+  stroke: rgba(39, 207, 255, 0.34);
+  stroke-width: 1.1;
+}
+
+.dartboard-rim-secondary {
+  fill: none;
+  stroke: rgba(39, 207, 255, 0.14);
+  stroke-width: 0.5;
+}
+
+.timer-bar {
+  margin: 4px 0 0;
+}
+
+.timer-bar-head {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.progress {
-  margin-top: 6px;
+.timer-bar-head strong {
+  color: #56ffac;
+  text-shadow: 0 0 10px rgba(86, 255, 172, 0.34);
+}
+
+.timer-bar-track {
   height: 8px;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--progress) 24%, transparent);
   overflow: hidden;
+  background: linear-gradient(180deg, rgba(10, 17, 30, 0.85), rgba(20, 33, 56, 0.85));
+  border: 1px solid rgba(39, 207, 255, 0.12);
 }
 
-.progress span {
+.timer-bar-fill {
   display: block;
   height: 100%;
-  background: var(--progress);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #56ffac 0%, #27cfff 100%);
+  box-shadow: 0 0 14px rgba(86, 255, 172, 0.34);
+}
+
+.checkout-board-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  justify-items: center;
+}
+
+.checkout-board-actions .btn {
+  width: min(100%, 320px);
 }
 
 .timer-banner {
@@ -1294,6 +1429,17 @@ body {
     line-height: 1.02;
   }
 
+  .interactive-dartboard-shell {
+    width: min(100%, 100vw - 44px);
+    padding: 8px;
+    border-radius: 24px;
+  }
+
+  .target-card {
+    min-width: 48px;
+    padding: 6px 8px;
+  }
+
   .home-hero {
     min-height: 300px;
     padding: 20px;
@@ -1384,5 +1530,90 @@ body {
   .custom-target-actions,
   .custom-target-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@keyframes dartboard-idle-glow {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.08),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.12),
+      0 0 18px rgba(39, 207, 255, 0.14),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes dart-target-pulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+@keyframes dartboard-correct-pulse {
+  0% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.08),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px rgba(87, 255, 172, 0.2),
+      0 0 26px rgba(87, 255, 172, 0.28),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.08),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes dartboard-wrong-flash {
+  0% {
+    transform: translateX(0);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.08),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(255, 88, 92, 0.18),
+      0 0 22px rgba(255, 88, 92, 0.22),
+      0 18px 42px rgba(0, 0, 0, 0.4);
+  }
+  75% {
+    transform: translateX(-1px);
+  }
+  100% {
+    transform: translateX(0);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(39, 207, 255, 0.08),
+      0 18px 42px rgba(0, 0, 0, 0.4);
   }
 }
