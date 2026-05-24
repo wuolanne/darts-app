@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DartsFlow icon source</title>
+  <desc id="desc">A minimal dartboard bullseye icon with a flow arrow for DartsFlow.</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#1b2633"/>
+      <stop offset="62%" stop-color="#10141b"/>
+      <stop offset="100%" stop-color="#090d12"/>
+    </radialGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <circle cx="256" cy="252" r="192" fill="#080d10" stroke="#43505a" stroke-width="5"/>
+  <g transform="translate(256 252)">
+    <g>
+      <path d="M0 -178 A178 178 0 0 1 55 -169 L43 -132 A139 139 0 0 0 0 -139Z" fill="#eadfc2"/>
+      <path d="M55 -169 A178 178 0 0 1 105 -144 L82 -112 A139 139 0 0 0 43 -132Z" fill="#2f5d3f"/>
+      <path d="M105 -144 A178 178 0 0 1 144 -105 L112 -82 A139 139 0 0 0 82 -112Z" fill="#eadfc2"/>
+      <path d="M144 -105 A178 178 0 0 1 169 -55 L132 -43 A139 139 0 0 0 112 -82Z" fill="#2f5d3f"/>
+      <path d="M169 -55 A178 178 0 0 1 178 0 L139 0 A139 139 0 0 0 132 -43Z" fill="#eadfc2"/>
+      <path d="M178 0 A178 178 0 0 1 169 55 L132 43 A139 139 0 0 0 139 0Z" fill="#2f5d3f"/>
+      <path d="M169 55 A178 178 0 0 1 144 105 L112 82 A139 139 0 0 0 132 43Z" fill="#eadfc2"/>
+      <path d="M144 105 A178 178 0 0 1 105 144 L82 112 A139 139 0 0 0 112 82Z" fill="#2f5d3f"/>
+      <path d="M105 144 A178 178 0 0 1 55 169 L43 132 A139 139 0 0 0 82 112Z" fill="#eadfc2"/>
+      <path d="M55 169 A178 178 0 0 1 0 178 L0 139 A139 139 0 0 0 43 132Z" fill="#2f5d3f"/>
+      <path d="M0 178 A178 178 0 0 1 -55 169 L-43 132 A139 139 0 0 0 0 139Z" fill="#eadfc2"/>
+      <path d="M-55 169 A178 178 0 0 1 -105 144 L-82 112 A139 139 0 0 0 -43 132Z" fill="#2f5d3f"/>
+      <path d="M-105 144 A178 178 0 0 1 -144 105 L-112 82 A139 139 0 0 0 -82 112Z" fill="#eadfc2"/>
+      <path d="M-144 105 A178 178 0 0 1 -169 55 L-132 43 A139 139 0 0 0 -112 82Z" fill="#2f5d3f"/>
+      <path d="M-169 55 A178 178 0 0 1 -178 0 L-139 0 A139 139 0 0 0 -132 43Z" fill="#eadfc2"/>
+      <path d="M-178 0 A178 178 0 0 1 -169 -55 L-132 -43 A139 139 0 0 0 -139 0Z" fill="#2f5d3f"/>
+      <path d="M-169 -55 A178 178 0 0 1 -144 -105 L-112 -82 A139 139 0 0 0 -132 -43Z" fill="#eadfc2"/>
+      <path d="M-144 -105 A178 178 0 0 1 -105 -144 L-82 -112 A139 139 0 0 0 -112 -82Z" fill="#2f5d3f"/>
+      <path d="M-105 -144 A178 178 0 0 1 -55 -169 L-43 -132 A139 139 0 0 0 -82 -112Z" fill="#eadfc2"/>
+      <path d="M-55 -169 A178 178 0 0 1 0 -178 L0 -139 A139 139 0 0 0 -43 -132Z" fill="#2f5d3f"/>
+    </g>
+    <circle r="138" fill="none" stroke="#2f3940" stroke-width="38"/>
+    <circle r="98" fill="none" stroke="#b74134" stroke-width="18" stroke-dasharray="15 15"/>
+    <circle r="98" fill="none" stroke="#319064" stroke-width="18" stroke-dasharray="15 15" stroke-dashoffset="15"/>
+    <circle r="72" fill="#10171d"/>
+    <circle r="42" fill="#3a9161" stroke="#eadfc2" stroke-width="3"/>
+    <circle r="20" fill="#e74735" stroke="#ffd071" stroke-width="4" filter="url(#softGlow)"/>
+    <circle r="8" fill="#ffe083"/>
+  </g>
+  <path d="M94 179a184 184 0 0 1 324-52" fill="none" stroke="#f05d33" stroke-opacity=".7" stroke-width="11" stroke-linecap="round"/>
+  <path d="M411 130l48 12-37 35z" fill="#f05d33"/>
+</svg>
