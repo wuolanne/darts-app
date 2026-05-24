@@ -2,21 +2,6 @@ export type ThemeMode = "dark" | "light" | "dim" | "system";
 export type AppLanguageMode = "en" | "fi" | "system";
 export type PreferredDouble = "D16" | "D20" | "D18" | "D12" | "Not sure";
 export type TimerOption = 0 | 10 | 20 | 30;
-export type ThrowPaceMode = "not_set" | "manual" | "calibrated";
-export type ThrowPaceSource =
-  | "preset_fast"
-  | "preset_normal"
-  | "preset_relaxed"
-  | "manual"
-  | "measured"
-  | "unset";
-
-export interface ThrowPaceSetting {
-  mode: ThrowPaceMode;
-  source: ThrowPaceSource;
-  secondsPerThree: number | null;
-  updatedAt: string | null;
-}
 
 export interface UserSettings {
   preferredDouble: PreferredDouble;
@@ -24,8 +9,6 @@ export interface UserSettings {
   themeMode: ThemeMode;
   languageMode: AppLanguageMode;
   vibrationFeedback: boolean;
-  throwPace: ThrowPaceSetting;
-  throwPaceOnboardingCompleted: boolean;
 }
 
 export type CheckoutRangeKey =
@@ -100,8 +83,6 @@ export interface AroundClockSession {
   entries: AroundClockEntry[];
   totalActiveSeconds: number;
   pauseSeconds: number;
-  estimatedDarts: number | null;
-  throwPaceSecondsPerThree: number | null;
 }
 
 export type StatsRange = "7d" | "30d" | "total";

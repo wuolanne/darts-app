@@ -8,7 +8,6 @@ import { CheckoutSpeedrunScreen } from "./screens/CheckoutSpeedrunScreen";
 import { AroundTheClockScreen } from "./screens/AroundTheClockScreen";
 import { CheckoutLibraryScreen } from "./screens/CheckoutLibraryScreen";
 import { StatsScreen } from "./screens/StatsScreen";
-import { ThrowPaceOnboarding } from "./screens/ThrowPaceOnboarding";
 import { AppScreen, AroundClockSession, CheckoutAttempt, CheckoutSpeedrunSession, UserSettings } from "./types/models";
 import { DEFAULT_SETTINGS, readSettings, writeSettings } from "./storage/settings";
 import {
@@ -114,7 +113,6 @@ function AppBody({
       checkoutAttempts={checkoutAttempts}
       speedruns={speedruns}
       aroundSessions={aroundSessions}
-      settings={settings}
     />
   );
 }
@@ -143,12 +141,7 @@ export default function App() {
     <I18nProvider requestedLanguage={settings.languageMode}>
       <ThemeProvider requestedMode={settings.themeMode}>
         <main className="app-shell">
-          {settingsLoaded &&
-          !settings.throwPaceOnboardingCompleted &&
-          settings.throwPace.mode === "not_set" &&
-          !settings.throwPace.secondsPerThree ? (
-            <ThrowPaceOnboarding settings={settings} onComplete={setSettings} />
-          ) : (
+          {settingsLoaded ? (
             <AppBody
               screen={screen}
               setScreen={setScreen}
@@ -161,7 +154,7 @@ export default function App() {
               aroundSessions={aroundSessions}
               setAroundSessions={setAroundSessions}
             />
-          )}
+          ) : null}
         </main>
       </ThemeProvider>
     </I18nProvider>

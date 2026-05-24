@@ -8,25 +8,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
   defaultTimer: 0,
   themeMode: "dark",
   languageMode: "en",
-  vibrationFeedback: false,
-  throwPaceOnboardingCompleted: false,
-  throwPace: {
-    mode: "not_set",
-    source: "unset",
-    secondsPerThree: null,
-    updatedAt: null
-  }
+  vibrationFeedback: false
 };
 
 export function readSettings(): UserSettings {
   const loaded = readJson<UserSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
   return {
     ...DEFAULT_SETTINGS,
-    ...loaded,
-    throwPace: {
-      ...DEFAULT_SETTINGS.throwPace,
-      ...loaded.throwPace
-    }
+    ...loaded
   };
 }
 

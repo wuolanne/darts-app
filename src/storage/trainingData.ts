@@ -42,12 +42,7 @@ export function appendCheckoutSpeedrun(
 }
 
 export function readAroundClockSessions(): AroundClockSession[] {
-  const loaded = readJson<AroundClockSession[]>(AROUND_KEY, []);
-  return loaded.map((session) => ({
-    ...session,
-    estimatedDarts: session.estimatedDarts ?? null,
-    throwPaceSecondsPerThree: session.throwPaceSecondsPerThree ?? null
-  }));
+  return readJson<AroundClockSession[]>(AROUND_KEY, []);
 }
 
 export function writeAroundClockSessions(sessions: AroundClockSession[]): void {

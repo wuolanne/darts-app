@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { AroundClockSession, AroundClockMode, UserSettings } from "../types/models";
 import { Button, Card, Pill, ScreenTitle, Segmented } from "../components/ui";
-import { estimateDartsFromActiveTime } from "../utils/pace";
 import { triggerHaptic } from "../utils/haptics";
 import { formatClock, formatPracticeDuration, formatSeconds, toRoundedSeconds } from "../utils/time";
 import { readJson, writeJson } from "../storage/localStorage";
@@ -175,10 +174,6 @@ export function AroundTheClockScreen({
     const nextIndex = running.index + 1;
     if (nextIndex >= running.targets.length) {
       const totalActive = toRoundedSeconds(now - running.startedAt - running.pauseMs);
-      const estimatedDarts = estimateDartsFromActiveTime(
-        totalActive,
-        settings.throwPace.secondsPerThree
-      );
       const session: AroundClockSession = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
@@ -186,9 +181,7 @@ export function AroundTheClockScreen({
         doubleRequirement: running.doubleRequirement,
         entries: nextEntries,
         totalActiveSeconds: totalActive,
-        pauseSeconds: toRoundedSeconds(running.pauseMs),
-        estimatedDarts,
-        throwPaceSecondsPerThree: settings.throwPace.secondsPerThree
+        pauseSeconds: toRoundedSeconds(running.pauseMs)
       };
       const comparable = previousSessions
         .filter(
@@ -245,7 +238,6 @@ export function AroundTheClockScreen({
     });
   };
 
-  const estimated = result?.estimatedDarts ?? null;
   const resultFastest =
     result?.entries.reduce<{ target: string; seconds: number } | null>((best, entry) => {
       if (!best || entry.seconds < best.seconds) {
@@ -483,15 +475,6 @@ export function AroundTheClockScreen({
           ) : null}
           {resultAverage !== null ? (
             <p className="muted">{t.aroundClock.averageTargetTime}: {formatSeconds(resultAverage)}</p>
-          ) : null}
-          {estimated !== null ? (
-            <p className="muted">
-              {t.aroundClock.estimatedDarts}: ~{estimated}
-              <br />
-              {formatI18n(t.aroundClock.basedOnPace, {
-                pace: result.throwPaceSecondsPerThree?.toFixed(2) ?? "-"
-              })}
-            </p>
           ) : null}
           {pbDelta !== null ? (
             <p className={pbDelta <= 0 ? "good-text" : "warn-text"}>

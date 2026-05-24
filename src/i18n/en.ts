@@ -38,7 +38,7 @@ export const en = {
     aroundDescription: "Timed sectors and targets with minimal taps.",
     libraryDescription: "Checkout routes and alternative continuations.",
     statsDescription: "7d / 30d / total practice insights.",
-    settingsDescription: "Preferred double, timer, theme, throw pace.",
+    settingsDescription: "Preferred double, timer, theme, vibration.",
     summary: "Practice summary",
     lastAvg: "Last avg",
     bestCheckout: "Best checkout",
