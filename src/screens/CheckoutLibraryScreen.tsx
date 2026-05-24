@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, ScreenTitle } from "../components/ui";
 import { PreferredDouble } from "../types/models";
 import { getCheckoutRouteDetails } from "../utils/checkoutLibrary";
+import { listPlayableCheckoutNumbers } from "../utils/constants";
 import { CheckoutRouteSummary } from "../features/checkout-engine/RouteSummary";
 import { useI18n } from "../i18n";
 
@@ -29,6 +30,16 @@ export function CheckoutLibraryScreen({
     return getCheckoutRouteDetails(selectedFinish, preferredDouble);
   }, [selectedFinish, preferredDouble]);
 
+  const rangeFinishes = useMemo(() => {
+    return RANGES.map((range) => {
+      const finishes = listPlayableCheckoutNumbers(range.min, range.max, (finish) => {
+        const route = getCheckoutRouteDetails(finish, preferredDouble);
+        return Boolean(route) && !route?.isBogey;
+      });
+      return { ...range, finishes };
+    }).filter((range) => range.finishes.length > 0);
+  }, [preferredDouble]);
+
   return (
     <div className="screen screen-library">
       <ScreenTitle
@@ -37,24 +48,22 @@ export function CheckoutLibraryScreen({
         onBack={onBack}
       />
 
-      {RANGES.map((range) => (
+      {rangeFinishes.map((range) => (
         <Card key={range.label}>
           <div className="practice-header">
             <h3>{range.label}</h3>
           </div>
           <div className="finish-grid">
-            {Array.from({ length: range.max - range.min + 1 }, (_, idx) => range.min + idx).map(
-              (finish) => (
-                <button
-                  key={finish}
-                  type="button"
-                  className={`finish-chip${selectedFinish === finish ? " finish-chip-active" : ""}`}
-                  onClick={() => setSelectedFinish((prev) => (prev === finish ? null : finish))}
-                >
-                  {finish}
-                </button>
-              )
-            )}
+            {range.finishes.map((finish) => (
+              <button
+                key={finish}
+                type="button"
+                className={`finish-chip${selectedFinish === finish ? " finish-chip-active" : ""}`}
+                onClick={() => setSelectedFinish((prev) => (prev === finish ? null : finish))}
+              >
+                {finish}
+              </button>
+            ))}
           </div>
 
           {selectedFinish !== null &&
