@@ -94,6 +94,8 @@ function tokenFor(sector: number, kind: HighlightKind): string {
   return "Bull";
 }
 
+const svgSafeStyle = { pointerEvents: "none", filter: "none" } as const;
+
 export function InteractiveDartboard({
   route,
   reveal,
@@ -130,28 +132,10 @@ export function InteractiveDartboard({
             <stop offset="60%" stopColor="#0d1020" />
             <stop offset="100%" stopColor="#080b14" />
           </radialGradient>
-          <filter id="dartboard-rim-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="dartboard-selection-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="blur" />
-            <feColorMatrix
-              in="blur"
-              type="matrix"
-              values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 1.2 0"
-            />
-          </filter>
         </defs>
 
-        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" style={{ pointerEvents: "none" }} />
-        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-shell)" style={{ pointerEvents: "none" }} />
+        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" style={svgSafeStyle} />
+        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-shell)" style={svgSafeStyle} />
 
         {BOARD_ORDER.map((sector, index) => {
           const a1 = index * 18 - 9;
@@ -185,28 +169,28 @@ export function InteractiveDartboard({
               ))}
 
               {isHighlighted(routeTargets, sector, "double") ? (
-                <path d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-route-highlight" />
+                <path d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-route-highlight" style={svgSafeStyle} />
               ) : null}
               {isHighlighted(routeTargets, sector, "treble") ? (
-                <path d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-route-highlight" />
+                <path d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-route-highlight" style={svgSafeStyle} />
               ) : null}
               {isHighlighted(routeTargets, sector, "single") ? (
                 <>
-                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-route-highlight is-soft" />
-                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-route-highlight is-soft" />
+                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-route-highlight is-soft" style={svgSafeStyle} />
+                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-route-highlight is-soft" style={svgSafeStyle} />
                 </>
               ) : null}
 
               {selected?.number === sector && selected.kind === "double" ? (
-                <path key={`selected-double-${pulseKey}-${sector}`} d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-selected-highlight" />
+                <path key={`selected-double-${pulseKey}-${sector}`} d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-selected-highlight" style={svgSafeStyle} />
               ) : null}
               {selected?.number === sector && selected.kind === "treble" ? (
-                <path key={`selected-treble-${pulseKey}-${sector}`} d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-selected-highlight" />
+                <path key={`selected-treble-${pulseKey}-${sector}`} d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-selected-highlight" style={svgSafeStyle} />
               ) : null}
               {selected?.number === sector && selected.kind === "single" ? (
                 <g key={`selected-single-${pulseKey}-${sector}`}>
-                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-selected-highlight is-soft" />
-                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-selected-highlight is-soft" />
+                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-selected-highlight is-soft" style={svgSafeStyle} />
+                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-selected-highlight is-soft" style={svgSafeStyle} />
                 </g>
               ) : null}
             </g>
@@ -235,10 +219,10 @@ export function InteractiveDartboard({
         />
 
         {routeTargets.some((item) => item.kind === "outer-bull") ? (
-          <circle cx={CX} cy={CY} r={R_BULL} className="dart-route-highlight" style={{ pointerEvents: "none" }} />
+          <circle cx={CX} cy={CY} r={R_BULL} className="dart-route-highlight" style={svgSafeStyle} />
         ) : null}
         {routeTargets.some((item) => item.kind === "bull") ? (
-          <circle cx={CX} cy={CY} r={R_EYE} className="dart-route-highlight" style={{ pointerEvents: "none" }} />
+          <circle cx={CX} cy={CY} r={R_EYE} className="dart-route-highlight" style={svgSafeStyle} />
         ) : null}
         {selected?.kind === "outer-bull" ? (
           <circle
@@ -247,7 +231,7 @@ export function InteractiveDartboard({
             cy={CY}
             r={R_BULL}
             className="dart-selected-highlight"
-            style={{ pointerEvents: "none" }}
+            style={svgSafeStyle}
           />
         ) : null}
         {selected?.kind === "bull" ? (
@@ -257,7 +241,7 @@ export function InteractiveDartboard({
             cy={CY}
             r={R_EYE}
             className="dart-selected-highlight"
-            style={{ pointerEvents: "none" }}
+            style={svgSafeStyle}
           />
         ) : null}
 
@@ -282,15 +266,14 @@ export function InteractiveDartboard({
           cy={CY}
           r={R_BOARD - 1}
           className="dartboard-rim"
-          filter="url(#dartboard-rim-glow)"
-          style={{ pointerEvents: "none" }}
+          style={svgSafeStyle}
         />
         <circle
           cx={CX}
           cy={CY}
           r={R_BOARD + 2}
           className="dartboard-rim-secondary"
-          style={{ pointerEvents: "none" }}
+          style={svgSafeStyle}
         />
       </svg>
     </div>
