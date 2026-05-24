@@ -153,61 +153,25 @@ export function StatsScreen({
 
       <Card>
         <h3>{t.stats.quickCheckoutPractice}</h3>
-        {checkout.attemptsCount === 0 ? <p className="muted">{t.stats.noAttempts}</p> : null}
-        {checkout.attemptsCount > 0 ? (
-          <>
-            <details className="stats-subsection">
-              <summary>{t.stats.overall}</summary>
-              <CompactRow left={t.stats.attempts} right={checkout.attemptsCount} />
-              <CompactRow left={t.stats.successRate} right={`${checkout.successRate.toFixed(1)}%`} />
-              <CompactRow left={t.stats.wrongRate} right={`${checkout.wrongRate.toFixed(1)}%`} />
-              <CompactRow left={t.stats.bustRate} right={`${checkout.bustRate.toFixed(1)}%`} />
-              <CompactRow
-                left={t.stats.avgAttemptTime}
-                right={checkout.averageAttemptTime !== null ? formatSeconds(checkout.averageAttemptTime) : t.common.noDataYet}
-              />
-              <CompactRow
-                left={t.stats.bestAttemptTime}
-                right={checkout.bestAttemptTime !== null ? formatSeconds(checkout.bestAttemptTime) : t.common.noDataYet}
-              />
-            </details>
-            <details className="stats-subsection">
-              <summary>{t.stats.byRange}</summary>
-              {checkout.byRange.map((row) => (
-                <CompactRow
-                  key={row.rangeLabel}
-                  left={row.rangeLabel}
-                  middle={`${row.attempts} ${t.stats.attemptsShort} / ${row.successRate.toFixed(0)}%`}
-                  right={row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}
-                />
-              ))}
-            </details>
-            <details className="stats-subsection">
-              <summary>{t.stats.bestFinishes}</summary>
-              {checkout.bestFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {checkout.bestFinishes.map((row) => (
-                <CompactRow
-                  key={`best-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.attempts} ${t.stats.attemptsShort}`}
-                  right={`${row.successRate.toFixed(0)}% / ${row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}`}
-                />
-              ))}
-            </details>
-            <details className="stats-subsection">
-              <summary>{t.stats.problemFinishes}</summary>
-              {checkout.problemFinishes.length === 0 ? <p className="muted">{t.common.noDataYet}</p> : null}
-              {checkout.problemFinishes.map((row) => (
-                <CompactRow
-                  key={`problem-${row.finish}`}
-                  left={row.finish}
-                  middle={`${row.attempts} ${t.stats.attemptsShort}`}
-                  right={`${row.successRate.toFixed(0)}% / ${row.averageTime !== null ? formatSeconds(row.averageTime) : "-"}`}
-                />
-              ))}
-            </details>
-          </>
-        ) : null}
+        <details className="stats-subsection">
+          <summary>{t.stats.overall}</summary>
+          <CompactRow left={t.stats.attempts} right={checkout.attemptsCount} />
+          <CompactRow
+            left={t.stats.successRate}
+            right={checkout.attemptsCount > 0 ? `${checkout.successRate.toFixed(1)} %` : "-"}
+          />
+        </details>
+        <details className="stats-subsection">
+          <summary>{t.stats.byRange}</summary>
+          {checkout.miniByRange.map((row) => (
+            <CompactRow
+              key={row.rangeLabel}
+              left={row.rangeLabel}
+              middle={`${t.stats.attempts} ${row.attempts}`}
+              right={`${t.stats.successRate} ${row.successRate === null ? "-" : `${row.successRate.toFixed(1)} %`}`}
+            />
+          ))}
+        </details>
       </Card>
 
       <Card>

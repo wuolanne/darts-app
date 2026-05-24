@@ -17,6 +17,12 @@ type RowByRange = {
   averageTime: number | null;
 };
 
+type MiniRangeRow = {
+  rangeLabel: string;
+  attempts: number;
+  successRate: number | null;
+};
+
 type RowByFinish = {
   finish: number;
   attempts: number;
@@ -190,6 +196,26 @@ export function getCheckoutStats(attempts: CheckoutAttempt[], range: StatsRange)
     .sort((a, b) => a.successRate - b.successRate || b.attempts - a.attempts)
     .slice(0, 5);
 
+  const quickMiniRanges = [
+    { label: "61-80", min: 61, max: 80 },
+    { label: "81-100", min: 81, max: 100 },
+    { label: "101-120", min: 101, max: 120 },
+    { label: "121-140", min: 121, max: 140 }
+  ] as const;
+
+  const miniByRange: MiniRangeRow[] = quickMiniRanges.map((bucket) => {
+    const items = filtered.filter(
+      (attempt) => attempt.finishNumber >= bucket.min && attempt.finishNumber <= bucket.max
+    );
+    const itemAttempts = items.length;
+    const itemSuccesses = items.filter((attempt) => attempt.result === "finished").length;
+    return {
+      rangeLabel: bucket.label,
+      attempts: itemAttempts,
+      successRate: itemAttempts > 0 ? (itemSuccesses / itemAttempts) * 100 : null
+    };
+  });
+
   return {
     attemptsCount,
     successRate: attemptsCount > 0 ? (finishedCount / attemptsCount) * 100 : 0,
@@ -198,6 +224,7 @@ export function getCheckoutStats(attempts: CheckoutAttempt[], range: StatsRange)
     averageAttemptTime,
     bestAttemptTime,
     byRange,
+    miniByRange,
     byFinish,
     bestFinishes,
     problemFinishes,
