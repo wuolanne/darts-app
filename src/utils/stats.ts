@@ -56,6 +56,12 @@ type BestRunRow = {
   averageCheckout: number | null;
 };
 
+type BestPerformanceByRangeRow = {
+  rangeLabel: string;
+  timestamp: string;
+  totalTime: number;
+};
+
 type AroundModeRow = {
   mode: string;
   sessions: number;
@@ -311,6 +317,20 @@ export function getSpeedrunStats(sessions: CheckoutSpeedrunSession[], range: Sta
   const overallAverage = safeAverage(totalTimes);
   const overallBest = totalTimes.length > 0 ? Math.min(...totalTimes) : null;
   const averageCheckoutTime = safeAverage(allCheckoutSeconds);
+  const bestPerformanceByRange: BestPerformanceByRangeRow[] = Array.from(byRangeMap.entries())
+    .map(([rangeLabel, items]) => {
+      const best = [...items]
+        .filter((item) => item.totalActiveSeconds > 0)
+        .sort((a, b) => a.totalActiveSeconds - b.totalActiveSeconds || new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())[0];
+      if (!best) return null;
+      return {
+        rangeLabel,
+        timestamp: best.timestamp,
+        totalTime: best.totalActiveSeconds
+      };
+    })
+    .filter((item): item is BestPerformanceByRangeRow => item !== null)
+    .sort((a, b) => rangeOrder(a.rangeLabel) - rangeOrder(b.rangeLabel));
 
   return {
     sessions: filtered.length,
@@ -324,7 +344,8 @@ export function getSpeedrunStats(sessions: CheckoutSpeedrunSession[], range: Sta
     fastestFinishes,
     slowestFinishes,
     mostPracticedFinishes,
-    bestRuns
+    bestRuns,
+    bestPerformanceByRange
   };
 }
 

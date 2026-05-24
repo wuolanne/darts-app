@@ -80,6 +80,8 @@ export function StatsScreen({
   const around = getAroundClockStats(aroundSessions, range);
   const bestLatestAvg = (best: string, latest: string, avg: string) =>
     formatI18n(t.stats.bestLatestAvg, { best, latest, avg });
+  const formatDurationOrDash = (seconds: number | null | undefined) =>
+    typeof seconds === "number" && seconds > 0 ? formatClock(seconds) : "-";
   const filteredAroundSessions = React.useMemo(() => {
     if (range === "total") return [...aroundSessions];
     const days = range === "7d" ? 7 : 30;
@@ -176,45 +178,34 @@ export function StatsScreen({
 
       <Card>
         <h3>{t.stats.checkoutTimedRun}</h3>
-        {speedrun.sessions === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
+        {speedrun.sessions === 0 ? (
+          <>
+            <p className="muted">{t.stats.noTimedCheckoutStats}</p>
+            <p className="muted">{t.stats.noTimedCheckoutStatsHint}</p>
+          </>
+        ) : null}
         {speedrun.sessions > 0 ? (
           <>
-            <details className="stats-subsection">
-              <summary>{t.stats.overall}</summary>
-              <CompactRow left={t.stats.sessions} right={speedrun.sessions} />
-              <CompactRow
-                left={t.stats.bestTotalTime}
-                right={speedrun.overallBestTime !== null ? formatClock(speedrun.overallBestTime) : t.common.noDataYet}
-              />
-              <CompactRow
-                left={t.stats.latestTotalTime}
-                right={speedrun.latestTotalTime !== null ? formatClock(speedrun.latestTotalTime) : t.common.noDataYet}
-              />
-              <CompactRow
-                left={t.stats.avgTotalTime}
-                right={speedrun.averageTotalTime !== null ? formatClock(speedrun.averageTotalTime) : t.common.noDataYet}
-              />
-            </details>
             <details className="stats-subsection">
               <summary>{t.stats.byRange}</summary>
               {speedrun.byRange.map((row) => (
                 <CompactRow
                   key={row.rangeLabel}
                   left={row.rangeLabel}
-                  middle={`${row.sessions} ${t.stats.sessions.toLowerCase()}`}
-                  right={bestLatestAvg(formatClock(row.bestTime), formatClock(row.latestTime), formatClock(row.averageTime))}
+                  middle={`${t.stats.sessions} ${row.sessions}`}
+                  right={`${t.stats.bestTime} ${formatDurationOrDash(row.bestTime)} · ${t.stats.latestTime} ${formatDurationOrDash(row.latestTime)} · ${t.stats.averageLabel} ${formatDurationOrDash(row.averageTime)}`}
                 />
               ))}
             </details>
             <details className="stats-subsection">
-              <summary>{t.stats.bestRuns}</summary>
-              {speedrun.bestRuns.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
-              {speedrun.bestRuns.map((run) => (
+              <summary>{t.stats.bestPerformances}</summary>
+              {speedrun.bestPerformanceByRange.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
+              {speedrun.bestPerformanceByRange.map((run) => (
                 <CompactRow
-                  key={run.id}
-                  left={`${dateLabel(run.timestamp)} ${run.rangeLabel}`}
-                  middle={`${run.completed}/${run.total}`}
-                  right={`${formatClock(run.totalTime)} / ${run.averageCheckout !== null ? formatSeconds(run.averageCheckout) : "-"}`}
+                  key={`${run.rangeLabel}-${run.timestamp}`}
+                  left={run.rangeLabel}
+                  middle={`${t.stats.bestTotalTime} ${formatDurationOrDash(run.totalTime)}`}
+                  right={`${t.stats.date} ${dateLabel(run.timestamp)}`}
                 />
               ))}
             </details>
