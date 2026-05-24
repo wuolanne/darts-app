@@ -905,6 +905,13 @@ body {
   text-wrap: nowrap;
 }
 
+.screen-around .around-current-target {
+  font-size: clamp(1.45rem, 7vw, 3.2rem);
+  white-space: nowrap;
+  text-wrap: nowrap;
+  letter-spacing: -0.01em;
+}
+
 .checkout-focus {
   display: flex;
   flex-direction: column;
@@ -1453,6 +1460,10 @@ body {
   .big-number {
     font-size: 2.25rem;
     line-height: 1.02;
+  }
+
+  .screen-around .around-current-target {
+    font-size: clamp(1.3rem, 6.4vw, 2.2rem);
   }
 
   .interactive-dartboard-shell {

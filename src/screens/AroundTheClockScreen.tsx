@@ -425,7 +425,7 @@ export function AroundTheClockScreen({
               {running.index + 1}/{running.targets.length}
             </Pill>
           </div>
-          <p className="big-number">{currentTarget}</p>
+          <p className="big-number around-current-target">{currentTarget}</p>
           {running.mode === "full_sector" ? (
             <p className="muted">
               {running.fullSectorOrder === "end_with_bull"

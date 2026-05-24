@@ -14,9 +14,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
 export function readSettings(): UserSettings {
   const loaded = readJson<UserSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
   const languageMode = loaded.languageMode === "fi" ? "fi" : "en";
+  const themeMode =
+    loaded.themeMode === "light" || loaded.themeMode === "dim" || loaded.themeMode === "dark"
+      ? loaded.themeMode
+      : "dark";
   return {
     ...DEFAULT_SETTINGS,
     ...loaded,
+    themeMode,
     languageMode: languageMode as AppLanguageMode
   };
 }

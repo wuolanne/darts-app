@@ -4,7 +4,7 @@ import { useI18n } from "../i18n";
 import { getSettingsLanguageCopy } from "../i18n/uiTokens";
 
 const PREFERRED_DOUBLES = ["D16", "D20", "D18", "D12", "Not sure"] as const;
-const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim", "system"];
+const THEME_OPTIONS: ThemeMode[] = ["dark", "light", "dim"];
 const TIMER_OPTIONS: TimerOption[] = [0, 10, 20, 30];
 export function SettingsScreen({
   settings,
