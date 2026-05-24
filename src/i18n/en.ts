@@ -21,7 +21,7 @@ export const en = {
     stop: "Stop"
   },
   home: {
-    title: "Darts Practice",
+    title: "DartsFlow",
     subtitle: "Low-input practice modes for daily reps.",
     quickCheckoutTitle: "Quick Checkout Practice",
     quickCheckoutDescription: "Low-input checkout reps with fast feedback.",

@@ -1,0 +1,9 @@
+{
+  "name": "DartsFlow",
+  "short_name": "DartsFlow",
+  "description": "Checkout practice app for darts players",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#10141b",
+  "theme_color": "#10141b"
+}

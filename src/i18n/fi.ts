@@ -23,7 +23,7 @@ export const fi: TranslationDict = {
     stop: "Lopeta"
   },
   home: {
-    title: "Darts Practice",
+    title: "DartsFlow",
     subtitle: "Vähän syöttöä vaativat harjoitustilat päivittäiseen treeniin.",
     quickCheckoutTitle: "Nopea checkout-minipeli",
     quickCheckoutDescription: "Piilotettu checkout-reitti nopealla palautteella.",
