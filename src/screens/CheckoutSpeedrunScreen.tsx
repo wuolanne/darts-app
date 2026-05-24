@@ -69,7 +69,7 @@ export function CheckoutSpeedrunScreen({
   const [customEnd, setCustomEnd] = useState("70");
   const [order, setOrder] = useState<SpeedrunOrder>("sequential");
   const [running, setRunning] = useState<RunningState | null>(null);
-  const [showRoute, setShowRoute] = useState(false);
+  const [showRoute, setShowRoute] = useState(true);
   const [ticker, setTicker] = useState(Date.now());
   const [result, setResult] = useState<CheckoutSpeedrunSession | null>(null);
   const [pbDelta, setPbDelta] = useState<number | null>(null);
@@ -137,7 +137,6 @@ export function CheckoutSpeedrunScreen({
     const now = Date.now();
     setResult(null);
     setPbDelta(null);
-    setShowRoute(false);
     setRunning({
       list,
       index: 0,
