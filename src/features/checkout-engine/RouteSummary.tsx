@@ -24,7 +24,7 @@ export function CheckoutRouteSummary({
   const curatedPrimary = getPrimaryCheckoutRoute(finish, preferredDouble);
   const continuation = curatedPrimary ? getSingleHitContinuation(curatedPrimary) : undefined;
   const firstTarget = curatedPrimary?.route[0] ? normalizeDartTarget(curatedPrimary.route[0]) : null;
-  const alternatives = rankedRoutes.slice(1, compact ? 4 : 7);
+  const alternatives = rankedRoutes.slice(1, compact ? 4 : 2);
 
   if (!bestRoute) {
     return (

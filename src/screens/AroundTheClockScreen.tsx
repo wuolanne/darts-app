@@ -451,7 +451,7 @@ export function AroundTheClockScreen({
               <strong>{formatSeconds(activeTargetSeconds)}</strong>
             </div>
           </div>
-          <div className="action-grid">
+          <div className="action-grid action-grid-vertical">
             <Button variant="success" onClick={done}>
               {running.mode === "full_sector" ? t.aroundClock.sectorDone.toUpperCase() : t.aroundClock.targetDone.toUpperCase()}
             </Button>

@@ -108,8 +108,15 @@ export function Dartboard({
   return (
     <div className="dartboard-wrap">
       <svg viewBox="0 0 400 400" className="dartboard-svg" aria-label="Dartboard route helper">
-        <circle cx={cx} cy={cy} r={195} fill="#ecefe8" />
-        <circle cx={cx} cy={cy} r={190} fill="#1b1f22" />
+        <defs>
+          <radialGradient id="boardOuter" cx="50%" cy="48%" r="58%">
+            <stop offset="0%" stopColor="#2a3038" />
+            <stop offset="75%" stopColor="#161b22" />
+            <stop offset="100%" stopColor="#0f141b" />
+          </radialGradient>
+        </defs>
+        <circle cx={cx} cy={cy} r={195} fill="#d5d8d2" />
+        <circle cx={cx} cy={cy} r={190} fill="url(#boardOuter)" />
 
         {BOARD_ORDER.map((sector, idx) => {
           const start = -Math.PI / 2 - segmentSize / 2 + idx * segmentSize;
@@ -120,7 +127,7 @@ export function Dartboard({
             <g key={sector}>
               <path
                 d={annularSectorPath(cx, cy, 170, 190, start, end)}
-                fill={isDark ? "#b73630" : "#2b7d41"}
+                fill={isDark ? "#a03a34" : "#2f6b47"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "double")) : undefined
@@ -128,7 +135,7 @@ export function Dartboard({
               />
               <path
                 d={annularSectorPath(cx, cy, 110, 170, start, end)}
-                fill={isDark ? "#ecefe8" : "#0f1115"}
+                fill={isDark ? "#d8dbd5" : "#10151d"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "single")) : undefined
@@ -136,7 +143,7 @@ export function Dartboard({
               />
               <path
                 d={annularSectorPath(cx, cy, 90, 110, start, end)}
-                fill={isDark ? "#b73630" : "#2b7d41"}
+                fill={isDark ? "#a03a34" : "#2f6b47"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "treble")) : undefined
@@ -144,7 +151,7 @@ export function Dartboard({
               />
               <path
                 d={annularSectorPath(cx, cy, 40, 90, start, end)}
-                fill={isDark ? "#ecefe8" : "#0f1115"}
+                fill={isDark ? "#d8dbd5" : "#10151d"}
                 className={onTargetSelect && !disabled ? "dart-clickable" : ""}
                 onClick={() =>
                   onTargetSelect && !disabled ? onTargetSelect(tokenFor(sector, "single")) : undefined
@@ -216,7 +223,7 @@ export function Dartboard({
           cx={cx}
           cy={cy}
           r={40}
-          fill="#2b7d41"
+          fill="#2f6b47"
           className={onTargetSelect && !disabled ? "dart-clickable" : ""}
           onClick={() =>
             onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "outer-bull")) : undefined
@@ -226,7 +233,7 @@ export function Dartboard({
           cx={cx}
           cy={cy}
           r={18}
-          fill="#b73630"
+          fill="#a03a34"
           className={onTargetSelect && !disabled ? "dart-clickable" : ""}
           onClick={() =>
             onTargetSelect && !disabled ? onTargetSelect(tokenFor(0, "bull")) : undefined

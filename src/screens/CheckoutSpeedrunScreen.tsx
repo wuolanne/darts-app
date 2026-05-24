@@ -318,7 +318,7 @@ export function CheckoutSpeedrunScreen({
             </div>
           ) : null}
 
-          <div className="action-grid">
+          <div className="action-grid action-grid-vertical">
             <Button variant="success" onClick={finishEntry}>
               {t.common.ready.toUpperCase()}
             </Button>
@@ -328,8 +328,6 @@ export function CheckoutSpeedrunScreen({
             <Button variant="danger" onClick={endRun}>
               {t.checkoutTimedRun.endRun.toUpperCase()}
             </Button>
-          </div>
-          <div className="top-gap">
             <Button variant="ghost" onClick={() => setShowRoute((prev) => !prev)}>
               {showRoute ? t.checkoutTimedRun.hideRoute.toUpperCase() : t.checkoutTimedRun.showRoute.toUpperCase()}
             </Button>
