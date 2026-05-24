@@ -1,5 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-
 const BOARD_ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 
 const CX = 170;
@@ -13,13 +11,7 @@ const R_TPL_IN = 79;
 const R_BULL = 20;
 const R_EYE = 9;
 
-type HighlightKind = "single" | "double" | "treble" | "outer-bull" | "bull";
 type FeedbackTone = "idle" | "correct" | "wrong";
-
-interface HighlightTarget {
-  number: number | null;
-  kind: HighlightKind;
-}
 
 function toRad(deg: number) {
   return ((deg - 90) * Math.PI) / 180;
@@ -45,62 +37,14 @@ function arcPath(r1: number, r2: number, a1: number, a2: number): string {
   ].join(" ");
 }
 
-function parseToken(raw: string): HighlightTarget | null {
-  const token = raw.trim();
-  if (!token) {
-    return null;
-  }
-  if (token === "Bull" || token === "DBull") {
-    return { number: null, kind: "bull" };
-  }
-  if (token === "25" || token === "SBull") {
-    return { number: null, kind: "outer-bull" };
-  }
-  const doubleMatch = token.match(/^D(\d{1,2})$/);
-  if (doubleMatch) {
-    return { number: Number(doubleMatch[1]), kind: "double" };
-  }
-  const trebleMatch = token.match(/^T(\d{1,2})$/);
-  if (trebleMatch) {
-    return { number: Number(trebleMatch[1]), kind: "treble" };
-  }
-  const singleMatch = token.match(/^S(\d{1,2})$/);
-  if (singleMatch) {
-    return { number: Number(singleMatch[1]), kind: "single" };
-  }
-  const plainMatch = token.match(/^(\d{1,2})$/);
-  if (plainMatch) {
-    return { number: Number(plainMatch[1]), kind: "single" };
-  }
-  return null;
-}
-
-function parseRoute(route: string): HighlightTarget[] {
-  return route
-    .split(",")
-    .map(parseToken)
-    .filter((item): item is HighlightTarget => item !== null);
-}
-
-function isHighlighted(targets: HighlightTarget[], sector: number, kind: HighlightKind) {
-  return targets.some((target) => target.number === sector && target.kind === kind);
-}
-
-function tokenFor(sector: number, kind: HighlightKind): string {
+function tokenFor(sector: number, kind: "single" | "double" | "treble"): string {
   if (kind === "single") return `S${sector}`;
   if (kind === "double") return `D${sector}`;
-  if (kind === "treble") return `T${sector}`;
-  if (kind === "outer-bull") return "25";
-  return "Bull";
+  return `T${sector}`;
 }
 
-const svgSafeStyle = { pointerEvents: "none", filter: "none" } as const;
-
 export function InteractiveDartboard({
-  route,
-  reveal,
   onTargetSelect,
-  selectedTarget,
   disabled = false,
   feedbackTone = "idle"
 }: {
@@ -111,31 +55,13 @@ export function InteractiveDartboard({
   disabled?: boolean;
   feedbackTone?: FeedbackTone;
 }) {
-  const routeTargets = useMemo(() => (reveal ? parseRoute(route) : []), [reveal, route]);
-  const selected = useMemo(() => (selectedTarget ? parseToken(selectedTarget) : null), [selectedTarget]);
-  const [pulseKey, setPulseKey] = useState(0);
-
-  useEffect(() => {
-    if (selectedTarget) {
-      setPulseKey((previous) => previous + 1);
-    }
-  }, [selectedTarget]);
-
   return (
     <div
       className={`interactive-dartboard-shell${feedbackTone === "correct" ? " is-correct" : ""}${feedbackTone === "wrong" ? " is-wrong" : ""}`}
     >
       <svg viewBox="0 0 340 340" className="interactive-dartboard-svg" aria-label="Interactive checkout dartboard">
-        <defs>
-          <radialGradient id="dartboard-shell" cx="50%" cy="45%" r="60%">
-            <stop offset="0%" stopColor="#18132c" />
-            <stop offset="60%" stopColor="#0d1020" />
-            <stop offset="100%" stopColor="#080b14" />
-          </radialGradient>
-        </defs>
-
-        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" style={svgSafeStyle} />
-        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-shell)" style={svgSafeStyle} />
+        <circle cx={CX} cy={CY} r={R_BOARD + 5} fill="#040712" />
+        <circle cx={CX} cy={CY} r={R_BOARD} fill="#0a0f18" />
 
         {BOARD_ORDER.map((sector, index) => {
           const a1 = index * 18 - 9;
@@ -168,31 +94,6 @@ export function InteractiveDartboard({
                 />
               ))}
 
-              {isHighlighted(routeTargets, sector, "double") ? (
-                <path d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-route-highlight" style={svgSafeStyle} />
-              ) : null}
-              {isHighlighted(routeTargets, sector, "treble") ? (
-                <path d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-route-highlight" style={svgSafeStyle} />
-              ) : null}
-              {isHighlighted(routeTargets, sector, "single") ? (
-                <>
-                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-route-highlight is-soft" style={svgSafeStyle} />
-                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-route-highlight is-soft" style={svgSafeStyle} />
-                </>
-              ) : null}
-
-              {selected?.number === sector && selected.kind === "double" ? (
-                <path key={`selected-double-${pulseKey}-${sector}`} d={arcPath(R_DBL_OUT, R_DBL_IN, a1, a2)} className="dart-selected-highlight" style={svgSafeStyle} />
-              ) : null}
-              {selected?.number === sector && selected.kind === "treble" ? (
-                <path key={`selected-treble-${pulseKey}-${sector}`} d={arcPath(R_TPL_OUT, R_TPL_IN, a1, a2)} className="dart-selected-highlight" style={svgSafeStyle} />
-              ) : null}
-              {selected?.number === sector && selected.kind === "single" ? (
-                <g key={`selected-single-${pulseKey}-${sector}`}>
-                  <path d={arcPath(R_DBL_IN, R_TPL_OUT, a1, a2)} className="dart-selected-highlight is-soft" style={svgSafeStyle} />
-                  <path d={arcPath(R_TPL_IN, R_BULL, a1, a2)} className="dart-selected-highlight is-soft" style={svgSafeStyle} />
-                </g>
-              ) : null}
             </g>
           );
         })}
@@ -218,33 +119,6 @@ export function InteractiveDartboard({
           onClick={() => (onTargetSelect && !disabled ? onTargetSelect("Bull") : undefined)}
         />
 
-        {routeTargets.some((item) => item.kind === "outer-bull") ? (
-          <circle cx={CX} cy={CY} r={R_BULL} className="dart-route-highlight" style={svgSafeStyle} />
-        ) : null}
-        {routeTargets.some((item) => item.kind === "bull") ? (
-          <circle cx={CX} cy={CY} r={R_EYE} className="dart-route-highlight" style={svgSafeStyle} />
-        ) : null}
-        {selected?.kind === "outer-bull" ? (
-          <circle
-            key={`selected-outer-bull-${pulseKey}`}
-            cx={CX}
-            cy={CY}
-            r={R_BULL}
-            className="dart-selected-highlight"
-            style={svgSafeStyle}
-          />
-        ) : null}
-        {selected?.kind === "bull" ? (
-          <circle
-            key={`selected-bull-${pulseKey}`}
-            cx={CX}
-            cy={CY}
-            r={R_EYE}
-            className="dart-selected-highlight"
-            style={svgSafeStyle}
-          />
-        ) : null}
-
         {BOARD_ORDER.map((sector, index) => {
           const [x, y] = polarXY(R_NUM, index * 18);
           return (
@@ -261,20 +135,8 @@ export function InteractiveDartboard({
           );
         })}
 
-        <circle
-          cx={CX}
-          cy={CY}
-          r={R_BOARD - 1}
-          className="dartboard-rim"
-          style={svgSafeStyle}
-        />
-        <circle
-          cx={CX}
-          cy={CY}
-          r={R_BOARD + 2}
-          className="dartboard-rim-secondary"
-          style={svgSafeStyle}
-        />
+        <circle cx={CX} cy={CY} r={R_BOARD - 1} className="dartboard-rim" />
+        <circle cx={CX} cy={CY} r={R_BOARD + 2} className="dartboard-rim-secondary" />
       </svg>
     </div>
   );

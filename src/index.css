@@ -1107,14 +1107,12 @@ body {
   border-radius: 30px;
   border: 1px solid color-mix(in oklab, #27cfff 22%, var(--card-border) 78%);
   background:
-    radial-gradient(circle at 50% 10%, rgba(88, 209, 255, 0.16), transparent 28%),
-    radial-gradient(circle at 50% 50%, rgba(12, 15, 29, 0.24), transparent 62%),
     linear-gradient(180deg, #0d1322 0%, #090d18 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 0 0 1px rgba(39, 207, 255, 0.08),
     0 18px 42px rgba(0, 0, 0, 0.4);
-  animation: dartboard-idle-glow 3.8s ease-in-out infinite;
+  overflow: visible;
 }
 
 .interactive-dartboard-shell.is-correct {
@@ -1128,8 +1126,9 @@ body {
 .interactive-dartboard-svg {
   width: 100%;
   height: auto;
+  aspect-ratio: 1 / 1;
   display: block;
-  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.42));
+  overflow: visible;
 }
 
 .dart-zone {
@@ -1147,28 +1146,25 @@ body {
 }
 
 .dart-route-highlight {
-  fill: rgba(80, 228, 255, 0.32);
+  fill: none;
   stroke: rgba(124, 237, 255, 0.82);
-  stroke-width: 1.25;
+  stroke-width: 1.1;
   pointer-events: none;
-  filter: url(#dartboard-selection-glow);
 }
 
 .dart-route-highlight.is-soft {
-  fill: rgba(80, 228, 255, 0.18);
+  fill: none;
 }
 
 .dart-selected-highlight {
-  fill: rgba(87, 255, 172, 0.32);
+  fill: none;
   stroke: rgba(87, 255, 172, 0.95);
-  stroke-width: 1.6;
+  stroke-width: 1.4;
   pointer-events: none;
-  filter: url(#dartboard-selection-glow);
-  animation: dart-target-pulse 340ms ease;
 }
 
 .dart-selected-highlight.is-soft {
-  fill: rgba(87, 255, 172, 0.24);
+  fill: none;
 }
 
 .dartboard-number {
