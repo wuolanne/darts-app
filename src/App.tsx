@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
+import { useCallback, useEffect, useState } from "react";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { I18nProvider } from "./i18n";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -21,7 +23,8 @@ import {
 
 function AppBody({
   screen,
-  setScreen,
+  onNavigate,
+  onBack,
   settings,
   setSettings,
   checkoutAttempts,
@@ -32,7 +35,8 @@ function AppBody({
   setAroundSessions
 }: {
   screen: AppScreen;
-  setScreen: (screen: AppScreen) => void;
+  onNavigate: (screen: AppScreen) => void;
+  onBack: () => void;
   settings: UserSettings;
   setSettings: (settings: UserSettings) => void;
   checkoutAttempts: CheckoutAttempt[];
@@ -45,7 +49,7 @@ function AppBody({
   if (screen === "home") {
     return (
       <HomeScreen
-        onNavigate={setScreen}
+        onNavigate={onNavigate}
         checkoutAttempts={checkoutAttempts}
         speedruns={speedruns}
         aroundSessions={aroundSessions}
@@ -57,7 +61,7 @@ function AppBody({
       <SettingsScreen
         settings={settings}
         onUpdateSettings={setSettings}
-        onBack={() => setScreen("home")}
+        onBack={onBack}
       />
     );
   }
@@ -65,7 +69,7 @@ function AppBody({
     return (
       <QuickCheckoutPracticeScreen
         settings={settings}
-        onBack={() => setScreen("home")}
+        onBack={onBack}
         onSaveAttempt={(attempt) => {
           const next = appendCheckoutAttempt(attempt);
           setCheckoutAttempts(next);
@@ -76,7 +80,7 @@ function AppBody({
   if (screen === "speedrun") {
     return (
       <CheckoutSpeedrunScreen
-        onBack={() => setScreen("home")}
+        onBack={onBack}
         settings={settings}
         previousSessions={speedruns}
         onSaveSession={(session) => {
@@ -89,7 +93,7 @@ function AppBody({
   if (screen === "around-clock") {
     return (
       <AroundTheClockScreen
-        onBack={() => setScreen("home")}
+        onBack={onBack}
         settings={settings}
         previousSessions={aroundSessions}
         onSaveSession={(session) => {
@@ -102,14 +106,14 @@ function AppBody({
   if (screen === "checkout-library") {
     return (
       <CheckoutLibraryScreen
-        onBack={() => setScreen("home")}
+        onBack={onBack}
         preferredDouble={settings.preferredDouble}
       />
     );
   }
   return (
     <StatsScreen
-      onBack={() => setScreen("home")}
+      onBack={onBack}
       checkoutAttempts={checkoutAttempts}
       speedruns={speedruns}
       aroundSessions={aroundSessions}
@@ -118,12 +122,32 @@ function AppBody({
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<AppScreen>("home");
+  const [screenHistory, setScreenHistory] = useState<AppScreen[]>(["home"]);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [checkoutAttempts, setCheckoutAttempts] = useState<CheckoutAttempt[]>([]);
   const [speedruns, setSpeedruns] = useState<CheckoutSpeedrunSession[]>([]);
   const [aroundSessions, setAroundSessions] = useState<AroundClockSession[]>([]);
+  const screen = screenHistory[screenHistory.length - 1] ?? "home";
+
+  const navigateTo = useCallback((nextScreen: AppScreen) => {
+    setScreenHistory((previous) => {
+      const current = previous[previous.length - 1] ?? "home";
+      if (current === nextScreen) {
+        return previous;
+      }
+      return [...previous, nextScreen];
+    });
+  }, []);
+
+  const goBack = useCallback(() => {
+    setScreenHistory((previous) => {
+      if (previous.length <= 1) {
+        return ["home"];
+      }
+      return previous.slice(0, -1);
+    });
+  }, []);
 
   useEffect(() => {
     setSettings(readSettings());
@@ -137,6 +161,48 @@ export default function App() {
     writeSettings(settings);
   }, [settings]);
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return undefined;
+    }
+
+    const closeOpenDialog = () => {
+      const openDialog = document.querySelector("dialog[open]") as HTMLDialogElement | null;
+      if (!openDialog) {
+        return false;
+      }
+      openDialog.close();
+      return true;
+    };
+
+    let active = true;
+    let handle: { remove: () => Promise<void> } | null = null;
+
+    void CapacitorApp.addListener("backButton", async () => {
+      if (!active) {
+        return;
+      }
+
+      if (closeOpenDialog()) {
+        return;
+      }
+
+      if (screen !== "home" || screenHistory.length > 1) {
+        goBack();
+        return;
+      }
+
+      await CapacitorApp.exitApp();
+    }).then((listener) => {
+      handle = listener;
+    });
+
+    return () => {
+      active = false;
+      void handle?.remove();
+    };
+  }, [goBack, screen, screenHistory.length]);
+
   return (
     <I18nProvider requestedLanguage={settings.languageMode}>
       <ThemeProvider requestedMode={settings.themeMode}>
@@ -144,7 +210,8 @@ export default function App() {
           {settingsLoaded ? (
             <AppBody
               screen={screen}
-              setScreen={setScreen}
+              onNavigate={navigateTo}
+              onBack={goBack}
               settings={settings}
               setSettings={setSettings}
               checkoutAttempts={checkoutAttempts}

@@ -9,6 +9,17 @@ After Capacitor setup:
 3. Select the `android/` folder from this repository
 4. Let Android Studio sync the Gradle project
 
+## Android system bars and back button
+
+- Status bar color is set to a dark app-matching color: `#10141B`
+- Navigation bar color is set to the same dark color: `#10141B`
+- Light system bar icons are forced off so Android uses light icons on the dark background
+- Android hardware back button is handled by the app:
+  - it navigates back inside the app when you are in a nested screen
+  - it exits only from the home screen
+
+Test this on a real Android phone before building the final signed `.aab`.
+
 ## Build a signed Android App Bundle
 
 In Android Studio:
