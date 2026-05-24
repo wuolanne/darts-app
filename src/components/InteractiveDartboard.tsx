@@ -125,11 +125,6 @@ export function InteractiveDartboard({
     >
       <svg viewBox="0 0 340 340" className="interactive-dartboard-svg" aria-label="Interactive checkout dartboard">
         <defs>
-          <radialGradient id="dartboard-depth" cx="50%" cy="50%" r="52%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
-            <stop offset="72%" stopColor="rgba(0,0,0,0)" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0.66)" />
-          </radialGradient>
           <radialGradient id="dartboard-shell" cx="50%" cy="45%" r="60%">
             <stop offset="0%" stopColor="#18132c" />
             <stop offset="60%" stopColor="#0d1020" />
@@ -282,7 +277,6 @@ export function InteractiveDartboard({
           );
         })}
 
-        <circle cx={CX} cy={CY} r={R_BOARD} fill="url(#dartboard-depth)" style={{ pointerEvents: "none" }} />
         <circle
           cx={CX}
           cy={CY}
