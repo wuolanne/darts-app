@@ -370,15 +370,27 @@ export function StatsScreen({
   }, [aroundEntryRecords, targetMode]);
 
   const bestAroundPerformances = React.useMemo(() => {
-    return aroundModeSummaries.map((row) => ({
-      key: row.key,
-      label: row.label,
-      bestTotalTime: row.best,
-      timestamp: row.latestTimestamp
-    }));
-  }, [aroundModeSummaries]);
+    const bestByMode = new Map<string, { key: string; label: string; bestTotalTime: number; timestamp: string }>();
+    for (const session of filteredAroundSessions) {
+      if (session.totalActiveSeconds <= 0) continue;
+      const key = `${session.mode}:${session.doubleRequirement ?? 0}`;
+      const label = getSessionModeLabel(session, t);
+      const current = bestByMode.get(key);
+      if (!current || session.totalActiveSeconds < current.bestTotalTime) {
+        bestByMode.set(key, {
+          key,
+          label,
+          bestTotalTime: session.totalActiveSeconds,
+          timestamp: session.timestamp
+        });
+      }
+    }
+    return Array.from(bestByMode.values()).sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [filteredAroundSessions, t]);
 
-  const aroundHasDetailedData = aroundModeSummaries.length > 0 || aroundEntryRecords.length > 0 || sortedAroundSessions.length > 0;
+  const aroundHasDetailedData = targetStatRows.length > 0 || sortedAroundSessions.length > 0;
 
   return (
     <div className="screen screen-stats">
@@ -532,49 +544,6 @@ export function StatsScreen({
               aroundHasDetailedData ? (
                 <>
                   <div className="stats-subsection">
-                    <strong>{t.stats.byMode}</strong>
-                    {aroundModeSummaries.map((row) => (
-                      <CompactRow
-                        key={`detail-${row.key}`}
-                        left={row.label}
-                        middle={`${t.stats.sessions} ${row.sessions}`}
-                        right={`${t.stats.bestTime} ${formatClock(row.best)} · ${t.stats.latestTime} ${formatClock(row.latest)}`}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="stats-subsection">
-                    <strong>{t.stats.hardestSectors}</strong>
-                    {aroundModeOptions.length > 0 ? (
-                      <Segmented
-                        value={hardestMode}
-                        options={[
-                          ...aroundModeOptions.map((option) => ({ label: option.label, value: option.value })),
-                          { label: t.stats.allGameModes, value: "all" as AroundDetailModeKey }
-                        ]}
-                        onChange={(value) => setHardestMode(value as AroundDetailModeKey)}
-                      />
-                    ) : null}
-                    {hardestSectorRows.length === 0 ? <p className="muted">{t.stats.noSectorLevelData}</p> : null}
-                    {hardestSectorRows.map((row) => (
-                      <CompactRow
-                        key={`detail-sector-${row.key}`}
-                        left={row.key}
-                        middle={
-                          row.estimatedDarts !== null && row.estimatedHitRate !== null
-                            ? `${t.stats.estimatedDarts} ${Math.round(row.estimatedDarts)}`
-                            : `${t.stats.attempts} ${row.attempts}`
-                        }
-                        right={
-                          row.estimatedDarts !== null && row.estimatedHitRate !== null
-                            ? `${t.stats.estimatedHitRate} ${row.estimatedHitRate.toFixed(1)} %`
-                            : `${t.stats.averageTime} ${formatSeconds(row.averageTime)}`
-                        }
-                      />
-                    ))}
-                  </div>
-
-                  <div className="stats-subsection">
                     <strong>{t.stats.byTargetSector}</strong>
                     {aroundModeOptions.length > 0 && targetMode ? (
                       <>
@@ -599,54 +568,70 @@ export function StatsScreen({
                     ))}
                   </div>
 
-                  <details className="stats-subsection">
-                    <summary>{t.stats.sessionHistory}</summary>
-                    {sortedAroundSessions.length === 0 ? <p className="muted">{t.stats.noSessions}</p> : null}
-                    {sortedAroundSessions.map((session) => {
-                      const sessionEntries = session.entries.filter((entry) => entry.seconds > 0);
-                      const sessionEstimatedDarts =
-                        typeof session.throwPaceSecondsPerThree === "number" && session.throwPaceSecondsPerThree > 0
-                          ? (session.totalActiveSeconds * 3) / session.throwPaceSecondsPerThree
-                          : null;
-                      const sessionRequiredHits = sessionEntries.reduce((sum, entry) => {
-                        const hits = requiredHitsForEntry(session, entry.target);
-                        return hits ? sum + hits : sum;
-                      }, 0);
-                      const sessionEstimatedHitRate =
-                        sessionEstimatedDarts && sessionRequiredHits > 0
-                          ? (sessionRequiredHits / sessionEstimatedDarts) * 100
-                          : null;
+                  {sortedAroundSessions.length > 0 ? (
+                    <details className="stats-subsection">
+                      <summary>{t.stats.sessionHistory}</summary>
+                      {sortedAroundSessions.map((session) => {
+                        const sessionEntries = session.entries.filter((entry) => entry.seconds > 0);
+                        const sessionEstimatedDarts =
+                          typeof session.throwPaceSecondsPerThree === "number" && session.throwPaceSecondsPerThree > 0
+                            ? (session.totalActiveSeconds * 3) / session.throwPaceSecondsPerThree
+                            : null;
+                        const sessionRequiredHits = sessionEntries.reduce((sum, entry) => {
+                          const hits = requiredHitsForEntry(session, entry.target);
+                          return hits ? sum + hits : sum;
+                        }, 0);
+                        const sessionEstimatedHitRate =
+                          sessionEstimatedDarts && sessionRequiredHits > 0
+                            ? (sessionRequiredHits / sessionEstimatedDarts) * 100
+                            : null;
+                        const hasMeaningfulDetail =
+                          sessionEntries.length > 0 ||
+                          sessionEstimatedDarts !== null ||
+                          sessionEstimatedHitRate !== null;
 
-                      return (
-                        <details key={session.id} className="stats-subsection top-gap">
-                          <summary>
-                            {dateLabel(session.timestamp)}{" · "}
-                            {getSessionModeLabel(session, t)}{" · "}
-                            {t.stats.totalTime} {formatClock(session.totalActiveSeconds)}
-                          </summary>
-                          <CompactRow left={t.stats.date} right={dateLabel(session.timestamp)} />
-                          <CompactRow left={t.stats.gameModes} right={getSessionModeLabel(session, t)} />
-                          <CompactRow left={t.stats.totalTime} right={formatClock(session.totalActiveSeconds)} />
-                          {sessionEstimatedDarts !== null ? (
-                            <CompactRow left={t.stats.estimatedDarts} right={Math.round(sessionEstimatedDarts)} />
-                          ) : null}
-                          {sessionEstimatedHitRate !== null ? (
+                        if (!hasMeaningfulDetail) {
+                          return (
                             <CompactRow
-                              left={t.stats.estimatedHitRate}
-                              right={`${sessionEstimatedHitRate.toFixed(1)} %`}
+                              key={session.id}
+                              left={dateLabel(session.timestamp)}
+                              middle={getSessionModeLabel(session, t)}
+                              right={`${t.stats.totalTime} ${formatClock(session.totalActiveSeconds)}`}
                             />
-                          ) : null}
-                          {sessionEntries.map((entry, index) => (
-                            <CompactRow
-                              key={`${session.id}-${entry.target}-${index}`}
-                              left={getEntryTargetLabel(session, entry.target, t)}
-                              right={formatSeconds(entry.seconds)}
-                            />
-                          ))}
-                        </details>
-                      );
-                    })}
-                  </details>
+                          );
+                        }
+
+                        return (
+                          <details key={session.id} className="stats-subsection top-gap">
+                            <summary>
+                              {dateLabel(session.timestamp)}{" · "}
+                              {getSessionModeLabel(session, t)}{" · "}
+                              {t.stats.totalTime} {formatClock(session.totalActiveSeconds)}
+                            </summary>
+                            <CompactRow left={t.stats.date} right={dateLabel(session.timestamp)} />
+                            <CompactRow left={t.stats.gameModes} right={getSessionModeLabel(session, t)} />
+                            <CompactRow left={t.stats.totalTime} right={formatClock(session.totalActiveSeconds)} />
+                            {sessionEstimatedDarts !== null ? (
+                              <CompactRow left={t.stats.estimatedDarts} right={Math.round(sessionEstimatedDarts)} />
+                            ) : null}
+                            {sessionEstimatedHitRate !== null ? (
+                              <CompactRow
+                                left={t.stats.estimatedHitRate}
+                                right={`${sessionEstimatedHitRate.toFixed(1)} %`}
+                              />
+                            ) : null}
+                            {sessionEntries.map((entry, index) => (
+                              <CompactRow
+                                key={`${session.id}-${entry.target}-${index}`}
+                                left={getEntryTargetLabel(session, entry.target, t)}
+                                right={formatSeconds(entry.seconds)}
+                              />
+                            ))}
+                          </details>
+                        );
+                      })}
+                    </details>
+                  ) : null}
                 </>
               ) : (
                 <>
