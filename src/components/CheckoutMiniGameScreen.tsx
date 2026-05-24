@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button, Card, Pill } from "./ui";
 import { InteractiveDartboard } from "./InteractiveDartboard";
 import { TargetCard } from "./TargetCard";
@@ -64,6 +65,25 @@ export function CheckoutMiniGameScreen({
 }) {
   const shownPicks = Array.from({ length: Math.max(maxPicks, 1) }, (_, index) => pickedTargets[index] ?? "-");
   const feedbackTone = feedback?.tone === "wrong" ? "wrong" : feedback?.tone === "complete" ? "correct" : "idle";
+  const [showDeferredRouteSummary, setShowDeferredRouteSummary] = useState(false);
+
+  useEffect(() => {
+    if (!completed) {
+      setShowDeferredRouteSummary(false);
+      return;
+    }
+    let frameOne = 0;
+    let frameTwo = 0;
+    frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(() => {
+        setShowDeferredRouteSummary(true);
+      });
+    });
+    return () => {
+      if (frameOne) window.cancelAnimationFrame(frameOne);
+      if (frameTwo) window.cancelAnimationFrame(frameTwo);
+    };
+  }, [completed, finish, preferredDouble]);
 
   return (
     <Card className="practice-card quick-practice-card checkout-mini-game-card">
@@ -124,9 +144,11 @@ export function CheckoutMiniGameScreen({
               <p>
                 <span className="muted">{picksLabel}:</span> {pickedTargets.length > 0 ? pickedTargets.join(" -> ") : noneLabel}
               </p>
-              <div className="route-box top-gap quick-route-box">
-                <CheckoutRouteSummary finish={finish} preferredDouble={preferredDouble} compact />
-              </div>
+              {showDeferredRouteSummary ? (
+                <div className="route-box top-gap quick-route-box">
+                  <CheckoutRouteSummary finish={finish} preferredDouble={preferredDouble} compact />
+                </div>
+              ) : null}
               <div className="checkout-board-actions top-gap">
                 <Button onClick={onNextCheckout}>{nextCheckoutLabel.toUpperCase()}</Button>
               </div>
