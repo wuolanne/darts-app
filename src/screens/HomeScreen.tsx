@@ -48,15 +48,6 @@ function getDaysAgoKey(daysAgo: number): string {
   return `${year}-${month}-${day}`;
 }
 
-function isWithinLastSevenDays(value: string): boolean {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  start.setTime(start.getTime() - 6 * DAY_MS);
-  return date.getTime() >= start.getTime();
-}
-
 function formatHomeMinutes(totalSeconds: number, language: "en" | "fi"): string {
   if (totalSeconds <= 0) {
     return "0 min";
@@ -140,21 +131,21 @@ function buildSummary(
   }
 
   const attemptTime = checkoutAttempts.reduce((sum, attempt) => {
-    if (!isWithinLastSevenDays(attempt.timestamp) || attempt.elapsedSeconds === null || attempt.elapsedSeconds <= 0) {
+    if (attempt.elapsedSeconds === null || attempt.elapsedSeconds <= 0) {
       return sum;
     }
     return sum + attempt.elapsedSeconds;
   }, 0);
 
   const speedrunTime = speedruns.reduce((sum, session) => {
-    if (!isWithinLastSevenDays(session.timestamp) || session.totalActiveSeconds <= 0) {
+    if (session.totalActiveSeconds <= 0) {
       return sum;
     }
     return sum + session.totalActiveSeconds;
   }, 0);
 
   const aroundTime = aroundSessions.reduce((sum, session) => {
-    if (!isWithinLastSevenDays(session.timestamp) || session.totalActiveSeconds <= 0) {
+    if (session.totalActiveSeconds <= 0) {
       return sum;
     }
     return sum + session.totalActiveSeconds;
@@ -170,7 +161,7 @@ function buildSummary(
   return {
     streak,
     practiceTime: formatHomeMinutes(attemptTime + speedrunTime + aroundTime, language),
-    practiceTimeLabel: copy.sevenDays,
+    practiceTimeLabel: copy.totalLabel,
     bestFinish,
     bestFinishLabel: bestFinish === DASH ? DASH : copy.checkoutLabel,
     bestRangeTime: bestRange ? formatPracticeDuration(bestRange.totalActiveSeconds) : DASH,
@@ -214,7 +205,7 @@ export function HomeScreen({
       metaValue: latestCheckout ? String(latestCheckout.finishNumber) : DASH
     },
     {
-      title: t.stats.checkoutTimedRun,
+      title: t.home.timedRunTitle,
       screen: "speedrun",
       description: t.home.timedRunDescription,
       icon: "T",

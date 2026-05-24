@@ -24,6 +24,7 @@ export const en = {
     title: "DartsFlow",
     subtitle: "Low-input practice modes for daily reps.",
     quickCheckoutTitle: "Quick Checkout Practice",
+    timedRunTitle: "Checkout Timed Run",
     quickCheckoutDescription: "Low-input checkout reps with fast feedback.",
     timedRunDescription: "Complete a checkout range as fast as possible.",
     aroundDescription: "Timed sectors and targets with minimal taps.",

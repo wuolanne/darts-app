@@ -7,7 +7,7 @@ export interface HomeDashboardCopy {
   bestRange: string;
   bestAtc: string;
   checkoutLabel: string;
-  sevenDays: string;
+  totalLabel: string;
 }
 
 export interface SettingsLanguageCopy {
@@ -20,11 +20,11 @@ export function getHomeDashboardCopy(language: SupportedUiLanguage): HomeDashboa
     return {
       dayStreak: "PÄIVÄN PUTKI",
       practiceTime: "TREENIAIKA",
-      bestFinish: "PARAS CHECKOUT",
-      bestRange: "PARAS RANGE",
+      bestFinish: "PARAS FINISH",
+      bestRange: "PARAS SARJA",
       bestAtc: "PARAS ATC",
       checkoutLabel: "checkout",
-      sevenDays: "7 päivää"
+      totalLabel: "yhteensä"
     };
   }
 
@@ -35,7 +35,7 @@ export function getHomeDashboardCopy(language: SupportedUiLanguage): HomeDashboa
     bestRange: "BEST RANGE",
     bestAtc: "BEST ATC",
     checkoutLabel: "checkout",
-    sevenDays: "7 days"
+    totalLabel: "total"
   };
 }
 
